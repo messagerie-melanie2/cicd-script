@@ -277,14 +277,14 @@ def write_pipelines_jsonnet(pipelines, path, debug = False):
         # Close the file
         df_file.close()
 
-def pipelines_write_jsonnet(pipelines, origin_path_jsonnet, branch, token, project_id, debug = False):
+def pipelines_write_jsonnet(pipelines, pipeline_folder_path, origin_path_jsonnet, branch, token, project_id, debug = False):
 
     for pipeline_name in pipelines.keys() :
-        new_file_path = "cicd-docker/pipelines/" + pipeline_name + ".jsonnet"
-        os.makedirs(os.path.dirname("cicd-docker/pipelines/"), exist_ok=True)
+        new_file_path = f"{pipeline_folder_path}/{pipeline_name}.jsonnet"
+        os.makedirs(os.path.dirname(f"{pipeline_folder_path}/"), exist_ok=True)
         shutil.copy(origin_path_jsonnet, new_file_path)
         write_jsonnet(pipelines[pipeline_name],{'mode':"all",'to_build':[]}, new_file_path, branch, token, project_id, {}, debug = debug)
     
-    os.makedirs(os.path.dirname("cicd-docker/pipelines/"), exist_ok=True)
-    shutil.copy("cicd-docker/pipelines.jsonnet", "cicd-docker/pipelines/pipelines.jsonnet")
-    write_pipelines_jsonnet(pipelines,"cicd-docker/pipelines/pipelines.jsonnet")
+    os.makedirs(os.path.dirname(f"{pipeline_folder_path}/"), exist_ok=True)
+    shutil.copy(f"{pipeline_folder_path}.jsonnet", f"{pipeline_folder_path}/pipelines.jsonnet")
+    write_pipelines_jsonnet(pipelines,f"{pipeline_folder_path}/pipelines.jsonnet")

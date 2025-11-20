@@ -59,7 +59,7 @@ def main(args) :
         if(args.pipeline_source == "schedule") :
             pipelines = sort_pipeline(new_sortedRes, args.debug_enabled)
             
-            pipelines_write_jsonnet(pipelines,args.generate_jsonnet_destination_file, dockerfiles_branch_tag, args.token, args.project_id, args.debug_enabled)
+            pipelines_write_jsonnet(pipelines,args.generate_jsonnet_destination_file, args.generate_jsonnet_pipeline_folder, dockerfiles_branch_tag, args.token, args.project_id, args.debug_enabled)
         else :
             trigger_variable = {}
             
@@ -69,9 +69,9 @@ def main(args) :
                 if args.debug_enabled :
                     print("trigger variable is None")
             
-            os.makedirs(os.path.dirname("cicd-docker/pipelines/"), exist_ok=True)
-            shutil.copy(args.generate_jsonnet_destination_file, "cicd-docker/pipelines/pipelines.jsonnet")
-            write_jsonnet(new_sortedRes, {'mode':"build",'to_build':to_build_array}, "cicd-docker/pipelines/pipelines.jsonnet", dockerfiles_branch_tag, args.token, args.project_id, trigger_variable, args.debug_enabled)
+            os.makedirs(os.path.dirname(f"{args.generate_jsonnet_pipeline_folder}/"), exist_ok=True)
+            shutil.copy(args.generate_jsonnet_destination_file, f"{args.generate_jsonnet_pipeline_folder}/pipelines.jsonnet")
+            write_jsonnet(new_sortedRes, {'mode':"build",'to_build':to_build_array}, f"{args.generate_jsonnet_pipeline_folder}/pipelines.jsonnet", dockerfiles_branch_tag, args.token, args.project_id, trigger_variable, args.debug_enabled)
 
         print("\r\n{0} Writed Jsonnet result to file !".format(job))
 
@@ -130,6 +130,10 @@ parser.add_argument(
 parser.add_argument(
     '-gbn', '--generate-jsonnet-branch-name', 
     metavar='BRANCH_NAME', default=NO_BRANCH,
+    help="Nom de la branche git actuelle, à intégrer dans le tag des images Docker")
+parser.add_argument(
+    '-gpf', '--generate-jsonnet-pipeline-folder', 
+    metavar='FILE_PATH', default="/cicd-docker/pipelines",
     help="Nom de la branche git actuelle, à intégrer dans le tag des images Docker")
 
 #####
