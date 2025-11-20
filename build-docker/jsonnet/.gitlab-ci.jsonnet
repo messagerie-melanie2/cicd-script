@@ -48,7 +48,7 @@ local build_docker(stage, name, path, parent, version, branch, is_changed, is_tr
   image:
   {
       # name: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/cicd-docker/kaniko-executor:v1.9.1-debug",
-      name: "${REGISTRY_DOMAIN}${CI_PROJECT_NAMESPACE}${CICD_BUILDER_PATH}:${CICD_BUILDER_TAG}",
+      name: "${REGISTRY_DOMAIN}${CICD_NAMESPACE}${CICD_BUILDER_PATH}:${CICD_BUILDER_TAG}",
       entrypoint: [""],
   },
   //
@@ -122,7 +122,7 @@ local deploy_docker(stage, name, path, parent, version, branch, is_changed, is_t
   },
   image:
   {
-      name: "${REGISTRY_DOMAIN}${CI_PROJECT_NAMESPACE}${CICD_DEPLOY_PATH}:${CICD_DEPLOY_TAG}",
+      name: "${REGISTRY_DOMAIN}${CICD_NAMESPACE}${CICD_DEPLOY_PATH}:${CICD_DEPLOY_TAG}",
       entrypoint: [""],
   },
   //
