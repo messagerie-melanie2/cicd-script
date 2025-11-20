@@ -54,7 +54,7 @@ local build_docker(stage, name, path, parent, version, branch, is_changed, is_tr
   //
   before_script:
     [
-      'source cicd-docker/script/before_script.sh',
+      'source $BEFORE_SCRIPT_PATH',
     ]
   ,
   //
