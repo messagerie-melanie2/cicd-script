@@ -21,11 +21,13 @@ STATUS_NO_LOG=env.list('STATUS_NO_LOG',["skipped","canceled"])
 def read_setup_files(folder_path, debug = False):
     all_setup = []
     my_path = os.path.abspath(os.path.dirname(__file__))
+    print(my_path)
     setup_path = os.path.join(my_path, folder_path)
+    print(setup_path)
     for subdir, dirs, files in os.walk(setup_path):
         for filename in files:
             filepath = subdir + os.sep + filename
-
+            print(filename)
             if filepath.endswith("triggers.yml"):
                 with open(setup_path, 'r') as setup_file:
                     try:
@@ -76,7 +78,7 @@ parser.add_argument(
     help="Afficher plus de logs lors de l'éxécution des fonctions")
 parser.add_argument(
     '-fp', '--folder-path', 
-    metavar='FOLDER_PATH', default='./trigger-project/setup/triggers.yaml',
+    metavar='FOLDER_PATH', default='trigger-project/setup/triggers.yaml',
     help="Afficher plus de logs lors de l'éxécution des fonctions")
 # parser.add_argument(
 #     '-tok', '--token', 
