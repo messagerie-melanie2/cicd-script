@@ -74,6 +74,10 @@ parser.add_argument(
     '-d', '--debug-enabled', 
     metavar='DEBUG', default=False,
     help="Afficher plus de logs lors de l'éxécution des fonctions")
+parser.add_argument(
+    '-fp', '--folder-path', 
+    metavar='FOLDER_PATH', default='./trigger-project/setup/triggers.yaml',
+    help="Afficher plus de logs lors de l'éxécution des fonctions")
 # parser.add_argument(
 #     '-tok', '--token', 
 #     metavar='TOKEN', default='',
