@@ -48,6 +48,7 @@ def set_config_path(token, all_setup, ci_config_path, debug = False):
         projects_to_setup = project_to_trigger.get("projects")
         for project in projects_to_setup :
             project_id = project.get("id")
+            print(project_id)
             if project.get("change_ci") != False :
                 if project_id == 27032 :
                     print(f"Setting ci config path of {project['name']} project")
