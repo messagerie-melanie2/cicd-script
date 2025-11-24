@@ -43,6 +43,7 @@ def set_config_path(token, all_setup, ci_config_path, debug = False):
     files = {
         'ci_config_path': (None, ci_config_path),
     }
+    headers = {"PRIVATE-TOKEN": token}
 
     for project_to_trigger in all_setup :
         projects_to_setup = project_to_trigger.get("projects")
@@ -57,7 +58,7 @@ def set_config_path(token, all_setup, ci_config_path, debug = False):
                     response = requests.put(
                         url,
                         files=files,
-                        auth=('gitlab-ci-token', token),
+                        headers=headers,
                     )
                     print(response.json())
 
