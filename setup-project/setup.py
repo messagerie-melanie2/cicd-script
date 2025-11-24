@@ -79,7 +79,7 @@ parser.add_argument(
     help="Afficher plus de logs lors de l'éxécution des fonctions")
 parser.add_argument(
     '-fp', '--folder-path', 
-    metavar='FOLDER_PATH', default='/trigger-project/setup/',
+    metavar='FOLDER_PATH', default='trigger-project/setup/',
     help="Afficher plus de logs lors de l'éxécution des fonctions")
 # parser.add_argument(
 #     '-tok', '--token', 
