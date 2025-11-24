@@ -22,9 +22,7 @@ def read_setup_files(folder_path, debug = False):
     all_setup = []
     my_path = os.path.abspath(os.path.dirname(__file__))
     my_project_path = my_path.split("cicd-script")[0]
-    print(my_project_path)
     setup_path = os.path.join(my_project_path, folder_path)
-    print(setup_path)
     for subdir, dirs, files in os.walk(setup_path):
         for filename in files:
             filepath = subdir + os.sep + filename
@@ -52,16 +50,18 @@ def set_config_path(token, all_setup, ci_config_path, debug = False):
             project_id = project.get("id")
             if project.get("change_ci") != False :
                 if project_id == 27032 :
+                    print(f"Setting ci config path of {project["name"]} project")
                     url = f"{GITLAB_URL}/projects/{project_id}"
+                    print(url)
                     response = requests.put(
                         url,
                         files=files,
                         auth=('gitlab-ci-token', token),
                     )
+                    print(response.json())
 
 def main(args) :
     all_setup = read_setup_files(args.folder_path)
-    print(all_setup)
     set_config_path(args.token,all_setup, ".gitlab-ci.yml@snum/detn/gmcd/cicd/cicd-yaml")
     
 
