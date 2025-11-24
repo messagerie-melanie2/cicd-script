@@ -51,17 +51,18 @@ def set_config_path(token, all_setup, ci_config_path, debug = False):
         for project in projects_to_setup :
             project_id = project.get("id")
             if project.get("change_ci") != False :
-                url = f"{GITLAB_URL}/projects/{project_id}"
-                response = requests.put(
-                    url,
-                    files=files,
-                    auth=('gitlab-ci-token', token),
-                )
+                if project_id == 27032 :
+                    url = f"{GITLAB_URL}/projects/{project_id}"
+                    response = requests.put(
+                        url,
+                        files=files,
+                        auth=('gitlab-ci-token', token),
+                    )
 
 def main(args) :
     all_setup = read_setup_files(args.folder_path)
     print(all_setup)
-    #set_config_path(args.token,all_setup, args.ci_config_path)
+    set_config_path(args.token,all_setup, ".gitlab-ci.yml@snum/detn/gmcd/cicd/cicd-yaml")
     
 
 #=======================================================#
@@ -81,10 +82,10 @@ parser.add_argument(
     '-fp', '--folder-path', 
     metavar='FOLDER_PATH', default='trigger-project/setup/',
     help="Afficher plus de logs lors de l'éxécution des fonctions")
-# parser.add_argument(
-#     '-tok', '--token', 
-#     metavar='TOKEN', default='',
-#     help="Token pour accéder à gitlab")
+parser.add_argument(
+    '-tok', '--token', 
+    metavar='TOKEN', default='',
+    help="Token pour accéder à gitlab")
 
 # Run the arguments parser
 args = parser.parse_args()
