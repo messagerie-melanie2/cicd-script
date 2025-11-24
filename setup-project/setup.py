@@ -30,7 +30,7 @@ def read_setup_files(folder_path, debug = False):
             filepath = subdir + os.sep + filename
             print(filename)
             if filepath.endswith("triggers.yml"):
-                with open(setup_path, 'r') as setup_file:
+                with open(filepath, 'r') as setup_file:
                     try:
                         setup_yaml = yaml.safe_load(setup_file)
                     except yaml.YAMLError as exc:
