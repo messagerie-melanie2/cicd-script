@@ -69,7 +69,7 @@ def main(args) :
 parser = argparse.ArgumentParser(
     prog='CICD Python Helper',
     description="Programme permettant de gérer les logs/artifacts des projets gitlab")
-group = parser.add_mutually_exclusive_group(required=True)
+# group = parser.add_mutually_exclusive_group(required=True)
 parser.add_argument(
     '-d', '--debug-enabled', 
     metavar='DEBUG', default=False,
