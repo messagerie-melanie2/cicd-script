@@ -21,8 +21,9 @@ STATUS_NO_LOG=env.list('STATUS_NO_LOG',["skipped","canceled"])
 def read_setup_files(folder_path, debug = False):
     all_setup = []
     my_path = os.path.abspath(os.path.dirname(__file__))
-    print(my_path)
-    setup_path = os.path.join(my_path, folder_path)
+    my_project_path = my_path.split("cicd-script")[0]
+    print(my_project_path)
+    setup_path = os.path.join(my_project_path, folder_path)
     print(setup_path)
     for subdir, dirs, files in os.walk(setup_path):
         for filename in files:
@@ -78,7 +79,7 @@ parser.add_argument(
     help="Afficher plus de logs lors de l'éxécution des fonctions")
 parser.add_argument(
     '-fp', '--folder-path', 
-    metavar='FOLDER_PATH', default='../trigger-project/setup/',
+    metavar='FOLDER_PATH', default='/trigger-project/setup/',
     help="Afficher plus de logs lors de l'éxécution des fonctions")
 # parser.add_argument(
 #     '-tok', '--token', 
