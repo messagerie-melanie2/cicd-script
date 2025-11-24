@@ -28,7 +28,7 @@ def read_setup_files(folder_path, debug = False):
         for filename in files:
             filepath = subdir + os.sep + filename
             print(filename)
-            if filepath.endswith("triggers.yaml"):
+            if filepath.endswith("triggers.yml"):
                 with open(setup_path, 'r') as setup_file:
                     try:
                         setup_yaml = yaml.safe_load(setup_file)
@@ -78,7 +78,7 @@ parser.add_argument(
     help="Afficher plus de logs lors de l'éxécution des fonctions")
 parser.add_argument(
     '-fp', '--folder-path', 
-    metavar='FOLDER_PATH', default='trigger-project/setup/triggers.yaml',
+    metavar='FOLDER_PATH', default='../trigger-project/setup/',
     help="Afficher plus de logs lors de l'éxécution des fonctions")
 # parser.add_argument(
 #     '-tok', '--token', 
