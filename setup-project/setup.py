@@ -74,7 +74,7 @@ def config_trigger_token(token, all_setup, debug = False):
         if project_to_trigger.get("type") == "gitlab" :
             print(f"Setting Trigger token of {project_to_trigger.get('name')} project")
             project_to_trigger_id = project_to_trigger.get("id")
-            if project_to_trigger_id == 27032 :
+            if project_to_trigger_id == 12724 :
                 url = f"{GITLAB_URL}/api/v4/projects/{project_to_trigger_id}/triggers"
                 try :
                     r = requests.get(url, headers=headers)
