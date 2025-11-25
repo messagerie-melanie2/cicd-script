@@ -102,7 +102,7 @@ def config_trigger_token(token, all_setup, debug = False):
                                 print("Http Error:",err)
                             print(f"Setup failed : {r.json()}")
                         else :
-                            trigger_token = r.json.get("token")
+                            trigger_token = r.json().get("token")
                         
             all_trigger_token[project_to_trigger.get("name")] = trigger_token
 
