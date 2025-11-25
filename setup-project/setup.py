@@ -105,10 +105,13 @@ def config_trigger_token(token, all_setup, debug = False):
                         
             all_trigger_token[project_to_trigger.get("name")] = trigger_token
 
+    return all_trigger_token
+
 def main(args) :
     all_setup = read_setup_files(args.folder_path)
     set_config_path(args.token,all_setup)
-    config_trigger_token(args.token,all_setup)
+    all_trigger_token = config_trigger_token(args.token,all_setup)
+    print(all_trigger_token)
 
 #=======================================================#
 #====================== Arguments ======================#
