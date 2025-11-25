@@ -4,15 +4,15 @@ import requests
 import os
 import yaml
 from datetime import datetime, timedelta
-from environs import Env
 
 #=======================================================#
 #================== Global parameters ==================#
 #=======================================================#
-env = Env()
 
 GITLAB_URL = os.environ.get('GITLAB_PROTOCOL',"https://") + os.environ.get('GITLAB_DOMAIN',"")
-STATUS_NO_LOG=env.list('STATUS_NO_LOG',["skipped","canceled"])
+GITLAB_CI_CONFIG_PATH = os.environ.get('GITLAB_CI_CONFIG_PATH',".gitlab-ci.yml@snum/detn/gmcd/cicd/cicd-yaml")
+GITLAB_ACCOUNT_USERNAME = os.environ.get('GITLAB_ACCOUNT_USERNAME',"jenkins.inframel")
+TRIGGER_DESCRIPTION = os.environ.get('TRIGGER_DESCRIPTION',"Trigger cree par Jenkins")
 
 #=======================================================#
 #======================== Main =========================#
@@ -39,9 +39,9 @@ def read_setup_files(folder_path, debug = False):
                         all_setup = all_setup + setup_yaml
     return all_setup
 
-def set_config_path(token, all_setup, ci_config_path, debug = False):
+def set_config_path(token, all_setup, debug = False):
     files = {
-        'ci_config_path': (None, ci_config_path),
+        'ci_config_path': (None, GITLAB_CI_CONFIG_PATH),
     }
     headers = {"PRIVATE-TOKEN": token}
 
@@ -52,20 +52,63 @@ def set_config_path(token, all_setup, ci_config_path, debug = False):
             print(project_id)
             if project.get("change_ci") != False :
                 if project_id == 27032 :
-                    print(f"Setting ci config path of {project['name']} project")
+                    print(f"Setting ci config path of {project.get('name')} project")
                     url = f"{GITLAB_URL}/api/v4/projects/{project_id}"
-                    print(url)
-                    response = requests.put(
-                        url,
-                        files=files,
-                        headers=headers,
-                    )
-                    print(response.json())
+                    try :
+                        r = requests.put(url, files=files, headers=headers)
+                        r.raise_for_status()
+                    except requests.exceptions.HTTPError as err:
+                        if debug : 
+                            print("Http Error:",err)
+                        print(f"Setup failed : {r.json()}")
+
+def config_trigger_token(token, all_setup, debug = False):
+    headers = {"PRIVATE-TOKEN": token}
+    files = {
+        'description': (None, TRIGGER_DESCRIPTION),
+    }
+    all_trigger_token = {}
+
+    for project_to_trigger in all_setup :
+        trigger_token = ""
+        if project_to_trigger.get("type") == "gitlab" :
+            print(f"Setting Trigger token of {project_to_trigger.get('name')} project")
+            project_to_trigger_id = project_to_trigger.get("id")
+            if project_to_trigger_id == 27032 :
+                url = f"{GITLAB_URL}/api/v4/projects/{project_to_trigger_id}/triggers"
+                try :
+                    r = requests.get(url, headers=headers)
+                    r.raise_for_status()
+                except requests.exceptions.HTTPError as err:
+                    if debug : 
+                        print("Http Error:",err)
+                    print(f"Setup failed : {r.json()}")
+                else :
+                    project_to_trigger_tokens = r.json()
+                    trigger_token_already_created = False
+
+                    for project_token in project_to_trigger_tokens :
+                        if project_token.get("owner").get("username") == GITLAB_ACCOUNT_USERNAME :
+                            trigger_token_already_created = True
+                            trigger_token = project_token.get("token")
+                    
+                    if not trigger_token_already_created :
+                        try :
+                            r = requests.post(url, files=files, headers=headers)
+                            r.raise_for_status()
+                        except requests.exceptions.HTTPError as err:
+                            if debug : 
+                                print("Http Error:",err)
+                            print(f"Setup failed : {r.json()}")
+                        else :
+                            trigger_token = r.json.get("token")
+                        
+            all_trigger_token[project_to_trigger.get("name")] = trigger_token
 
 def main(args) :
     all_setup = read_setup_files(args.folder_path)
-    set_config_path(args.token,all_setup, ".gitlab-ci.yml@snum/detn/gmcd/cicd/cicd-yaml")
-    
+    set_config_path(args.token,all_setup)
+    config_trigger_token(args.token,all_setup)
 
 #=======================================================#
 #====================== Arguments ======================#
