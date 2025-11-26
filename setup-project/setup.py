@@ -150,10 +150,10 @@ def create_ci_variables(token, all_setup, debug = False):
             project_configuration["variable"] = variable
 
             if project_id in all_project_configuration.keys() :
-                all_project_configuration[project_id] = all_project_configuration[project_id] | project_configuration
+                all_project_configuration[project_id]["variable"] = all_project_configuration[project_id]["variable"] | project_configuration["variable"]
             else :
                 all_project_configuration[project_id] = project_configuration
-                
+
     return all_project_configuration
 
 def main(args) :
