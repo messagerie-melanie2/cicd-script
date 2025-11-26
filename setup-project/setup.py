@@ -13,6 +13,8 @@ GITLAB_URL = os.environ.get('GITLAB_PROTOCOL',"https://") + os.environ.get('GITL
 GITLAB_CI_CONFIG_PATH = os.environ.get('GITLAB_CI_CONFIG_PATH',".gitlab-ci.yml@snum/detn/gmcd/cicd/cicd-yaml")
 GITLAB_ACCOUNT_USERNAME = os.environ.get('GITLAB_ACCOUNT_USERNAME',"jenkins.inframel")
 TRIGGER_DESCRIPTION = os.environ.get('TRIGGER_DESCRIPTION',"Trigger cree par Jenkins")
+TRIGGER_ARGUMENTS = {'all': 'trigger_files,branchs_only_trigger,branchs_mapping', 'gitlab': 'focus_trigger', 'jenkins': 'additional_params'}
+GITLAB_VARIABLE_TRIGGER_KEY = os.environ.get('GITLAB_VARIABLE_TRIGGER_KEY',"TRIGGER_TOKEN")
 
 #=======================================================#
 #======================== Main =========================#
@@ -62,57 +64,100 @@ def set_config_path(token, all_setup, debug = False):
                             print("Http Error:",err)
                         print(f"Setup failed : {r.json()}")
 
-def config_trigger_token(token, all_setup, debug = False):
+def config_trigger_token(project_to_trigger, headers, files, debug = False):
+    trigger_token = ""
+    if project_to_trigger.get("type") == "gitlab" :
+        print(f"Setting Trigger token of {project_to_trigger.get('name')} project")
+        project_to_trigger_id = project_to_trigger.get("id")
+        if project_to_trigger_id == 12724 :
+            url = f"{GITLAB_URL}/api/v4/projects/{project_to_trigger_id}/triggers"
+            try :
+                r = requests.get(url, headers=headers)
+                r.raise_for_status()
+            except requests.exceptions.HTTPError as err:
+                if debug : 
+                    print("Http Error:",err)
+                print(f"Setup failed : {r.json()}")
+            else :
+                print(r.json())
+                project_to_trigger_tokens = r.json()
+                trigger_token_already_created = False
+
+                for project_token in project_to_trigger_tokens :
+                    if project_token.get("owner").get("username") == GITLAB_ACCOUNT_USERNAME :
+                        trigger_token_already_created = True
+                        trigger_token = project_token.get("token")
+                
+                if not trigger_token_already_created :
+                    try :
+                        r = requests.post(url, files=files, headers=headers)
+                        r.raise_for_status()
+                    except requests.exceptions.HTTPError as err:
+                        if debug : 
+                            print("Http Error:",err)
+                        print(f"Setup failed : {r.json()}")
+                    else :
+                        trigger_token = r.json().get("token")
+
+    return trigger_token
+
+def add_trigger_argument(project, type) :
+
+    configuration_to_add = {}
+    trigger_argument = TRIGGER_ARGUMENTS[type].split(',')
+
+    for argument in trigger_argument :
+        value = project.get(argument)
+        if value != None :
+            configuration_to_add[argument] = value
+    
+    return configuration_to_add
+
+def create_ci_variables(token, all_setup, debug = False):
     headers = {"PRIVATE-TOKEN": token}
-    files = {
+    files_trigger = {
         'description': (None, TRIGGER_DESCRIPTION),
     }
-    all_trigger_token = {}
+    all_project_configuration = {}
 
     for project_to_trigger in all_setup :
-        trigger_token = ""
-        if project_to_trigger.get("type") == "gitlab" :
-            print(f"Setting Trigger token of {project_to_trigger.get('name')} project")
-            project_to_trigger_id = project_to_trigger.get("id")
-            if project_to_trigger_id == 12724 :
-                url = f"{GITLAB_URL}/api/v4/projects/{project_to_trigger_id}/triggers"
-                try :
-                    r = requests.get(url, headers=headers)
-                    r.raise_for_status()
-                except requests.exceptions.HTTPError as err:
-                    if debug : 
-                        print("Http Error:",err)
-                    print(f"Setup failed : {r.json()}")
-                else :
-                    print(r.json())
-                    project_to_trigger_tokens = r.json()
-                    trigger_token_already_created = False
+        trigger_token = config_trigger_token(project_to_trigger, headers, files_trigger, debug)
+        projects_to_setup = project_to_trigger.get("projects")
+        project_to_trigger_type = project_to_trigger.get("type")
+        project_to_trigger_name = project_to_trigger.get("name")
+        for project in projects_to_setup :
+            project_configuration = {}
+            variable = {}
+            project_name = project.get("name")
+            project_id = project.get("id")
+            
+            variable[project_to_trigger_name] = {}
+            variable[project_to_trigger_name] = variable[project_to_trigger_name] | add_trigger_argument(project,"all")
+            variable[project_to_trigger_name] = variable[project_to_trigger_name] | add_trigger_argument(project,project_to_trigger_type)
+            variable[project_to_trigger_name]["type"] = project_to_trigger_type
+            
+            
+            configuration_to_add = {}
+            if project_to_trigger_type == "gitlab" :
+                project_to_trigger_id = project_to_trigger.get("id")
+                configuration_to_add["id"] = project_to_trigger_id
+                configuration_to_add["trigger_token_name"] = f'{GITLAB_VARIABLE_TRIGGER_KEY}_{project_to_trigger_id}'
+                configuration_to_add["token"] = trigger_token
 
-                    for project_token in project_to_trigger_tokens :
-                        if project_token.get("owner").get("username") == GITLAB_ACCOUNT_USERNAME :
-                            trigger_token_already_created = True
-                            trigger_token = project_token.get("token")
-                    
-                    if not trigger_token_already_created :
-                        try :
-                            r = requests.post(url, files=files, headers=headers)
-                            r.raise_for_status()
-                        except requests.exceptions.HTTPError as err:
-                            if debug : 
-                                print("Http Error:",err)
-                            print(f"Setup failed : {r.json()}")
-                        else :
-                            trigger_token = r.json().get("token")
-                        
-            all_trigger_token[project_to_trigger.get("name")] = trigger_token
+            variable[project_to_trigger_name] = variable[project_to_trigger_name] | configuration_to_add
 
-    return all_trigger_token
+            project_configuration["name"] = project_name
+            project_configuration["variable"] = variable
+
+            if project_id in all_project_configuration.keys() :
+                all_project_configuration[project_id] = all_project_configuration[project_id] | project_configuration
+    return all_project_configuration
 
 def main(args) :
     all_setup = read_setup_files(args.folder_path)
     set_config_path(args.token,all_setup)
-    all_trigger_token = config_trigger_token(args.token,all_setup)
-    print(all_trigger_token)
+    all_project_configuration = create_ci_variables(args.token,all_setup)
+    print(all_project_configuration)
 
 #=======================================================#
 #====================== Arguments ======================#
