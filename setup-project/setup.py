@@ -85,7 +85,7 @@ def set_config_path(token, all_setup, debug = False):
                         print(f"Setup failed : {r.json()}")
 
 def config_trigger_token(project_to_trigger, headers, files, debug = False):
-    trigger_token = ""
+    trigger_token = "test"
     if project_to_trigger.get("type") == "gitlab" :
         print(f"Setting Trigger token of {project_to_trigger.get('name')} project")
         project_to_trigger_id = project_to_trigger.get("id")
