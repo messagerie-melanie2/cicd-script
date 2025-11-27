@@ -85,39 +85,38 @@ def set_config_path(token, all_setup, debug = False):
                         print(f"Setup failed : {r.json()}")
 
 def config_trigger_token(project_to_trigger, headers, files, debug = False):
-    trigger_token = "test"
+    trigger_token = ""
     if project_to_trigger.get("type") == "gitlab" :
         print(f"Setting Trigger token of {project_to_trigger.get('name')} project")
         project_to_trigger_id = project_to_trigger.get("id")
-        if project_to_trigger_id == 12724 :
-            url = f"{GITLAB_URL}/api/v4/projects/{project_to_trigger_id}/triggers"
-            try :
-                r = requests.get(url, headers=headers)
-                r.raise_for_status()
-            except requests.exceptions.HTTPError as err:
-                if debug : 
-                    print("Http Error:",err)
-                print(f"Setup failed : {r.json()}")
-            else :
-                print(r.json())
-                project_to_trigger_tokens = r.json()
-                trigger_token_already_created = False
+        url = f"{GITLAB_URL}/api/v4/projects/{project_to_trigger_id}/triggers"
+        try :
+            r = requests.get(url, headers=headers)
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            if debug : 
+                print("Http Error:",err)
+            print(f"Setup failed : {r.json()}")
+        else :
+            print(r.json())
+            project_to_trigger_tokens = r.json()
+            trigger_token_already_created = False
 
-                for project_token in project_to_trigger_tokens :
-                    if project_token.get("owner").get("username") == GITLAB_ACCOUNT_USERNAME :
-                        trigger_token_already_created = True
-                        trigger_token = project_token.get("token")
-                
-                if not trigger_token_already_created :
-                    try :
-                        r = requests.post(url, files=files, headers=headers)
-                        r.raise_for_status()
-                    except requests.exceptions.HTTPError as err:
-                        if debug : 
-                            print("Http Error:",err)
-                        print(f"Setup failed : {r.json()}")
-                    else :
-                        trigger_token = r.json().get("token")
+            for project_token in project_to_trigger_tokens :
+                if project_token.get("owner").get("username") == GITLAB_ACCOUNT_USERNAME :
+                    trigger_token_already_created = True
+                    trigger_token = project_token.get("token")
+            
+            if not trigger_token_already_created :
+                try :
+                    r = requests.post(url, files=files, headers=headers)
+                    r.raise_for_status()
+                except requests.exceptions.HTTPError as err:
+                    if debug : 
+                        print("Http Error:",err)
+                    print(f"Setup failed : {r.json()}")
+                else :
+                    trigger_token = r.json().get("token")
 
     return trigger_token
 
