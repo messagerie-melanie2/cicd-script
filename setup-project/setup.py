@@ -236,7 +236,7 @@ def set_ci_variables(token,all_project_configuration, debug = False):
                 project_variables = r.json()
 
             for project_to_trigger_name,variable in project_configuration.get("variable").items() :
-                variable_already_put = set_new_ci_variable(headers, project_id, project_variables, variable.get("trigger_token_name"), variable.get("token"), True, debug)
+                variable_already_put = set_new_ci_variable(headers, project_id, project_variables, variable.get("token_name"), variable.get("token"), True, debug)
                 variable.pop("token")
                 if not variable_already_put :
                     send_message(f"🔔 Le projet {project_configuration.get('name')} a bien été configuré pour trigger le projet {project_to_trigger_name}. Pour plus d'information voir : {CI_JOB_URL}")
