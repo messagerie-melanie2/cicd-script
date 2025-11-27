@@ -27,13 +27,13 @@ JENKINS_VARIABLE_TRIGGER_CONFIGURATION_KEY = os.environ.get('JENKINS_VARIABLE_TR
 
 def send_message(message, debug = False):
     if TRIGGER_CHANNEL_URL != "" :
-        headers = {"Content-Type": "application/json; charset=utf-8"}
-        files = {
-            'message': (None, message),
-            'message_raw': (None, message)
+        #headers = {"Content-Type": "application/json; charset=utf-8"}
+        payload = {
+            'message': message,
+            'message_raw': message
         }
         try :
-            r = requests.post(TRIGGER_CHANNEL_URL,files=files, headers=headers)
+            r = requests.post(TRIGGER_CHANNEL_URL,json=payload)
             r.raise_for_status()
         except requests.exceptions.HTTPError as err:
             if debug : 
@@ -241,7 +241,7 @@ def set_ci_variables(token,all_project_configuration, debug = False):
                 if not variable_already_put :
                     send_message(f"🔔 Le projet {project_configuration.get('name')} a bien été configuré pour trigger le projet {project_to_trigger_name}. Pour plus d'information voir : {CI_JOB_URL}")
                 
-                set_new_ci_variable(headers, project_id, project_variables, project_configuration.get("variable_name"), variable, False, debug)
+                set_new_ci_variable(headers, project_id, project_variables, project_configuration.get("variable_name"), str(variable), False, debug)
 
 def main(args) :
     all_setup = read_setup_files(args.folder_path)
