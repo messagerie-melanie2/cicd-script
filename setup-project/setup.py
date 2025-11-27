@@ -201,12 +201,14 @@ def set_new_ci_variable(headers, project_id, project_variables, variable_key, va
                 print("Http Error:",err)
             print(f"Setup failed : {r.json()}")
     else :
+        print(f"Setup {variable_key} for {project_id} project")
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
         files = {
             'key': (None, variable_key),
             'value': (None, variable_value),
             'masked': (None, variable_masked),
         }
+        print(files)
         try :
             r = requests.post(url,files=files, headers=headers)
             r.raise_for_status()
@@ -237,7 +239,7 @@ def set_ci_variables(token,all_project_configuration, debug = False):
                 variable_already_put = set_new_ci_variable(headers, project_id, project_variables, variable.get("trigger_token_name"), variable.get("token"), True, debug)
                 variable.pop("token")
                 if not variable_already_put :
-                    send_message(f"🔔 Le projet ${project_configuration.get('name')} a bien été configuré pour trigger le projet ${project_to_trigger_name}. Pour plus d'information voir : ${CI_JOB_URL}")
+                    send_message(f"🔔 Le projet {project_configuration.get('name')} a bien été configuré pour trigger le projet {project_to_trigger_name}. Pour plus d'information voir : {CI_JOB_URL}")
                 
                 set_new_ci_variable(headers, project_id, project_variables, project_configuration.get("variable_name"), variable, False, debug)
 
