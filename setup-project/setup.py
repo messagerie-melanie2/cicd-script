@@ -203,14 +203,14 @@ def set_new_ci_variable(headers, project_id, project_variables, variable_key, va
     else :
         print(f"Setup {variable_key} for {project_id} project")
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
-        files = {
-            'key': (None, variable_key),
-            'value': (None, variable_value),
-            'masked': (None, variable_masked),
+        payload = {
+            'key': variable_key,
+            'value': variable_value,
+            'masked': variable_masked,
         }
-        print(files)
+        print(payload)
         try :
-            r = requests.post(url,files=files, headers=headers)
+            r = requests.post(url, data=payload, headers=headers)
             r.raise_for_status()
         except requests.exceptions.HTTPError as err:
             if debug : 
