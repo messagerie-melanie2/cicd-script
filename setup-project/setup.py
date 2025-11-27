@@ -10,15 +10,35 @@ from datetime import datetime, timedelta
 #=======================================================#
 
 GITLAB_URL = os.environ.get('GITLAB_PROTOCOL',"https://") + os.environ.get('GITLAB_DOMAIN',"")
+TRIGGER_CHANNEL_URL = os.environ.get('TRIGGER_CHANNEL_URL',"https://tchap-bot.mel.e2.rie.gouv.fr/api/webhook/post/VaUQRGFvb5WhklqC6VYmXSlmLKXrcSTbRmoefdzkAbjvh4yXkOqMGZtSsgCsC50bjt0rSyBn1PqWByTirXOYmwhdJMTZfKxnBGUt")
 GITLAB_CI_CONFIG_PATH = os.environ.get('GITLAB_CI_CONFIG_PATH',".gitlab-ci.yml@snum/detn/gmcd/cicd/cicd-yaml")
 GITLAB_ACCOUNT_USERNAME = os.environ.get('GITLAB_ACCOUNT_USERNAME',"jenkins.inframel")
 TRIGGER_DESCRIPTION = os.environ.get('TRIGGER_DESCRIPTION',"Trigger cree par Jenkins")
-TRIGGER_ARGUMENTS = {'all': 'trigger_files,branchs_only_trigger,branchs_mapping', 'gitlab': 'focus_trigger', 'jenkins': 'additional_params'}
+TRIGGER_ARGUMENTS = {'all': 'trigger_files,branchs_only_trigger,branchs_mapping', 'gitlab': 'focus_trigger', 'jenkins': 'additional_params,token_name'}
 GITLAB_VARIABLE_TRIGGER_KEY = os.environ.get('GITLAB_VARIABLE_TRIGGER_KEY',"TRIGGER_TOKEN")
+JENKINS_TRIGGER_TOKEN_NAME = os.environ.get('JENKINS_TRIGGER_TOKEN_NAME',"JENKINS_TRIGGER_TOKEN")
+CI_JOB_URL = os.environ.get('CI_JOB_URL',"")
+GITLAB_VARIABLE_TRIGGER_CONFIGURATION_KEY = os.environ.get('GITLAB_VARIABLE_TRIGGER_CONFIGURATION_KEY',"GITLAB_TRIGGER_CONFIGURATION")
+JENKINS_VARIABLE_TRIGGER_CONFIGURATION_KEY = os.environ.get('JENKINS_VARIABLE_TRIGGER_CONFIGURATION_KEY',"JENKINS_TRIGGER_CONFIGURATION")
 
 #=======================================================#
 #======================== Main =========================#
 #=======================================================#
+
+def send_message(message, debug = False):
+    if TRIGGER_CHANNEL_URL != "" :
+        headers = {"Content-Type": "application/json; charset=utf-8"}
+        files = {
+            'message': (None, message),
+            'message_raw': (None, message)
+        }
+        try :
+            r = requests.post(TRIGGER_CHANNEL_URL,files=files, headers=headers)
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            if debug : 
+                print("Http Error:",err)
+            print(f"Setup failed : {r.json()}")
 
 def read_setup_files(folder_path, debug = False):
     all_setup = []
@@ -131,6 +151,8 @@ def create_ci_variables(token, all_setup, debug = False):
             project_name = project.get("name")
             project_id = project.get("id")
             
+            project_configuration["name"] = project_name
+
             variable[project_to_trigger_name] = {}
             variable[project_to_trigger_name] = variable[project_to_trigger_name] | add_trigger_argument(project,"all")
             variable[project_to_trigger_name] = variable[project_to_trigger_name] | add_trigger_argument(project,project_to_trigger_type)
@@ -141,12 +163,18 @@ def create_ci_variables(token, all_setup, debug = False):
             if project_to_trigger_type == "gitlab" :
                 project_to_trigger_id = project_to_trigger.get("id")
                 configuration_to_add["id"] = project_to_trigger_id
-                configuration_to_add["trigger_token_name"] = f'{GITLAB_VARIABLE_TRIGGER_KEY}_{project_to_trigger_id}'
+                configuration_to_add["token_name"] = f'{GITLAB_VARIABLE_TRIGGER_KEY}_{project_to_trigger_id}'
                 configuration_to_add["token"] = trigger_token
+
+                project_configuration["variable_name"] = GITLAB_VARIABLE_TRIGGER_CONFIGURATION_KEY
+            if project_to_trigger_type == "jenkins" :
+                configuration_to_add["token_name"] = JENKINS_TRIGGER_TOKEN_NAME
+                configuration_to_add["token"] = os.environ.get(JENKINS_TRIGGER_TOKEN_NAME,"")
+
+                project_configuration["variable_name"] = JENKINS_VARIABLE_TRIGGER_CONFIGURATION_KEY
 
             variable[project_to_trigger_name] = variable[project_to_trigger_name] | configuration_to_add
 
-            project_configuration["name"] = project_name
             project_configuration["variable"] = variable
 
             if project_id in all_project_configuration.keys() :
@@ -156,11 +184,69 @@ def create_ci_variables(token, all_setup, debug = False):
 
     return all_project_configuration
 
+def set_new_ci_variable(headers, project_id, project_variables, variable_key, variable_value, variable_masked, debug = False) :
+    variable_already_put = False
+
+    for variable in project_variables :
+        if variable.get("key") == variable_key :
+            variable_already_put = True
+    
+    if variable_already_put :
+        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables/{variable_key}?value={variable_value}"
+        try :
+            r = requests.put(url, headers=headers)
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            if debug : 
+                print("Http Error:",err)
+            print(f"Setup failed : {r.json()}")
+    else :
+        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
+        files = {
+            'key': (None, variable_key),
+            'value': (None, variable_value),
+            'masked': (None, variable_masked),
+        }
+        try :
+            r = requests.post(url,files=files, headers=headers)
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            if debug : 
+                print("Http Error:",err)
+            print(f"Setup failed : {r.json()}")
+
+    return variable_already_put
+
+def set_ci_variables(token,all_project_configuration, debug = False):
+    headers = {"PRIVATE-TOKEN": token}
+
+    for project_id,project_configuration in all_project_configuration.items() :
+        if project_id == 27032 :
+            url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
+            try :
+                r = requests.get(url, headers=headers)
+                r.raise_for_status()
+            except requests.exceptions.HTTPError as err:
+                if debug : 
+                    print("Http Error:",err)
+                print(f"Setup failed : {r.json()}")
+            else :
+                project_variables = r.json()
+
+            for project_to_trigger_name,variable in project_configuration.get("variable").items() :
+                variable_already_put = set_new_ci_variable(headers, project_id, project_variables, variable.get("trigger_token_name"), variable.get("token"), True, debug)
+                variable.pop("token")
+                if not variable_already_put :
+                    send_message(f"🔔 Le projet ${project_configuration.get("name")} a bien été configuré pour trigger le projet ${project_to_trigger_name}. Pour plus d'information voir : ${CI_JOB_URL}")
+                
+                set_new_ci_variable(headers, project_id, project_variables, project_configuration.get("variable_name"), variable, False, debug)
+
 def main(args) :
     all_setup = read_setup_files(args.folder_path)
     set_config_path(args.token,all_setup)
     all_project_configuration = create_ci_variables(args.token,all_setup)
     print(all_project_configuration)
+    set_ci_variables(args.token, all_project_configuration)
 
 #=======================================================#
 #====================== Arguments ======================#
