@@ -112,7 +112,7 @@ def trigger_gitlab(project_to_trigger,project_to_trigger_config, project, branch
                     trigger = True
     
     if trigger :
-        trigger_token = os.getenv(project_to_trigger_config["trigger_token_name"])
+        trigger_token = os.getenv(project_to_trigger_config["token_name"])
         
         try :
             branchs_mapping = project_to_trigger_config["branchs_mapping"]         
