@@ -3,7 +3,7 @@ import argparse
 import requests
 import os
 import yaml
-from datetime import datetime, timedelta
+import json
 
 #=======================================================#
 #================== Global parameters ==================#
@@ -172,7 +172,7 @@ def create_ci_variables(token, all_setup, debug = False):
                     configuration_to_add["token_name"] = JENKINS_TRIGGER_TOKEN_NAME
                 else :
                     configuration_to_add["token_name"] = token_name
-                    
+
                 configuration_to_add["token"] = os.environ.get(configuration_to_add.get("token_name"),"")
 
                 project_configuration["variable_name"] = JENKINS_VARIABLE_TRIGGER_CONFIGURATION_KEY
@@ -245,7 +245,7 @@ def set_ci_variables(token,all_project_configuration, debug = False):
                 if not variable_already_put :
                     send_message(f"🔔 Le projet {project_configuration.get('name')} a bien été configuré pour trigger le projet {project_to_trigger_name}. Pour plus d'information voir : {CI_JOB_URL}")
                 
-            set_new_ci_variable(headers, project_id, project_variables, project_configuration.get("variable_name"), str(project_configuration.get("variable")), False, debug)
+            set_new_ci_variable(headers, project_id, project_variables, project_configuration.get("variable_name"), json.dumps(project_configuration.get("variable"))), False, debug)
 
 def main(args) :
     all_setup = read_setup_files(args.folder_path)
