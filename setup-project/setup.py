@@ -245,7 +245,7 @@ def set_ci_variables(token,all_project_configuration, debug = False):
                 if not variable_already_put :
                     send_message(f"🔔 Le projet {project_configuration.get('name')} a bien été configuré pour trigger le projet {project_to_trigger_name}. Pour plus d'information voir : {CI_JOB_URL}")
                 
-            set_new_ci_variable(headers, project_id, project_variables, project_configuration.get("variable_name"), json.dumps(project_configuration.get("variable"))), False, debug)
+            set_new_ci_variable(headers, project_id, project_variables, project_configuration.get("variable_name"), json.dumps(project_configuration.get("variable")), False, debug)
 
 def main(args) :
     all_setup = read_setup_files(args.folder_path)
