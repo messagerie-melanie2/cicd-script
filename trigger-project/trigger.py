@@ -142,6 +142,8 @@ def trigger_gitlab(project_to_trigger,project_to_trigger_config, project, branch
             'variables[TRIGGER_VARIABLES]' : (None, f"{variables_json}"),
         }
 
+        print(files)
+
         try :
             focus_trigger = project_to_trigger_config["focus_trigger"]         
         except Exception as e:
