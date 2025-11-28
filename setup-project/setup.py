@@ -167,8 +167,12 @@ def create_ci_variables(token, all_setup, debug = False):
 
                 project_configuration["variable_name"] = GITLAB_VARIABLE_TRIGGER_CONFIGURATION_KEY
             if project_to_trigger_type == "jenkins" :
-                if configuration_to_add.get("token_name") == None :
+                token_name = variable[project_to_trigger_name].get("token_name")
+                if token_name == None :
                     configuration_to_add["token_name"] = JENKINS_TRIGGER_TOKEN_NAME
+                else :
+                    configuration_to_add["token_name"] = token_name
+                    
                 configuration_to_add["token"] = os.environ.get(configuration_to_add.get("token_name"),"")
 
                 project_configuration["variable_name"] = JENKINS_VARIABLE_TRIGGER_CONFIGURATION_KEY
