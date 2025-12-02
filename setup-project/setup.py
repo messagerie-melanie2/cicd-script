@@ -338,6 +338,8 @@ def set_project_allowlist(token, all_setup, debug = False):
                         if project.get("id") == project_info.get("namespace",{}).get("id") :
                             project_to_trigger_allowlist_already_setup = True
                     
+                    print(project_info)
+                    
                     if not project_to_trigger_allowlist_already_setup :
                         url = f"{GITLAB_URL}/api/v4/projects/{project_to_trigger_id}/job_token_scope/groups_allowlist"
                         payload = {'target_project_id': project_info.get("namespace",{}).get("id")}
