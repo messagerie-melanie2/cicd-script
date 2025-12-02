@@ -279,7 +279,7 @@ def set_project_allowlist(token, all_setup, debug = False):
         if project_to_trigger_type == "gitlab" :
             project_to_trigger_id = project_to_trigger.get("id")
             for project in projects_to_setup :
-                print(f"Setting allowlists of {project.get("name")} project")
+                print(f"Setting allowlists of {project.get('name')} project")
                 project_id = project.get("id")
 
                 if project_id == 27032 :
