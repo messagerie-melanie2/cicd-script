@@ -247,12 +247,115 @@ def set_ci_variables(token,all_project_configuration, debug = False):
                 
             set_new_ci_variable(headers, project_id, project_variables, project_configuration.get("variable_name"), json.dumps(project_configuration.get("variable")), False, debug)
 
+
+def set_allowlist(token, headers, project_allowlist, project_id, project_to_allow_id, debug = False) :
+    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope/allowlist"
+    payload = {'target_project_id': project_to_allow_id}
+    project_allowlist_already_setup = False
+
+    for project in project_allowlist :
+        if project.get("id") == project_to_allow_id :
+            project_allowlist_already_setup = True
+
+    if not project_allowlist_already_setup :
+        print("Adding to allowlist...")
+        try :
+            r = requests.post(url, data=payload, headers=headers)
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            if debug : 
+                print("Http Error:",err)
+            print(f"Setup failed : {r.json()}")
+    else : 
+        print("Already added to allowlist.")
+
+def set_project_allowlist(token, all_setup, debug = False):
+    headers = {"PRIVATE-TOKEN": token}
+
+    for project_to_trigger in all_setup :
+        projects_to_setup = project_to_trigger.get("projects")
+        project_to_trigger_type = project_to_trigger.get("type")
+        project_to_trigger_dependencies = project_to_trigger.get("dependencies", [])
+        if project_to_trigger_type == "gitlab" :
+            project_to_trigger_id = project_to_trigger.get("id")
+            for project in projects_to_setup :
+                print(f"Setting allowlists of {project.get("name")} project")
+                project_id = project.get("id")
+
+                if project_id == 27032 :
+                    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope"
+                    payload = {'enabled': True}
+                    try :
+                        r = requests.patch(url, data=payload, headers=headers)
+                        r.raise_for_status()
+                    except requests.exceptions.HTTPError as err:
+                        if debug : 
+                            print("Http Error:",err)
+                        print(f"Setup failed : {r.json()}")
+                    
+                    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope/allowlist"
+                    try :
+                        r = requests.get(url, headers=headers)
+                        r.raise_for_status()
+                    except requests.exceptions.HTTPError as err:
+                        if debug : 
+                            print("Http Error:",err)
+                        print(f"Setup failed : {r.json()}")
+                    else :
+                        project_allowlist = r.json()
+                        
+                    set_allowlist(token, headers, project_allowlist, project_id, project_to_trigger_id, debug)
+
+                    for dependencies in project_to_trigger_dependencies :
+                        dependencies_id = dependencies.get("id")
+                        set_allowlist(token, headers, project_allowlist, project_id, dependencies_id, debug)
+                    
+                    url = f"{GITLAB_URL}/api/v4/projects/{project_to_trigger_id}/job_token_scope/groups_allowlist?per_page=100"
+                    try :
+                        r = requests.get(url, headers=headers)
+                        r.raise_for_status()
+                    except requests.exceptions.HTTPError as err:
+                        if debug : 
+                            print("Http Error:",err)
+                        print(f"Setup failed : {r.json()}")
+                    else :
+                        project_to_trigger_allowlist = r.json()
+
+                    project_to_trigger_allowlist_already_setup = False
+
+                    url = f"{GITLAB_URL}/api/v4/projects/{project_id}"
+                    try :
+                        r = requests.get(url, headers=headers)
+                        r.raise_for_status()
+                    except requests.exceptions.HTTPError as err:
+                        if debug : 
+                            print("Http Error:",err)
+                        print(f"Setup failed : {r.json()}")
+                    else :
+                        project_info = r.json()
+                    
+                    for project in project_to_trigger_allowlist :
+                        if project.get("id") == project_info.get("namespace",{}).get("id") :
+                            project_to_trigger_allowlist_already_setup = True
+                    
+                    if not project_to_trigger_allowlist_already_setup :
+                        url = f"{GITLAB_URL}/api/v4/projects/{project_to_trigger_id}/job_token_scope/groups_allowlist"
+                        payload = {'target_project_id': project_info.get("namespace",{}).get("id")}
+                        try :
+                            r = requests.post(url, data=payload, headers=headers)
+                            r.raise_for_status()
+                        except requests.exceptions.HTTPError as err:
+                            if debug : 
+                                print("Http Error:",err)
+                            print(f"Setup failed : {r.json()}")
+
 def main(args) :
     all_setup = read_setup_files(args.folder_path)
     set_config_path(args.token,all_setup)
     all_project_configuration = create_ci_variables(args.token,all_setup)
     print(all_project_configuration)
     set_ci_variables(args.token, all_project_configuration)
+    set_project_allowlist(args.token,all_setup)
 
 #=======================================================#
 #====================== Arguments ======================#
