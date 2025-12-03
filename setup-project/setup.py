@@ -236,7 +236,7 @@ def set_ci_variables(token,all_project_configuration, debug = False):
 
     for project_id,project_configuration in all_project_configuration.items() :
         if project_id == 27032 :
-            project_name = project_configuration.get('name')
+            project_name = project_configuration.pop('name')
 
             url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
             print(f"Getting variables for {project_name} project")
