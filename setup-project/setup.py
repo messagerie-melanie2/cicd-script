@@ -42,16 +42,16 @@ def request(mode, url = '', headers = None, payload_data = None, payload_json = 
     response = {}
     try :
         r = requests.Response()
-        match mode :
-            case "get" :
+        match mode:
+            case "get":
                 r = requests.get(url=url, headers=headers, data=payload_data, json = payload_json, files=files)
-            case "post" :
+            case "post":
                 r = requests.post(url=url, headers=headers, data=payload_data, json = payload_json, files=files)
-            case "put" :
+            case "put":
                 r = requests.put(url=url, headers=headers, data=payload_data, json = payload_json, files=files)
-            case "patch" :
+            case "patch":
                 r = requests.patch(url=url, headers=headers, data=payload_data, json = payload_json, files=files)
-            case _ :
+            case _:
                 print("request mode not supported")  
         r.raise_for_status()
     except requests.exceptions.HTTPError as err:
