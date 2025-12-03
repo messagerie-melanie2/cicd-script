@@ -1,5 +1,5 @@
 from global_vars import *
-from setup_trigger import read_setup_files, set_config_path, create_ci_variables, set_ci_variables, set_project_allowlist
+from setup_trigger import read_setup_files, set_config_path, create_ci_variables, set_ci_variables, set_allowlist
 
 #=======================================================#
 #======================== Main =========================#
@@ -30,7 +30,7 @@ def main(args) :
     if args.debug_enabled :
         print(all_project_configuration)
     set_ci_variables(token, all_project_configuration, debug = args.debug_enabled)
-    set_project_allowlist(token,all_setup, debug = args.debug_enabled)
+    set_allowlist(token,all_setup, debug = args.debug_enabled)
 
 #=======================================================#
 #====================== Arguments ======================#
