@@ -59,8 +59,8 @@ def request(mode, url = '', headers = None, payload_data = None, payload_json = 
             print("Http Error:",err)
         print(f"Request failed : {r.json()}")
     else :
-        print(r)
-        response = r.json()
+        if r.status_code == 200:
+            response = r.json()
     
     return response
     
