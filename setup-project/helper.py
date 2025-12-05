@@ -99,7 +99,7 @@ def set_new_ci_variable(headers, project_id, project_variables, variable_key, va
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables/{variable_key}?value={variable_value}"
         request("put", url, headers)
     else :
-        logger.info(f"Setup %s{variable_key} for {project_id} project")
+        logger.info(f"Setup {variable_key} for {project_id} project")
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
         payload = {
             'key': variable_key,
