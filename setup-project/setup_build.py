@@ -59,12 +59,14 @@ def config_build_token(token, project, project_variables, debug = False):
         if variable.get("key") == SETUP_BUILD_TOKEN_NAME :
             build_token_variable_already_created = True
 
+    in_a_year = date.today() + timedelta(days=365)
     if not build_token_already_created :
         print(f"Build token not created, Creating Build token of {project_name} project")
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/access_tokens"
         payload = {
             'name': SETUP_BUILD_TOKEN_NAME,
             'scopes': SETUP_BUILD_TOKEN_SCOPE_DEFAULT,
+            'expires_at': in_a_year.strftime("%Y-%m-%d"),
             'access_level': SETUP_BUILD_TOKEN_ACCESS_LEVEL,
         }
         response = request("post", url, headers, payload_json=payload, debug=debug)
@@ -74,7 +76,10 @@ def config_build_token(token, project, project_variables, debug = False):
         set_new_ci_variable(headers, project_id, project_variables, SETUP_BUILD_TOKEN_NAME, build_token, True, debug)
     elif build_token_already_created and not build_token_variable_already_created :
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/access_tokens/{build_token_id}/rotate"
-        response = request("post", url, headers, debug=debug)
+        payload = {
+            'expires_at': in_a_year.strftime("%Y-%m-%d"),
+        }
+        response = request("post", url, headers, payload_json=payload, debug=debug)
         build_token = response.get("token")
         if debug :
             print(build_token)
