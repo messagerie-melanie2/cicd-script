@@ -11,11 +11,16 @@ import logging
 #=======================================================#
 #================== Global parameters ==================#
 #=======================================================#
+SETUP_LOG_LEVEL_DEFAULT = "INFO"
+
+SETUP_ACCEPTED_STATUS_CODE = [200,201,202]
+SETUP_LOG_LEVEL = os.environ.get("SETUP_LOG_LEVEL", SETUP_LOG_LEVEL_DEFAULT).upper()
+
+
 logging.basicConfig(
-    level=logging.INFO,  # niveau de log par défaut
+    level=getattr(logging, SETUP_LOG_LEVEL, logging.INFO),
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
 )
-SETUP_ACCEPTED_STATUS_CODE = [200,201,202]
 
 #=======================================================#
 #============== Trigger Global parameters ==============#
