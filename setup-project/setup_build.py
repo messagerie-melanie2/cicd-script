@@ -112,7 +112,7 @@ def set_build_ci_variables(token, project, project_variables):
     logger.info(f"Setting Build CI variables of {project_name} project")
 
     variable_already_put = set_new_ci_variable(headers, project_id, project_variables, SETUP_BUILD_ENABLE_BUILD_VARIABLE_NAME, "yes", False)
-    if variable_already_put :
+    if not variable_already_put :
         send_message(SETUP_TRIGGER_CHANNEL_URL, f"🔔 Le projet {project_name} a bien été configuré pour utiliser la pipeline de build. Pour plus d'information voir : {SETUP_CI_JOB_URL}")
     set_new_ci_variable(headers, project_id, project_variables, SETUP_BUILD_DOCKERHUB_TOKEN_VARIABLE_NAME, SETUP_BUILD_DOCKERHUB_TOKEN, True)
 
