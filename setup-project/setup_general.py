@@ -1,7 +1,9 @@
 from global_vars import *
 from helper import request
 
-def read_setup_files(folder_path, file_endswith, debug = False):
+logger = logging.getLogger(__name__)
+
+def read_setup_files(folder_path, file_endswith):
     """
     Reads all file setup YAML files and returns a combined list of configurations.
 
@@ -12,8 +14,6 @@ def read_setup_files(folder_path, file_endswith, debug = False):
     Args:
         folder_path (str): The folder path where all YAML setup file are located.
         file_endswith (str): The string that decide what is a setup file.
-        debug (bool, optional): Whether to print debug information when a YAML
-            file fails to load. Defaults to False.
 
     Returns:
         list: A list containing all merged YAML configuration entries.
@@ -30,14 +30,13 @@ def read_setup_files(folder_path, file_endswith, debug = False):
                     try:
                         setup_yaml = yaml.safe_load(setup_file)
                     except yaml.YAMLError as exc:
-                        if debug :
-                            print("Couldn't load yaml for {0} file...".format(setup_path))
-                            print(exc)
+                        logger.debug(f"Couldn't load yaml for {setup_path} file...")
+                        logger.debug(exc)
                     else :
                         all_setup = all_setup + setup_yaml
     return all_setup
 
-def set_config_path(token, projects_to_setup, debug = False):
+def set_config_path(token, projects_to_setup):
     """
     Updates the CI configuration path for a list of GitLab projects.
 
@@ -49,7 +48,6 @@ def set_config_path(token, projects_to_setup, debug = False):
         token (str): The GitLab private token used for authentication.
         projects_to_setup (list): A list of project configuration dictionaries loaded
             from setup YAML files.
-        debug (bool, optional): Whether to print debug information. Defaults to False.
 
     Returns:
         None
@@ -63,6 +61,6 @@ def set_config_path(token, projects_to_setup, debug = False):
         project_id = project.get("id")
         if project.get("change_ci") != False :
             if project_id == 27032:
-                print(f"Setting ci config path of {project.get('name')} project")
+                logger.info(f"Setting ci config path of {project.get('name')} project")
                 url = f"{GITLAB_URL}/api/v4/projects/{project_id}"
-                request("put", url, headers, files=files, debug=debug)
+                request("put", url, headers, files=files)

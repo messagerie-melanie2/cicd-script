@@ -6,10 +6,15 @@ import yaml
 import json
 from datetime import date, timedelta
 from environs import Env
+import logging
 
 #=======================================================#
 #================== Global parameters ==================#
 #=======================================================#
+logging.basicConfig(
+    level=logging.INFO,  # niveau de log par défaut
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+)
 SETUP_ACCEPTED_STATUS_CODE = [200,201,202]
 
 #=======================================================#

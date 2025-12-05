@@ -1,6 +1,8 @@
 from global_vars import *
 
-def request(mode, url = '', headers = None, payload_data = None, payload_json = None, files = None , debug = False):
+logger = logging.getLogger(__name__)
+
+def request(mode, url = '', headers = None, payload_data = None, payload_json = None, files = None):
     """
     Sends an HTTP request based on the specified mode.
 
@@ -16,7 +18,6 @@ def request(mode, url = '', headers = None, payload_data = None, payload_json = 
         payload_data (dict or bytes, optional): Data sent using the `data` parameter.
         payload_json (dict, optional): Data sent as JSON using the `json` parameter.
         files (dict, optional): Files to upload using multipart/form-data.
-        debug (bool, optional): Whether to print debug information. Defaults to False.
 
     Returns:
         dict: The JSON response content if the request succeeds.
@@ -37,12 +38,11 @@ def request(mode, url = '', headers = None, payload_data = None, payload_json = 
             case "patch":
                 r = requests.patch(url=url, headers=headers, data=payload_data, json = payload_json, files=files)
             case _:
-                print("request mode not supported")  
+                logger.warning(f"request mode {mode} not supported")
         r.raise_for_status()
     except requests.exceptions.HTTPError as err:
-        if debug : 
-            print("Http Error:",err)
-        print(f"Request failed : {r.json()}")
+        logger.error(f"Request failed : {r.json()}")
+        logger.debug(f"Http Error: {err}")
     else :
         if r.status_code in SETUP_ACCEPTED_STATUS_CODE:
             response = r.json()
@@ -50,7 +50,7 @@ def request(mode, url = '', headers = None, payload_data = None, payload_json = 
     return response
     
 
-def send_message(url, message, debug = False):
+def send_message(url, message):
     """
     Sends a message to the configured trigger channel endpoint.
 
@@ -60,7 +60,6 @@ def send_message(url, message, debug = False):
     Args:
         url (str): the url to request
         message (str): The message to send.
-        debug (bool, optional): Whether to print debug information. Defaults to False.
 
     Returns:
         None
@@ -70,9 +69,9 @@ def send_message(url, message, debug = False):
             'message': message,
             'message_raw': message
         }
-        request("post",url, payload_json=payload, debug=debug)
+        request("post",url, payload_json=payload)
 
-def set_new_ci_variable(headers, project_id, project_variables, variable_key, variable_value, variable_masked, debug = False) :
+def set_new_ci_variable(headers, project_id, project_variables, variable_key, variable_value, variable_masked) :
     """
     Creates or updates a CI/CD variable for a specific GitLab project.
 
@@ -86,7 +85,6 @@ def set_new_ci_variable(headers, project_id, project_variables, variable_key, va
         variable_key (str): The key/name of the variable.
         variable_value (str): The value to set for the variable.
         variable_masked (bool): Whether the variable should be masked in GitLab.
-        debug (bool, optional): Whether to print debug details. Defaults to False.
 
     Returns:
         bool: True if the variable already existed, False if it was newly created.
@@ -99,20 +97,20 @@ def set_new_ci_variable(headers, project_id, project_variables, variable_key, va
     
     if variable_already_put :
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables/{variable_key}?value={variable_value}"
-        request("put", url, headers, debug = debug)
+        request("put", url, headers)
     else :
-        print(f"Setup {variable_key} for {project_id} project")
+        logger.info(f"Setup %s{variable_key} for {project_id} project")
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
         payload = {
             'key': variable_key,
             'value': variable_value,
             'masked': variable_masked,
         }
-        request("post", url, headers, payload_data=payload, debug = debug)
+        request("post", url, headers, payload_data=payload)
 
     return variable_already_put
 
-def set_new_allowlist(headers, project_allowlist, project_id, project_to_allow_id, debug = False) :
+def set_new_allowlist(headers, project_allowlist, project_id, project_to_allow_id) :
     """
     Adds a project to a GitLab job token allowlist if it is not already included.
 
@@ -121,7 +119,6 @@ def set_new_allowlist(headers, project_allowlist, project_id, project_to_allow_i
         project_allowlist (list): List of projects currently in the allowlist.
         project_id (int): The ID of the project whose allowlist is being modified.
         project_to_allow_id (int): The ID of the project to add to the allowlist.
-        debug (bool, optional): Whether to print debug information. Defaults to False.
 
     Returns:
         None
@@ -135,6 +132,6 @@ def set_new_allowlist(headers, project_allowlist, project_id, project_to_allow_i
             project_allowlist_already_setup = True
 
     if not project_allowlist_already_setup :
-        request("post",url, headers, payload_data=payload, debug=debug)
+        request("post",url, headers, payload_data=payload)
     else : 
-        print("Already added to allowlist.")
+        logger.info("Already added to allowlist.")

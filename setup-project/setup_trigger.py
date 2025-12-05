@@ -1,11 +1,13 @@
 from global_vars import *
 from helper import request, send_message, set_new_ci_variable, set_new_allowlist
 
+logger = logging.getLogger(__name__)
+
 #=======================================================#
 #=============== Trigger setup function ================#
 #=======================================================#
 
-def config_trigger_token(project, headers, files, debug = False):
+def config_trigger_token(project, headers, files):
     """
     Retrieves or creates a trigger token for a GitLab project.
 
@@ -16,7 +18,6 @@ def config_trigger_token(project, headers, files, debug = False):
         project (dict): The project configuration dictionary.
         headers (dict): HTTP headers containing the GitLab authentication token.
         files (dict): Additional form-data fields used when creating a token.
-        debug (bool, optional): Whether to print debug information. Defaults to False.
 
     Returns:
         str: The trigger token for the project (existing or newly created).
@@ -24,14 +25,13 @@ def config_trigger_token(project, headers, files, debug = False):
     trigger_token = ""
     if project.get("type") == "gitlab" :
         project_name = project.get('name')
-        print(f"Setting Trigger token of {project_name} project")
+        logger.info(f"Setting Trigger token of {project_name} project")
         project_to_trigger_id = project.get("id")
 
-        print(f"Getting Trigger tokens of {project_name} project")
+        logger.info(f"Getting Trigger tokens of {project_name} project")
         url = f"{GITLAB_URL}/api/v4/projects/{project_to_trigger_id}/triggers"
-        project_tokens = request("get", url, headers, debug=debug)
-        if debug :
-            print(project_tokens)
+        project_tokens = request("get", url, headers)
+        logger.debug(f"project_tokens : {project_tokens}")
 
         trigger_token_already_created = False
 
@@ -41,11 +41,10 @@ def config_trigger_token(project, headers, files, debug = False):
                 trigger_token = token_info.get("token")
         
         if not trigger_token_already_created :
-            print(f"Trigger token not created, Creating Trigger token of {project_name} project")
-            response = request("post", url, headers, files=files, debug=debug)
+            logger.info(f"Trigger token not created, Creating Trigger token of {project_name} project")
+            response = request("post", url, headers, files=files)
             trigger_token = response.get("token")
-            if debug :
-                print(trigger_token)
+            logger.debug(f"trigger_token : {trigger_token}")
 
     return trigger_token
 
@@ -122,7 +121,7 @@ def create_trigger_project_ci_variable(project, project_to_trigger, trigger_toke
 
     return project_configuration
 
-def create_trigger_ci_variables(token, all_setup, debug = False):
+def create_trigger_ci_variables(token, all_setup):
     """
     Creates CI/CD variable configurations for all projects defined in setup files.
 
@@ -132,7 +131,6 @@ def create_trigger_ci_variables(token, all_setup, debug = False):
     Args:
         token (str): GitLab private token used for authentication.
         all_setup (list): List of project setup configurations loaded from YAML.
-        debug (bool, optional): Whether to print debug information. Defaults to False.
 
     Returns:
         dict: A dictionary mapping each project ID to its CI/CD variable configuration.
@@ -144,12 +142,15 @@ def create_trigger_ci_variables(token, all_setup, debug = False):
     all_project_configuration = {}
 
     for project_to_trigger in all_setup :
-        trigger_token = config_trigger_token(project_to_trigger, headers, files_trigger, debug)
+        trigger_token = config_trigger_token(project_to_trigger, headers, files_trigger)
         projects_to_setup = project_to_trigger.get("projects")
         project_to_trigger_type = project_to_trigger.get("type")
         for project in projects_to_setup :
             project_id = project.get("id")
+            project_name = project.get("name")
             variable_name = SETUP_VARIABLE_CONFIGURATION_KEY_DEFAULT.get(project_to_trigger_type)
+
+            logger.info(f"Creating project configuration of {project_name} project")
             project_configuration = create_trigger_project_ci_variable(project, project_to_trigger, trigger_token, variable_name)
 
             if project_id in all_project_configuration.keys() :
@@ -162,7 +163,7 @@ def create_trigger_ci_variables(token, all_setup, debug = False):
 
     return all_project_configuration
 
-def set_trigger_ci_variables(token,all_project_configuration, debug = False):
+def set_trigger_ci_variables(token,all_project_configuration):
     """
     Applies all CI/CD variables to GitLab projects based on prepared configuration.
 
@@ -173,7 +174,6 @@ def set_trigger_ci_variables(token,all_project_configuration, debug = False):
     Args:
         token (str): GitLab private token used for authentication.
         all_project_configuration (dict): Dictionary of all CI variable configurations.
-        debug (bool, optional): Whether to print debug information. Defaults to False.
 
     Returns:
         None
@@ -185,21 +185,20 @@ def set_trigger_ci_variables(token,all_project_configuration, debug = False):
             project_name = project_configuration.pop('name')
 
             url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
-            print(f"Getting variables for {project_name} project")
-            project_variables = request("get", url, headers, debug = debug)
-            if debug :
-                print(project_variables)
+            logger.info(f"Getting variables for {project_name} project")
+            project_variables = request("get", url, headers)
+            logger.debug(f"project_variables : {project_variables}")
 
             for variable_name in project_configuration.keys() :
                 for project_to_trigger_name,variable in project_configuration.get(variable_name).items() :
-                    variable_already_put = set_new_ci_variable(headers, project_id, project_variables, variable.get("token_name"), variable.get("token"), True, debug)
+                    variable_already_put = set_new_ci_variable(headers, project_id, project_variables, variable.get("token_name"), variable.get("token"), True)
                     variable.pop("token")
                     if not variable_already_put :
                         send_message(SETUP_TRIGGER_CHANNEL_URL, f"🔔 Le projet {project_name} a bien été configuré pour trigger le projet {project_to_trigger_name}. Pour plus d'information voir : {SETUP_CI_JOB_URL}")
                 
-                set_new_ci_variable(headers, project_id, project_variables, variable_name, json.dumps(project_configuration.get(variable_name)), False, debug)
+                set_new_ci_variable(headers, project_id, project_variables, variable_name, json.dumps(project_configuration.get(variable_name)), False)
 
-def set_trigger_project_allowlist(project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies, headers, debug = False):
+def set_trigger_project_allowlist(project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies, headers):
     """
     Configures GitLab job token allowlists for a project.
 
@@ -212,60 +211,56 @@ def set_trigger_project_allowlist(project, project_to_trigger_name, project_to_t
         project_to_trigger_id (int): ID of the project that will be triggered.
         project_to_trigger_dependencies (list): List of dependency project dictionaries.
         headers (dict): HTTP headers containing the GitLab authentication token.
-        debug (bool, optional): Whether to print debug information. Defaults to False.
 
     Returns:
         None
     """
     project_name = project.get("name")
     project_id = project.get("id")
-    print(f"Setting allowlists of {project_name} project")
+    logger.info(f"Setting allowlists of {project_name} project")
 
     if project_id == 27032 :
-        print(f"Enabling allowlists of {project_name} project...")
+        logger.info(f"Enabling allowlists of {project_name} project...")
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope"
         payload = {'enabled': True}
-        request("patch",url, headers, payload_data=payload, debug=debug)
+        request("patch",url, headers, payload_data=payload)
         
-        print(f"Getting allowlists of {project_name} project...")
+        logger.info(f"Getting allowlists of {project_name} project...")
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope/allowlist"
-        project_allowlist = request("get",url, headers, debug=debug)
-        if debug : 
-            print(project_allowlist)
+        project_allowlist = request("get",url, headers)
+        logger.debug(f"project_allowlist : {project_allowlist}")
         
-        print(f"Adding to allowlists of {project_name} project, {project_to_trigger_name} project...")
-        set_new_allowlist(headers, project_allowlist, project_id, project_to_trigger_id, debug)
+        logger.info(f"Adding to allowlists of {project_name} project, {project_to_trigger_name} project...")
+        set_new_allowlist(headers, project_allowlist, project_id, project_to_trigger_id)
 
-        print(f"Adding {project_to_trigger_name} project dependencies to allowlists of {project_name} project...")
+        logger.info(f"Adding {project_to_trigger_name} project dependencies to allowlists of {project_name} project...")
         for dependencies in project_to_trigger_dependencies :
             dependencies_id = dependencies.get("id")
-            set_new_allowlist(headers, project_allowlist, project_id, dependencies_id, debug)
+            set_new_allowlist(headers, project_allowlist, project_id, dependencies_id)
         
-        print(f"Getting allowlists of {project_to_trigger_name} project...")
+        logger.info(f"Getting allowlists of {project_to_trigger_name} project...")
         url = f"{GITLAB_URL}/api/v4/projects/{project_to_trigger_id}/job_token_scope/groups_allowlist?per_page=100"
-        project_to_trigger_allowlist = request("get", url, headers, debug=debug)
-        if debug : 
-            print(project_to_trigger_allowlist)
+        project_to_trigger_allowlist = request("get", url, headers)
+        logger.debug(f"project_to_trigger_allowlist : {project_to_trigger_allowlist}")
 
         project_to_trigger_allowlist_already_setup = False
 
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}"
-        print(f"Getting {project_name} project info...")
-        project_info = request("get", url, headers, debug=debug)
-        if debug : 
-            print(project_info)
+        logger.info(f"Getting {project_name} project info...")
+        project_info = request("get", url, headers)
+        logger.debug(f"project_info : {project_info}")
 
         for project in project_to_trigger_allowlist :
             if project.get("id") == project_info.get("namespace",{}).get("id") :
                 project_to_trigger_allowlist_already_setup = True
         
         if not project_to_trigger_allowlist_already_setup :
-            print(f"Adding {project_name} namespace to allowlists of {project_name} project...")
+            logger.info(f"Adding {project_name} namespace to allowlists of {project_name} project...")
             url = f"{GITLAB_URL}/api/v4/projects/{project_to_trigger_id}/job_token_scope/groups_allowlist"
             payload = {'target_group_id': project_info.get("namespace",{}).get("id")}
-            request("post",url, headers, payload_data=payload, debug=debug)
+            request("post",url, headers, payload_data=payload)
 
-def set_trigger_allowlist(token, all_setup, debug = False):
+def set_trigger_allowlist(token, all_setup):
     """
     Applies allowlist rules for all GitLab projects defined in setup files.
 
@@ -275,7 +270,6 @@ def set_trigger_allowlist(token, all_setup, debug = False):
     Args:
         token (str): GitLab private token for authentication.
         all_setup (list): Project setup configurations loaded from YAML files.
-        debug (bool, optional): Whether to print debug information. Defaults to False.
 
     Returns:
         None
@@ -290,4 +284,4 @@ def set_trigger_allowlist(token, all_setup, debug = False):
         if project_to_trigger_type == "gitlab" :
             project_to_trigger_id = project_to_trigger.get("id")
             for project in projects_to_setup :
-                set_trigger_project_allowlist(project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies, headers, debug)
+                set_trigger_project_allowlist(project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies, headers)
