@@ -1,75 +1,9 @@
 from global_vars import *
-from helper import request, send_message
+from helper import request, send_message, set_new_ci_variable, set_new_allowlist
 
 #=======================================================#
 #=============== Trigger setup function ================#
 #=======================================================#
-
-def read_setup_files(debug = False):
-    """
-    Reads all trigger setup YAML files and returns a combined list of configurations.
-
-    This function scans the setup directory for all files ending with
-    `triggers.yml`, loads their YAML content, and aggregates the result.
-    YAML parsing errors can optionally be displayed in debug mode.
-
-    Args:
-        debug (bool, optional): Whether to print debug information when a YAML
-            file fails to load. Defaults to False.
-
-    Returns:
-        list: A list containing all merged YAML configuration entries.
-    """
-    all_setup = []
-    my_path = os.path.abspath(os.path.dirname(__file__))
-    my_project_path = my_path.split("cicd-script")[0]
-    setup_path = os.path.join(my_project_path, SETUP_TRIGGER_FOLDER_PATH)
-    for subdir, dirs, files in os.walk(setup_path):
-        for filename in files:
-            filepath = subdir + os.sep + filename
-            if filepath.endswith("triggers.yml"):
-                with open(filepath, 'r') as setup_file:
-                    try:
-                        setup_yaml = yaml.safe_load(setup_file)
-                    except yaml.YAMLError as exc:
-                        if debug :
-                            print("Couldn't load yaml for {0} file...".format(setup_path))
-                            print(exc)
-                    else :
-                        all_setup = all_setup + setup_yaml
-    return all_setup
-
-def set_config_path(token, all_setup, debug = False):
-    """
-    Updates the CI configuration path for a list of GitLab projects.
-
-    For each project defined in `all_setup`, this function sends a PUT request
-    to update the `ci_config_path` field in the GitLab API. Projects with
-    `change_ci` set to False are skipped.
-
-    Args:
-        token (str): The GitLab private token used for authentication.
-        all_setup (list): A list of project configuration dictionaries loaded
-            from setup YAML files.
-        debug (bool, optional): Whether to print debug information. Defaults to False.
-
-    Returns:
-        None
-    """
-    files = {
-        'ci_config_path': (None, SETUP_GITLAB_CI_CONFIG_PATH),
-    }
-    headers = {"PRIVATE-TOKEN": token}
-
-    for project_to_trigger in all_setup :
-        projects_to_setup = project_to_trigger.get("projects")
-        for project in projects_to_setup :
-            project_id = project.get("id")
-            if project.get("change_ci") != False :
-                if project_id == 27032 :
-                    print(f"Setting ci config path of {project.get('name')} project")
-                    url = f"{GITLAB_URL}/api/v4/projects/{project_id}"
-                    request("put", url, headers, files=files, debug=debug)
 
 def config_trigger_token(project, headers, files, debug = False):
     """
@@ -136,7 +70,7 @@ def add_trigger_argument(project, type) :
     
     return configuration_to_add
 
-def create_project_ci_variable(project, project_to_trigger, trigger_token, variable_name):
+def create_trigger_project_ci_variable(project, project_to_trigger, trigger_token, variable_name):
     """
     Builds the CI/CD variable configuration for a project.
 
@@ -188,7 +122,7 @@ def create_project_ci_variable(project, project_to_trigger, trigger_token, varia
 
     return project_configuration
 
-def create_ci_variables(token, all_setup, debug = False):
+def create_trigger_ci_variables(token, all_setup, debug = False):
     """
     Creates CI/CD variable configurations for all projects defined in setup files.
 
@@ -216,7 +150,7 @@ def create_ci_variables(token, all_setup, debug = False):
         for project in projects_to_setup :
             project_id = project.get("id")
             variable_name = SETUP_VARIABLE_CONFIGURATION_KEY_DEFAULT.get(project_to_trigger_type)
-            project_configuration = create_project_ci_variable(project, project_to_trigger, trigger_token, variable_name)
+            project_configuration = create_trigger_project_ci_variable(project, project_to_trigger, trigger_token, variable_name)
 
             if project_id in all_project_configuration.keys() :
                 if variable_name in all_project_configuration[project_id].keys() :
@@ -228,47 +162,7 @@ def create_ci_variables(token, all_setup, debug = False):
 
     return all_project_configuration
 
-def set_new_ci_variable(headers, project_id, project_variables, variable_key, variable_value, variable_masked, debug = False) :
-    """
-    Creates or updates a CI/CD variable for a specific GitLab project.
-
-    If the variable already exists, it is updated. Otherwise, a new variable
-    is created.
-
-    Args:
-        headers (dict): HTTP headers including the GitLab access token.
-        project_id (int): The ID of the project where variables are defined.
-        project_variables (list): Existing variables retrieved from the GitLab API.
-        variable_key (str): The key/name of the variable.
-        variable_value (str): The value to set for the variable.
-        variable_masked (bool): Whether the variable should be masked in GitLab.
-        debug (bool, optional): Whether to print debug details. Defaults to False.
-
-    Returns:
-        bool: True if the variable already existed, False if it was newly created.
-    """
-    variable_already_put = False
-
-    for variable in project_variables :
-        if variable.get("key") == variable_key :
-            variable_already_put = True
-    
-    if variable_already_put :
-        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables/{variable_key}?value={variable_value}"
-        request("put", url, headers, debug = debug)
-    else :
-        print(f"Setup {variable_key} for {project_id} project")
-        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
-        payload = {
-            'key': variable_key,
-            'value': variable_value,
-            'masked': variable_masked,
-        }
-        request("post", url, headers, payload_data=payload, debug = debug)
-
-    return variable_already_put
-
-def set_ci_variables(token,all_project_configuration, debug = False):
+def set_trigger_ci_variables(token,all_project_configuration, debug = False):
     """
     Applies all CI/CD variables to GitLab projects based on prepared configuration.
 
@@ -305,35 +199,7 @@ def set_ci_variables(token,all_project_configuration, debug = False):
                 
                 set_new_ci_variable(headers, project_id, project_variables, variable_name, json.dumps(project_configuration.get(variable_name)), False, debug)
 
-
-def set_new_allowlist(headers, project_allowlist, project_id, project_to_allow_id, debug = False) :
-    """
-    Adds a project to a GitLab job token allowlist if it is not already included.
-
-    Args:
-        headers (dict): HTTP headers containing the GitLab authentication token.
-        project_allowlist (list): List of projects currently in the allowlist.
-        project_id (int): The ID of the project whose allowlist is being modified.
-        project_to_allow_id (int): The ID of the project to add to the allowlist.
-        debug (bool, optional): Whether to print debug information. Defaults to False.
-
-    Returns:
-        None
-    """
-    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope/allowlist"
-    payload = {'target_project_id': project_to_allow_id}
-    project_allowlist_already_setup = False
-
-    for project in project_allowlist :
-        if project.get("id") == project_to_allow_id :
-            project_allowlist_already_setup = True
-
-    if not project_allowlist_already_setup :
-        request("post",url, headers, payload_data=payload, debug=debug)
-    else : 
-        print("Already added to allowlist.")
-
-def set_project_allowlist(project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies, headers, debug = False):
+def set_trigger_project_allowlist(project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies, headers, debug = False):
     """
     Configures GitLab job token allowlists for a project.
 
@@ -399,7 +265,7 @@ def set_project_allowlist(project, project_to_trigger_name, project_to_trigger_i
             payload = {'target_group_id': project_info.get("namespace",{}).get("id")}
             request("post",url, headers, payload_data=payload, debug=debug)
 
-def set_allowlist(token, all_setup, debug = False):
+def set_trigger_allowlist(token, all_setup, debug = False):
     """
     Applies allowlist rules for all GitLab projects defined in setup files.
 
@@ -424,4 +290,4 @@ def set_allowlist(token, all_setup, debug = False):
         if project_to_trigger_type == "gitlab" :
             project_to_trigger_id = project_to_trigger.get("id")
             for project in projects_to_setup :
-                set_project_allowlist(project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies, headers, debug)
+                set_trigger_project_allowlist(project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies, headers, debug)

@@ -192,7 +192,7 @@ def trigger_jenkins(project_to_trigger, project_to_trigger_config, branch, chang
     
     if trigger :
 
-        trigger_token = os.getenv("JENKINS_TRIGGER_TOKEN")
+        trigger_token = os.getenv(project_to_trigger_config["token_name"])
 
         try :
             branchs_mapping = project_to_trigger_config["branchs_mapping"]         
