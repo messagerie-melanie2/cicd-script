@@ -194,7 +194,7 @@ def set_trigger_ci_variables(token,all_project_configuration):
                     variable_already_put = set_new_ci_variable(headers, project_id, project_variables, variable.get("token_name"), variable.get("token"), True)
                     variable.pop("token")
                     if not variable_already_put :
-                        send_message(SETUP_TRIGGER_CHANNEL_URL, f"🔔 Le projet {project_name} a bien été configuré pour trigger le projet {project_to_trigger_name}. Pour plus d'information voir : {SETUP_CI_JOB_URL}")
+                        send_message(SETUP_CHANNEL_URL, f"🔔 Le projet {project_name} a bien été configuré pour trigger le projet {project_to_trigger_name}. Pour plus d'information voir : {SETUP_CI_JOB_URL}")
                 
                 set_new_ci_variable(headers, project_id, project_variables, variable_name, json.dumps(project_configuration.get(variable_name)), False)
                 set_new_ci_variable(headers, project_id, project_variables, SETUP_CICD_CONFIGURATION_PATH_VARIABLE_NAME, SETUP_CICD_CONFIGURATION_PATH, False)
