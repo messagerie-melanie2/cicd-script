@@ -51,7 +51,7 @@ def config_build_token(token, project, project_variables, debug = False):
     build_token_variable_already_created = False
 
     for token_info in project_tokens :
-        if token_info.get("name") == SETUP_BUILD_TOKEN_NAME :
+        if token_info.get("name") == SETUP_BUILD_TOKEN_NAME and not token_info.get("revoked"):
             build_token_already_created = True
             build_token_id = token_info.get("id")
     
