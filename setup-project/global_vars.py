@@ -11,14 +11,14 @@ import logging
 #=======================================================#
 #================== Global parameters ==================#
 #=======================================================#
-SETUP_LOG_LEVEL_DEFAULT = "INFO"
+SETUP_LOG_LEVEL_DEFAULT = "DEBUG"
 
 SETUP_ACCEPTED_STATUS_CODE = [200,201,202]
 SETUP_LOG_LEVEL = os.environ.get("SETUP_LOG_LEVEL", SETUP_LOG_LEVEL_DEFAULT).upper()
 
 
 logging.basicConfig(
-    level=getattr(logging, SETUP_LOG_LEVEL, logging.INFO),
+    level=getattr(logging, SETUP_LOG_LEVEL),
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
 )
 
