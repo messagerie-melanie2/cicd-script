@@ -1,0 +1,7 @@
+nav:
+  - Infra Backend: 
+    - CI/CD : 
+      - Script : 
+        - Configuration des projets : setup-project/README.md
+src_code:
+  - setup-project/
