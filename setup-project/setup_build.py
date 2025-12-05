@@ -70,9 +70,9 @@ def config_build_token(token, project, project_variables, debug = False):
             'access_level': SETUP_BUILD_TOKEN_ACCESS_LEVEL,
         }
         response = request("post", url, headers, payload_json=payload, debug=debug)
-        build_token = response.get("token")
         if debug :
-            print(build_token)
+            print(response)
+        build_token = response.get("token")
         set_new_ci_variable(headers, project_id, project_variables, SETUP_BUILD_TOKEN_NAME, build_token, True, debug)
     elif build_token_already_created and not build_token_variable_already_created :
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/access_tokens/{build_token_id}/rotate"
