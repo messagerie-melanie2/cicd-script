@@ -88,7 +88,7 @@ def config_build_token(token, project, project_variables):
         payload = {
             'expires_at': in_a_year.strftime("%Y-%m-%d"),
         }
-        response = request("post", url, headers, payload_json=payload, debug=debug)
+        response = request("post", url, headers, payload_json=payload)
         logger.debug(f"response : {response}")
         build_token = response.get("token")
         set_new_ci_variable(headers, project_id, project_variables, SETUP_BUILD_TOKEN_NAME, build_token, True)
@@ -112,6 +112,7 @@ def set_build_ci_variables(token, project, project_variables):
     logger.info(f"Setting Build CI variables of {project_name} project")
 
     variable_already_put = set_new_ci_variable(headers, project_id, project_variables, SETUP_BUILD_ENABLE_BUILD_VARIABLE_NAME, "yes", False)
+    set_new_ci_variable(headers, project_id, project_variables, SETUP_CICD_CONFIGURATION_PATH_VARIABLE_NAME, SETUP_CICD_CONFIGURATION_PATH, False)
     if not variable_already_put :
         send_message(SETUP_TRIGGER_CHANNEL_URL, f"🔔 Le projet {project_name} a bien été configuré pour utiliser la pipeline de build. Pour plus d'information voir : {SETUP_CI_JOB_URL}")
     set_new_ci_variable(headers, project_id, project_variables, SETUP_BUILD_DOCKERHUB_TOKEN_VARIABLE_NAME, SETUP_BUILD_DOCKERHUB_TOKEN, True)
