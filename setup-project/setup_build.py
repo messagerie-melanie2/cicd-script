@@ -16,7 +16,7 @@ def get_build_project_variables(token, project):
         project (dict): The project info dictionary.
 
     Returns:
-        list: Existing variables retrieved from the GitLab API.
+        project_variables (list): Existing variables retrieved from the GitLab API.
     """
     headers = {"PRIVATE-TOKEN": token}
     project_name = project.get('name')

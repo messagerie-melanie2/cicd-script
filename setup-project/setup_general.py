@@ -16,7 +16,7 @@ def read_setup_files(folder_path, file_endswith):
         file_endswith (str): The string that decide what is a setup file.
 
     Returns:
-        list: A list containing all merged YAML configuration entries.
+        all_setup (list): A list containing all merged YAML configuration entries.
     """
     all_setup = []
     my_path = os.path.abspath(os.path.dirname(__file__))

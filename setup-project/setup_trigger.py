@@ -20,7 +20,7 @@ def config_trigger_token(project, headers, files):
         files (dict): Additional form-data fields used when creating a token.
 
     Returns:
-        str: The trigger token for the project (existing or newly created).
+        trigger_token (str): The trigger token for the project (existing or newly created).
     """
     trigger_token = ""
     if project.get("type") == "gitlab" :
@@ -57,7 +57,7 @@ def add_trigger_argument(project, type) :
         type (str): The trigger argument category to extract.
 
     Returns:
-        dict: A dictionary containing the trigger arguments relevant to the given type.
+        configuration_to_add (dict): A dictionary containing the trigger arguments relevant to the given type.
     """
     configuration_to_add = {}
     trigger_argument = SETUP_TRIGGER_ARGUMENTS[type].split(',')
@@ -84,7 +84,7 @@ def create_trigger_project_ci_variable(project, project_to_trigger, trigger_toke
         variable_name (str): The key under which variables should be stored.
 
     Returns:
-        dict: A dictionary containing the full CI variable configuration.
+        project_configuration (dict): A dictionary containing the full CI variable configuration.
     """
     project_configuration = {}
     variable = {}
@@ -133,7 +133,7 @@ def create_trigger_ci_variables(token, all_setup):
         all_setup (list): List of project setup configurations loaded from YAML.
 
     Returns:
-        dict: A dictionary mapping each project ID to its CI/CD variable configuration.
+        all_project_configuration (dict): A dictionary mapping each project ID to its CI/CD variable configuration.
     """
     headers = {"PRIVATE-TOKEN": token}
     files_trigger = {

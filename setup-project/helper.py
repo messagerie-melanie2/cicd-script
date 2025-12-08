@@ -20,7 +20,7 @@ def request(mode, url = '', headers = None, payload_data = None, payload_json = 
         files (dict, optional): Files to upload using multipart/form-data.
 
     Returns:
-        dict: The JSON response content if the request succeeds.
+        response (dict): The JSON response content if the request succeeds.
 
     Raises:
         requests.exceptions.HTTPError: If the server returns an HTTP error status.
@@ -87,7 +87,7 @@ def set_new_ci_variable(headers, project_id, project_variables, variable_key, va
         variable_masked (bool): Whether the variable should be masked in GitLab.
 
     Returns:
-        bool: True if the variable already existed, False if it was newly created.
+        variable_already_put (bool): True if the variable already existed, False if it was newly created.
     """
     variable_already_put = False
 
