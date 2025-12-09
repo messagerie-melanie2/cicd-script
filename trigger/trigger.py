@@ -178,7 +178,7 @@ def trigger(project_name, project_config, trigger_project, branch, description, 
             data = create_payload(project_name, project_config, trigger_project, mapped_branch, branch, description, changes)
             url = create_url(project_config, mapped_branch, branch)
             request_auth = create_request_auth(project_config, token)
-            response = request("post",url, headers=request_auth.get("headers"), auth=request_auth.get("auth"), data=data)
+            response = request("post",url, headers=request_auth.get("headers"), auth=request_auth.get("auth"), payload_data=data)
             logging.debug(f"Response : {response}")
 
 def main(args):
