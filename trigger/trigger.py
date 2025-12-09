@@ -154,7 +154,7 @@ def create_url(project_config, mapped_branch, initial_branch) :
         logging.debug(f"Project type {project_type} doesn't have url_mapping.")
     
     if project_type == "gitlab" :
-        url = GITLAB_REPO + '/api/v4/projects/' + str(project_config.get("id"))   + '/trigger/pipeline'
+        url = GITLAB_URL + 'api/v4/projects/' + str(project_config.get("id"))   + '/trigger/pipeline'
     
     return url
 
