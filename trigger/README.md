@@ -5,7 +5,7 @@ Fonction main qui lance les triggers à la suite en fonction des entrées donné
 
 ::: cicd-script.trigger.main
 
-## Module setup_general
+## Module trigger_function
 Regroupement des fonctions nécessaires pour lancer un trigger.
 
 ::: cicd-script.trigger.trigger_function
