@@ -96,7 +96,7 @@ def create_trigger_project_ci_variable(project, project_to_trigger, trigger_toke
 
     variable[project_to_trigger_name] = variable[project_to_trigger_name] | configuration_to_add
 
-    project_configuration["variable"] = variable
+    project_configuration = project_configuration | variable
 
     return project_configuration
 
@@ -163,7 +163,7 @@ def set_trigger_ci_variables(token,all_project_configuration):
             project_variables = request("get", url, headers)
             logger.debug(f"project_variables : {project_variables}")
 
-            for project_to_trigger_name,variable in project_configuration["variable"].items() :
+            for project_to_trigger_name,variable in project_configuration.items() :
                 variable_already_put = set_new_ci_variable(headers, project_id, project_variables, variable.get("token_name"), variable.get("token"), True)
                 variable.pop("token")
                 if not variable_already_put :
