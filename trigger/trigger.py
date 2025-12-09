@@ -190,7 +190,7 @@ def main(args):
 
     trigger_config = env.json(TRIGGER_VARIABLE_CONFIGURATION_KEY_DEFAULT, {})
     trigger_parameters_local_file = read_trigger_parameters_local_file()
-    changes = get_changes(args.commit_before_sha,args.commit_sha,args.debug_enabled)
+    changes = get_changes(args.commit_before_sha,args.commit_sha)
 
     for project_name,project_config in trigger_config.items() :
         project_config = add_local_file_to_config(project_config, trigger_parameters_local_file)
