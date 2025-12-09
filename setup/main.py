@@ -1,4 +1,4 @@
-from global_vars import *
+from setup.global_vars import *
 from setup_general import read_setup_files, set_config_path
 from setup_trigger import create_trigger_ci_variables, set_trigger_ci_variables, set_trigger_allowlist
 from setup_build import config_build_token, get_build_project_variables, set_build_ci_variables

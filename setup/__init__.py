@@ -1,1 +1,0 @@
-print("Package setup chargé")
