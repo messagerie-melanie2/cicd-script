@@ -1,4 +1,4 @@
-from global_vars import *
+from lib.global_vars import *
 
 logger = logging.getLogger(__name__)
 
