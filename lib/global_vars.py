@@ -23,8 +23,8 @@ GITLAB_URL = os.environ.get('GITLAB_PROTOCOL',"https://") + os.environ.get('GITL
 #=======================================================#
 #============== Trigger Global parameters ==============#
 #=======================================================#
-SETUP_VARIABLE_CONFIGURATION_KEY_DEFAULT = {'gitlab': 'GITLAB_TRIGGER_CONFIGURATION', 'jenkins': 'JENKINS_TRIGGER_CONFIGURATION'}
+TRIGGER_VARIABLE_CONFIGURATION_KEY_DEFAULT = 'TRIGGER_CONFIGURATION'
 SETUP_TRIGGER_ARGUMENTS_DEFAULT = {'all': 'trigger_files,branchs_only_trigger,branchs_mapping', 'gitlab': 'focus_trigger', 'jenkins': 'additional_params,token_name'}
 
-SETUP_VARIABLE_CONFIGURATION_KEY = env.json('SETUP_VARIABLE_CONFIGURATION_KEY',SETUP_VARIABLE_CONFIGURATION_KEY_DEFAULT)
+TRIGGER_VARIABLE_CONFIGURATION_KEY = env.json('SETUP_VARIABLE_CONFIGURATION_KEY',TRIGGER_VARIABLE_CONFIGURATION_KEY_DEFAULT)
 SETUP_TRIGGER_ARGUMENTS = env.json('SETUP_TRIGGER_ARGUMENTS',SETUP_TRIGGER_ARGUMENTS_DEFAULT)

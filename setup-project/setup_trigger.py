@@ -48,7 +48,7 @@ def config_trigger_token(project, headers, files):
 
     return trigger_token
 
-def create_trigger_project_ci_variable(project, project_to_trigger, trigger_token, variable_name):
+def create_trigger_project_ci_variable(project, project_to_trigger, trigger_token):
     """
     Builds the CI/CD variable configuration for a project.
 
@@ -96,7 +96,7 @@ def create_trigger_project_ci_variable(project, project_to_trigger, trigger_toke
 
     variable[project_to_trigger_name] = variable[project_to_trigger_name] | configuration_to_add
 
-    project_configuration[variable_name] = variable
+    project_configuration = variable
 
     return project_configuration
 
@@ -123,20 +123,15 @@ def create_trigger_ci_variables(token, all_setup):
     for project_to_trigger in all_setup :
         trigger_token = config_trigger_token(project_to_trigger, headers, files_trigger)
         projects_to_setup = project_to_trigger.get("projects")
-        project_to_trigger_type = project_to_trigger.get("type")
         for project in projects_to_setup :
             project_id = project.get("id")
             project_name = project.get("name")
-            variable_name = SETUP_VARIABLE_CONFIGURATION_KEY_DEFAULT.get(project_to_trigger_type)
 
             logger.info(f"Creating project configuration of {project_name} project")
-            project_configuration = create_trigger_project_ci_variable(project, project_to_trigger, trigger_token, variable_name)
+            project_configuration = create_trigger_project_ci_variable(project, project_to_trigger, trigger_token)
 
             if project_id in all_project_configuration.keys() :
-                if variable_name in all_project_configuration[project_id].keys() :
-                    all_project_configuration[project_id][variable_name] = all_project_configuration[project_id][variable_name] | project_configuration[variable_name]
-                else :
-                    all_project_configuration[project_id][variable_name] = project_configuration[variable_name]
+                all_project_configuration[project_id] = all_project_configuration[project_id] | project_configuration
             else :
                 all_project_configuration[project_id] = project_configuration
 
@@ -168,15 +163,14 @@ def set_trigger_ci_variables(token,all_project_configuration):
             project_variables = request("get", url, headers)
             logger.debug(f"project_variables : {project_variables}")
 
-            for variable_name in project_configuration.keys() :
-                for project_to_trigger_name,variable in project_configuration.get(variable_name).items() :
-                    variable_already_put = set_new_ci_variable(headers, project_id, project_variables, variable.get("token_name"), variable.get("token"), True)
-                    variable.pop("token")
-                    if not variable_already_put :
-                        send_message(SETUP_CHANNEL_URL, f"🔔 Le projet {project_name} a bien été configuré pour trigger le projet {project_to_trigger_name}. Pour plus d'information voir : {SETUP_CI_JOB_URL}")
-                
-                set_new_ci_variable(headers, project_id, project_variables, variable_name, json.dumps(project_configuration.get(variable_name)), False)
-                set_new_ci_variable(headers, project_id, project_variables, SETUP_CICD_CONFIGURATION_PATH_VARIABLE_NAME, SETUP_CICD_CONFIGURATION_PATH, False)
+            for project_to_trigger_name,variable in project_configuration.items() :
+                variable_already_put = set_new_ci_variable(headers, project_id, project_variables, variable.get("token_name"), variable.get("token"), True)
+                variable.pop("token")
+                if not variable_already_put :
+                    send_message(SETUP_CHANNEL_URL, f"🔔 Le projet {project_name} a bien été configuré pour trigger le projet {project_to_trigger_name}. Pour plus d'information voir : {SETUP_CI_JOB_URL}")
+            
+            set_new_ci_variable(headers, project_id, project_variables, TRIGGER_VARIABLE_CONFIGURATION_KEY, json.dumps(variable), False)
+            set_new_ci_variable(headers, project_id, project_variables, SETUP_CICD_CONFIGURATION_PATH_VARIABLE_NAME, SETUP_CICD_CONFIGURATION_PATH, False)
 
 def set_trigger_project_allowlist(project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies, headers):
     """
