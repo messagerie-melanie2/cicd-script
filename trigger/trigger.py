@@ -5,22 +5,14 @@ from lib.helper import request, add_argument_to_conf
 #=======================================================#
 #================== Global parameters ==================#
 #=======================================================#
-GITLAB_REPO = "https://gitlab-forge.din.developpement-durable.gouv.fr"
-JENKINS_URL = {"prod":"https://jenkins-prod.mel.edcs.fr/jenkins-prod/generic-webhook-trigger/invoke","preprod":"https://jenkins-preprod.mel.edcs.fr/jenkins-preprod/generic-webhook-trigger/invoke"}
-TRIGGER_PARAMETERS_FILE_NAME = "./trigger_parameters.yml"
-DESCRIPTION_VARIABLES = [{'tag': "--parent-recette",'name':"CI_PARENT_RECETTE"}]
+# GITLAB_REPO = "https://gitlab-forge.din.developpement-durable.gouv.fr"
+# JENKINS_URL = {"prod":"https://jenkins-prod.mel.edcs.fr/jenkins-prod/generic-webhook-trigger/invoke","preprod":"https://jenkins-preprod.mel.edcs.fr/jenkins-preprod/generic-webhook-trigger/invoke"}
+# TRIGGER_PARAMETERS_FILE_NAME = "./trigger_parameters.yml"
+# DESCRIPTION_VARIABLES = [{'tag': "--parent-recette",'name':"CI_PARENT_RECETTE"}]
 
 #=======================================================#
 #======================== Main =========================#
 #=======================================================#
-
-def get_trigger_config():
-    trigger_config = {}
-    for type, variable_name in SETUP_VARIABLE_CONFIGURATION_KEY.items() :
-        config_to_add = env.json(variable_name, {})
-        trigger_config = trigger_config | config_to_add
-    
-    return trigger_config
 
 def get_changes(commit_before_sha, commit_sha):
     changes = ""
@@ -196,7 +188,7 @@ def main(args):
     os.environ["https_proxy"]=""
     os.environ["HTTPS_PROXY"]=""
 
-    trigger_config = get_trigger_config()
+    trigger_config = env.json(TRIGGER_VARIABLE_CONFIGURATION_KEY_DEFAULT, {})
     trigger_parameters_local_file = read_trigger_parameters_local_file()
     changes = get_changes(args.commit_before_sha,args.commit_sha,args.debug_enabled)
 
