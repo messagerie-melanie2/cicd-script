@@ -1,5 +1,5 @@
 from global_vars import *
-from lib.helper import request, send_message, set_new_ci_variable, set_new_allowlist, add_argument_to_conf
+from ..lib.helper import request, send_message, set_new_ci_variable, set_new_allowlist, add_argument_to_conf
 
 logger = logging.getLogger(__name__)
 
