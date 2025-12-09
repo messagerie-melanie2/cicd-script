@@ -1,62 +1,95 @@
 # coding=utf-8
 from trigger.global_vars import *
 from lib.helper import request, add_argument_to_conf
+logger = logging.getLogger(__name__)
 
 #=======================================================#
-#================== Global parameters ==================#
-#=======================================================#
-# GITLAB_REPO = "https://gitlab-forge.din.developpement-durable.gouv.fr"
-# JENKINS_URL = {"prod":"https://jenkins-prod.mel.edcs.fr/jenkins-prod/generic-webhook-trigger/invoke","preprod":"https://jenkins-preprod.mel.edcs.fr/jenkins-preprod/generic-webhook-trigger/invoke"}
-# TRIGGER_PARAMETERS_FILE_NAME = "./trigger_parameters.yml"
-# DESCRIPTION_VARIABLES = [{'tag': "--parent-recette",'name':"CI_PARENT_RECETTE"}]
-
-#=======================================================#
-#======================== Main =========================#
+#================== Trigger function ===================#
 #=======================================================#
 
 def get_changes(commit_before_sha, commit_sha):
+    """
+    Launching a shell git command to get file changed based between two commit given by the pipeline.
+
+    Args:
+        commit_before_sha (str): The commit sha of the commit before the actual one.
+        commit_sha (str): The commit sha of the actual commit.
+
+    Returns:
+        changes (str): Changed files between two commit.
+    """
     changes = ""
     #Launch a git diff
     try :
         changes = subprocess.check_output(['git','diff','--name-only',commit_before_sha,commit_sha]).decode(sys.stdout.encoding)
         changes = ' '.join(changes.splitlines())
     except subprocess.CalledProcessError as err:
-        logging.info(f"Git diff failed...({err})")
+        logger.info(f"Git diff failed...({err})")
     else :
-        logging.debug(f"Changed files : {changes}")
+        logger.debug(f"Changed files : {changes}")
 
     return changes
 
 def read_trigger_parameters_local_file():
+    """
+    Reading local trigger parameters file that can overrides values of project trigger configuration.
+
+    Args:
+        None
+
+    Returns:
+        trigger_parameters_local_file (dict): Dictionary loaded from a potential local parameters file.
+    """
     trigger_parameters_local_file = {}
     try:
         with open(TRIGGER_PARAMETERS_FILE_NAME, 'r') as trigger_parameters:
             try:
                 trigger_parameters_local_file = yaml.safe_load(trigger_parameters)
             except yaml.YAMLError as exc:
-                logging.debug(f"{TRIGGER_PARAMETERS_FILE_NAME} file cannot be load...({exc})")
+                logger.debug(f"{TRIGGER_PARAMETERS_FILE_NAME} file cannot be load...({exc})")
     except Exception as e:
-        logging.debug(f"{TRIGGER_PARAMETERS_FILE_NAME} file not found...({e})")
+        logger.debug(f"{TRIGGER_PARAMETERS_FILE_NAME} file not found...({e})")
     
     return trigger_parameters_local_file
 
 def add_local_file_to_config(config, trigger_parameters_local_file) :
+    """
+    Overriding configuration found in local trigger parameters file.
+
+    Args:
+        config (dict): Original configuration.
+        trigger_parameters_local_file (dict): Configuration found in a local trigger parameters file.
+
+    Returns:
+        new_config (dict): New configuration with override values.
+    """
     new_config = config.copy()
     for project in trigger_parameters_local_file :
         project_name = project.get('name')
         project_type = project.get('type')
         project_config = new_config.get(project["name"])
         if project_config != None :
-            logging.debug(f"{project_name} in trigger_parameters.yml, adding new arguments to config...")
+            logger.debug(f"{project_name} in trigger_parameters.yml, adding new arguments to config...")
             project_config = project_config | add_argument_to_conf(project, SETUP_TRIGGER_ARGUMENTS, "all")
             project_config = project_config | add_argument_to_conf(project, SETUP_TRIGGER_ARGUMENTS, project_type)
             new_config[str(project_name)] = new_config[str(project_name)] | project_config
         else : 
-            logging.debug(f"{project_name} not in trigger_parameters.yml")
+            logger.debug(f"{project_name} not in trigger_parameters.yml")
     
     return new_config
 
 def check_if_branch_can_trigger(project_name, project_config, branch) :
+    """
+    Checking if a trigger can be launched depending of branchs_only_trigger parameters and actual branch.
+
+    Args:
+        project_name (str): Project to trigger name.
+        project_config (dict): Project to trigger configuration.
+        branch (str): Actual branch of the pipeline.
+
+    Returns:
+        branch_can_trigger (bool): Notice if a trigger can be launched.
+    """
     branch_can_trigger = False
     branchs_only_trigger = project_config.get("branchs_only_trigger")
 
@@ -67,11 +100,22 @@ def check_if_branch_can_trigger(project_name, project_config, branch) :
             branch_can_trigger = True
     
     if not branch_can_trigger :
-        logging.info(f"{branch} branch is not in branchs_only_trigger : {branchs_only_trigger} for project {project_name}, trigger will not be launched")
+        logger.info(f"{branch} branch is not in branchs_only_trigger : {branchs_only_trigger} for project {project_name}, trigger will not be launched")
 
     return branch_can_trigger
 
 def check_if_file_can_trigger(project_name, project_config, changes) :
+    """
+    Checking if a trigger can be launched depending of trigger_files parameters and files changed of the pipeline launched.
+
+    Args:
+        project_name (str): Project to trigger name.
+        project_config (dict): Project to trigger configuration.
+        changes (str): Changed files of the pipeline launched.
+
+    Returns:
+        file_can_trigger (bool): Notice if a trigger can be launched.
+    """
     file_can_trigger = False
     trigger_files = project_config.get("trigger_files")
 
@@ -85,11 +129,21 @@ def check_if_file_can_trigger(project_name, project_config, changes) :
                     file_can_trigger = True
     
     if not file_can_trigger :
-        logging.info(f"{changes} changes is not in trigger_files : {trigger_files} for project {project_name}, trigger will not be launched")
+        logger.info(f"{changes} changes is not in trigger_files : {trigger_files} for project {project_name}, trigger will not be launched")
 
     return file_can_trigger
 
 def get_mapped_branch(initial_branch, project_config) :
+    """
+    Giving a mapped branch in case branchs_mapping parameters is present.
+
+    Args:
+        initial_branch (str): Actual branch of the pipeline.
+        project_config (dict): Project to trigger configuration.
+
+    Returns:
+        mapped_branch (str): New branch to trigger according to branchs_mapping parameters.
+    """
     branchs_mapping = project_config.get("branchs_mapping")
     mapped_branch = initial_branch
 
@@ -97,19 +151,34 @@ def get_mapped_branch(initial_branch, project_config) :
         mapping = branchs_mapping.get("branch")
         if mapping != None :
             mapped_branch = mapping
-            logging.info(f"branch {mapped_branch} will be triggered")
+            logger.info(f"branch {mapped_branch} will be triggered")
         else : 
-            logging.debug(f"branch {initial_branch} not in branchs_mapping")
+            logger.debug(f"branch {initial_branch} not in branchs_mapping")
     else : 
-        logging.debug("branchs_mapping not in config")
+        logger.debug("branchs_mapping not in config")
     
     return mapped_branch
 
 def create_payload(project_name, project_config, trigger_project, mapped_branch, initial_branch, description, changes):
+    """
+    Creating payload needed to request a trigger depending of the project to trigger type.
+
+    Args:
+        project_name (str): Project to trigger name.
+        project_config (dict): Project to trigger configuration.
+        trigger_project (str): Project that trigger name.
+        mapped_branch (str): Branch to trigger.
+        initial_branch (str): Actual branch of the pipeline.
+        description (str): Description of the pipeline.
+        changes (str): Changed files of the pipeline launched.
+
+    Returns:
+        data (dict): Payload needed to request a trigger depending of the project to trigger type.
+    """
     project_type = project_config.get("type")
     trigger_token = os.getenv(project_config.get("token_name"))
 
-    logging.info("Creating payload...")
+    logger.info("Creating payload...")
     data = {}
 
     if project_type == "gitlab" :
@@ -132,15 +201,26 @@ def create_payload(project_name, project_config, trigger_project, mapped_branch,
         data["pipeline_name"] = project_name
         additional_params = project_config.get("additional_params")
         if additional_params == None :
-            logging.debug("additional_params not in config")
+            logger.debug("additional_params not in config")
         else : 
             data["additional_params"] = additional_params
 
-    logging.info(f"Payload created : {data}")
+    logger.info(f"Payload created : {data}")
 
     return data
 
 def create_url(project_config, mapped_branch, initial_branch) :
+    """
+    Creating url needed to request a trigger depending of the project to trigger type.
+
+    Args:
+        project_config (dict): Project to trigger configuration.
+        mapped_branch (str): Branch to trigger.
+        initial_branch (str): Actual branch of the pipeline.
+
+    Returns:
+        url (str): url needed to request a trigger depending of the project to trigger type.
+    """
     project_type = project_config.get("type")
     url = ""
 
@@ -148,10 +228,10 @@ def create_url(project_config, mapped_branch, initial_branch) :
     if url_mapping != None :
         url = url_mapping.get(mapped_branch)
         if url == None :
-            logging.warning(f"branch {initial_branch} not in URL_MAPPING of project type {project_type}. Branch {DEFAULT_BRANCH} will be taken by default")
+            logger.warning(f"branch {initial_branch} not in URL_MAPPING of project type {project_type}. Branch {DEFAULT_BRANCH} will be taken by default")
             url = url_mapping.get(DEFAULT_BRANCH)
     else :
-        logging.debug(f"Project type {project_type} doesn't have url_mapping.")
+        logger.debug(f"Project type {project_type} doesn't have url_mapping.")
     
     if project_type == "gitlab" :
         url = GITLAB_URL + 'api/v4/projects/' + str(project_config.get("id"))   + '/trigger/pipeline'
@@ -159,6 +239,16 @@ def create_url(project_config, mapped_branch, initial_branch) :
     return url
 
 def create_request_auth(project_config, token):
+    """
+    Creating authentication information needed to request a trigger depending of the project to trigger type.
+
+    Args:
+        project_config (dict): Project to trigger configuration.
+        token (str): Token to use for authentication.
+
+    Returns:
+        request_auth (dict): authentication information needed to request a trigger depending of the project to trigger type.
+    """
     project_type = project_config.get("type")
     request_auth = {}
     if project_type == "gitlab" :
@@ -173,67 +263,10 @@ def create_request_auth(project_config, token):
 def trigger(project_name, project_config, trigger_project, branch, description, changes, token):
     if check_if_branch_can_trigger(project_name, project_config, branch) :
         if check_if_file_can_trigger(project_name, project_config, changes) :
-            logging.info(f"Launch triggering process of {project_name} project")
+            logger.info(f"Launch triggering process of {project_name} project")
             mapped_branch = get_mapped_branch(branch, project_config)
             data = create_payload(project_name, project_config, trigger_project, mapped_branch, branch, description, changes)
             url = create_url(project_config, mapped_branch, branch)
             request_auth = create_request_auth(project_config, token)
             response = request("post",url, headers=request_auth.get("headers"), auth=request_auth.get("auth"), payload_data=data)
-            logging.debug(f"Response : {response}")
-
-def main(args):
-    #Leave proxy
-    os.environ["http_proxy"]=""
-    os.environ["HTTP_PROXY"]=""
-    os.environ["https_proxy"]=""
-    os.environ["HTTPS_PROXY"]=""
-
-    trigger_config = env.json(TRIGGER_VARIABLE_CONFIGURATION_KEY_DEFAULT, {})
-    trigger_parameters_local_file = read_trigger_parameters_local_file()
-    changes = get_changes(args.commit_before_sha,args.commit_sha)
-
-    for project_name,project_config in trigger_config.items() :
-        project_config = add_local_file_to_config(project_config, trigger_parameters_local_file)
-        trigger(project_name, project_config, args.project, args.branch, args.description, changes, args.token)
-
-#=======================================================#
-#====================== Arguments ======================#
-#=======================================================#
-
-# Create arguments parser
-parser = argparse.ArgumentParser(
-    prog='CICD Python Helper',
-    description="Programme permettant de gérer les logs/artifacts des projets gitlab")
-
-parser.add_argument(
-    '-tok', '--token', 
-    metavar='TOKEN', default=' ',
-    help="Token pour accéder à gitlab")
-parser.add_argument(
-    '-p', '--project', 
-    metavar='PROJECT_NAME', default=' ',
-    help="Nom du projet qui trigger")
-parser.add_argument(
-    '-b', '--branch', 
-    metavar='BRANCH', default=' ',
-    help="Branche qui trigger")
-parser.add_argument(
-    '-desc', '--description', 
-    metavar='DESCRIPTION', default=' ',
-    help="Decription du trigger")
-parser.add_argument(
-    '-cbs', '--commit-before-sha', 
-    metavar='COMMIT_BEFORE_SHA', default=' ',
-    help="Sha du commit précedent")
-parser.add_argument(
-    '-cs', '--commit-sha', 
-    metavar='COMMIT_SHA', default=' ',
-    help="Sha du commit actuelle")
-
-# Run the arguments parser
-args = parser.parse_args()
-
-main(args)
-
-# End
-print("\r")
+            logger.debug(f"Response : {response}")
