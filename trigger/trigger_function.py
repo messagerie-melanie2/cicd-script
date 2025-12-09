@@ -34,9 +34,6 @@ def read_trigger_parameters_local_file():
     """
     Reading local trigger parameters file that can overrides values of project trigger configuration.
 
-    Args:
-        None
-
     Returns:
         trigger_parameters_local_file (dict): Dictionary loaded from a potential local parameters file.
     """

@@ -25,9 +25,6 @@ def main(args):
             - description (str): Description of the pipeline.
             - commit_before_sha (str): The commit sha of the commit before the actual one.
             - commit_sha (str): The commit sha of the actual commit.
-
-    Returns:
-        None
     """
 
     #Leave proxy

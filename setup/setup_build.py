@@ -40,9 +40,6 @@ def config_build_token(token, project, project_variables):
         token (str): The GitLab private token used for authentication.
         project (dict): The project info dictionary.
         project_variables (list): Existing variables retrieved from the GitLab API.
-
-    Returns:
-        None
     """
 
     headers = {"PRIVATE-TOKEN": token}
@@ -102,9 +99,6 @@ def set_build_ci_variables(token, project, project_variables):
         token (str): The GitLab private token used for authentication.
         project (dict): The project info dictionary.
         project_variables (list): Existing variables retrieved from the GitLab API.
-
-    Returns:
-        None
     """
     headers = {"PRIVATE-TOKEN": token}
     project_name = project.get('name')

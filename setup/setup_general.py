@@ -48,9 +48,6 @@ def set_config_path(token, projects_to_setup):
         token (str): The GitLab private token used for authentication.
         projects_to_setup (list): A list of project configuration dictionaries loaded
             from setup YAML files.
-
-    Returns:
-        None
     """
     files = {
         'ci_config_path': (None, SETUP_GITLAB_CI_CONFIG_PATH),

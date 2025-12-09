@@ -24,9 +24,6 @@ def main(args) :
         args (Namespace): Command-line arguments containing:
             - setup_trigger (bool, exclusive): Launch a trigger setup.
             - setup_build (bool, exclusive): Launch a build setup.
-
-    Returns:
-        None
     """
 
     token = os.environ.get(SETUP_GITLAB_TOKEN_NAME)

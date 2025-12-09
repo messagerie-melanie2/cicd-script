@@ -60,7 +60,6 @@ def create_trigger_project_ci_variable(project, project_to_trigger, trigger_toke
         project (dict): The project receiving CI variables.
         project_to_trigger (dict): The project to be triggered.
         trigger_token (str): The GitLab trigger token (if applicable).
-        variable_name (str): The key under which variables should be stored.
 
     Returns:
         project_configuration (dict): A dictionary containing the full CI variable configuration.
@@ -148,9 +147,6 @@ def set_trigger_ci_variables(token,all_project_configuration):
     Args:
         token (str): GitLab private token used for authentication.
         all_project_configuration (dict): Dictionary of all CI variable configurations.
-
-    Returns:
-        None
     """
     headers = {"PRIVATE-TOKEN": token}
 
@@ -185,9 +181,6 @@ def set_trigger_project_allowlist(project, project_to_trigger_name, project_to_t
         project_to_trigger_id (int): ID of the project that will be triggered.
         project_to_trigger_dependencies (list): List of dependency project dictionaries.
         headers (dict): HTTP headers containing the GitLab authentication token.
-
-    Returns:
-        None
     """
     project_name = project.get("name")
     project_id = project.get("id")
@@ -244,9 +237,6 @@ def set_trigger_allowlist(token, all_setup):
     Args:
         token (str): GitLab private token for authentication.
         all_setup (list): Project setup configurations loaded from YAML files.
-
-    Returns:
-        None
     """
     headers = {"PRIVATE-TOKEN": token}
 
