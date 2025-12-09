@@ -1,12 +1,5 @@
 # coding=utf-8
-import argparse
-import requests
-import os
-import yaml
-import json
-from datetime import date, timedelta
-from environs import Env
-import logging
+from lib.global_vars import *
 
 #=======================================================#
 #================== Global parameters ==================#
@@ -30,7 +23,6 @@ logging.basicConfig(
 #=======================================================#
 #============== Trigger Global parameters ==============#
 #=======================================================#
-env = Env()
 
 #Default values
 SETUP_GITLAB_TOKEN_NAME_DEFAULT = "CICD_GITLAB_ADMIN_TOKEN"
@@ -39,22 +31,17 @@ SETUP_TRIGGER_FILE_ENDSWITH_DEFAULT = "triggers.yml"
 SETUP_GITLAB_CI_CONFIG_PATH_DEFAULT = ".gitlab-ci.yml@snum/detn/gmcd/cicd/cicd-yaml"
 SETUP_GITLAB_ACCOUNT_USERNAME_DEFAULT = "admin.gitlab"
 SETUP_TRIGGER_DESCRIPTION_DEFAULT = "Trigger cree par L'administrateur"
-SETUP_TRIGGER_ARGUMENTS_DEFAULT = {'all': 'trigger_files,branchs_only_trigger,branchs_mapping', 'gitlab': 'focus_trigger', 'jenkins': 'additional_params,token_name'}
 SETUP_GITLAB_VARIABLE_TRIGGER_KEY_DEFAULT = "TRIGGER_TOKEN"
 SETUP_JENKINS_TRIGGER_TOKEN_NAME_DEFAULT = "JENKINS_TRIGGER_TOKEN"
-SETUP_VARIABLE_CONFIGURATION_KEY_DEFAULT = {'gitlab': 'GITLAB_TRIGGER_CONFIGURATION', 'jenkins': 'JENKINS_TRIGGER_CONFIGURATION'}
 
-GITLAB_URL = os.environ.get('GITLAB_PROTOCOL',"https://") + os.environ.get('GITLAB_DOMAIN',"")
 SETUP_GITLAB_TOKEN_NAME = os.environ.get('SETUP_GITLAB_TOKEN_NAME',SETUP_GITLAB_TOKEN_NAME_DEFAULT)
 SETUP_TRIGGER_FOLDER_PATH = os.environ.get('SETUP_TRIGGER_FOLDER_PATH',SETUP_TRIGGER_FOLDER_PATH_DEFAULT)
 SETUP_TRIGGER_FILE_ENDSWITH = os.environ.get('SETUP_TRIGGER_FILE_ENDSWITH',SETUP_TRIGGER_FILE_ENDSWITH_DEFAULT)
 SETUP_GITLAB_CI_CONFIG_PATH = os.environ.get('SETUP_GITLAB_CI_CONFIG_PATH',SETUP_GITLAB_CI_CONFIG_PATH_DEFAULT)
 SETUP_GITLAB_ACCOUNT_USERNAME = os.environ.get('SETUP_GITLAB_ACCOUNT_USERNAME',SETUP_GITLAB_ACCOUNT_USERNAME_DEFAULT)
 SETUP_TRIGGER_DESCRIPTION = os.environ.get('SETUP_TRIGGER_DESCRIPTION',SETUP_TRIGGER_DESCRIPTION_DEFAULT)
-SETUP_TRIGGER_ARGUMENTS = env.json('SETUP_TRIGGER_ARGUMENTS',SETUP_TRIGGER_ARGUMENTS_DEFAULT)
 SETUP_GITLAB_VARIABLE_TRIGGER_KEY = os.environ.get('SETUP_GITLAB_VARIABLE_TRIGGER_KEY',SETUP_GITLAB_VARIABLE_TRIGGER_KEY_DEFAULT)
 SETUP_JENKINS_TRIGGER_TOKEN_NAME = os.environ.get('SETUP_JENKINS_TRIGGER_TOKEN_NAME',SETUP_JENKINS_TRIGGER_TOKEN_NAME_DEFAULT)
-SETUP_VARIABLE_CONFIGURATION_KEY = env.json('SETUP_VARIABLE_CONFIGURATION_KEY',SETUP_VARIABLE_CONFIGURATION_KEY_DEFAULT)
 
 #=======================================================#
 #=============== Build Global parameters ===============#

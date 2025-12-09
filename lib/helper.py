@@ -2,7 +2,7 @@ from global_vars import *
 
 logger = logging.getLogger(__name__)
 
-def request(mode, url = '', headers = None, payload_data = None, payload_json = None, files = None):
+def request(mode, url = '', headers = None, auth = None, payload_data = None, payload_json = None, files = None):
     """
     Sends an HTTP request based on the specified mode.
 
@@ -32,11 +32,11 @@ def request(mode, url = '', headers = None, payload_data = None, payload_json = 
             case "get":
                 r = requests.get(url=url, headers=headers)
             case "post":
-                r = requests.post(url=url, headers=headers, data=payload_data, json = payload_json, files=files)
+                r = requests.post(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files)
             case "put":
-                r = requests.put(url=url, headers=headers, data=payload_data, json = payload_json, files=files)
+                r = requests.put(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files)
             case "patch":
-                r = requests.patch(url=url, headers=headers, data=payload_data, json = payload_json, files=files)
+                r = requests.patch(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files)
             case _:
                 logger.warning(f"request mode {mode} not supported")
         r.raise_for_status()
@@ -44,7 +44,7 @@ def request(mode, url = '', headers = None, payload_data = None, payload_json = 
         logger.error(f"Request failed : {r.json()}")
         logger.debug(f"Http Error: {err}")
     else :
-        if r.status_code in SETUP_ACCEPTED_STATUS_CODE:
+        if r.status_code in ACCEPTED_STATUS_CODE:
             response = r.json()
     
     return response
@@ -70,6 +70,28 @@ def send_message(url, message):
             'message_raw': message
         }
         request("post",url, payload_json=payload)
+
+def add_argument_to_conf(project, arguments_dict, type) :
+    """
+    Builds a dictionary of arguments based on a dictionary (format: {'type1': 'argument1,argument2','type2': 'argument3'}) settings.
+
+    Args:
+        project (dict): The project configuration dictionary.
+        type (str): The trigger argument category to extract.
+
+    Returns:
+        configuration_to_add (dict): A dictionary containing the trigger arguments relevant to the given type.
+    """
+    configuration_to_add = {}
+    argument_list = arguments_dict[type].split(',')
+
+    for argument in argument_list :
+        value = project.get(argument)
+        if value != None :
+            logging.debug(f"Adding {argument} to configuration.")
+            configuration_to_add[argument] = value
+    
+    return configuration_to_add
 
 def set_new_ci_variable(headers, project_id, project_variables, variable_key, variable_value, variable_masked) :
     """

@@ -1,5 +1,5 @@
 from global_vars import *
-from helper import request, send_message, set_new_ci_variable, set_new_allowlist
+from lib.helper import request, send_message, set_new_ci_variable, set_new_allowlist, add_argument_to_conf
 
 logger = logging.getLogger(__name__)
 
@@ -48,27 +48,6 @@ def config_trigger_token(project, headers, files):
 
     return trigger_token
 
-def add_trigger_argument(project, type) :
-    """
-    Builds a dictionary of trigger arguments based on global SETUP_TRIGGER_ARGUMENTS settings.
-
-    Args:
-        project (dict): The project configuration dictionary.
-        type (str): The trigger argument category to extract.
-
-    Returns:
-        configuration_to_add (dict): A dictionary containing the trigger arguments relevant to the given type.
-    """
-    configuration_to_add = {}
-    trigger_argument = SETUP_TRIGGER_ARGUMENTS[type].split(',')
-
-    for argument in trigger_argument :
-        value = project.get(argument)
-        if value != None :
-            configuration_to_add[argument] = value
-    
-    return configuration_to_add
-
 def create_trigger_project_ci_variable(project, project_to_trigger, trigger_token, variable_name):
     """
     Builds the CI/CD variable configuration for a project.
@@ -95,8 +74,8 @@ def create_trigger_project_ci_variable(project, project_to_trigger, trigger_toke
     project_configuration["name"] = project_name
 
     variable[project_to_trigger_name] = {}
-    variable[project_to_trigger_name] = variable[project_to_trigger_name] | add_trigger_argument(project,"all")
-    variable[project_to_trigger_name] = variable[project_to_trigger_name] | add_trigger_argument(project,project_to_trigger_type)
+    variable[project_to_trigger_name] = variable[project_to_trigger_name] | add_argument_to_conf(project, SETUP_TRIGGER_ARGUMENTS, "all")
+    variable[project_to_trigger_name] = variable[project_to_trigger_name] | add_argument_to_conf(project, SETUP_TRIGGER_ARGUMENTS, project_to_trigger_type)
     variable[project_to_trigger_name]["type"] = project_to_trigger_type
     
     

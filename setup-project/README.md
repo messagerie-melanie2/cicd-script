@@ -1,5 +1,6 @@
 # Documentation du setup-project
 
+## Module main
 ::: cicd-script.setup-project.main
 
 ::: cicd-script.setup-project.helper
