@@ -1,6 +1,6 @@
 # coding=utf-8
-from global_vars import *
-from ..lib.helper import request, add_argument_to_conf
+from trigger.global_vars import *
+from lib.helper import request, add_argument_to_conf
 
 #=======================================================#
 #================== Global parameters ==================#
