@@ -1,5 +1,5 @@
 # coding=utf-8
-from ..lib.global_vars import *
+from lib.global_vars import *
 
 #=======================================================#
 #================== Global parameters ==================#

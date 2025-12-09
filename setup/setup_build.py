@@ -1,5 +1,5 @@
-from global_vars import *
-from ..lib.helper import request, send_message, set_new_ci_variable
+from setup.global_vars import *
+from lib.helper import request, send_message, set_new_ci_variable
 
 logger = logging.getLogger(__name__)
 

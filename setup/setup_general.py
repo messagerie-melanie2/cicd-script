@@ -1,5 +1,5 @@
-from global_vars import *
-from ..lib.helper import request
+from setup.global_vars import *
+from lib.helper import request
 
 logger = logging.getLogger(__name__)
 
