@@ -233,9 +233,6 @@ parser.add_argument(
 # Run the arguments parser
 args = parser.parse_args()
 
-if(args.debug_enabled):
-    print(args)
-
 main(args)
 
 # End
