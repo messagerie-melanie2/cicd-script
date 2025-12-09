@@ -96,7 +96,7 @@ def create_trigger_project_ci_variable(project, project_to_trigger, trigger_toke
 
     variable[project_to_trigger_name] = variable[project_to_trigger_name] | configuration_to_add
 
-    project_configuration = project_configuration | variable
+    project_configuration["variable"] = variable
 
     return project_configuration
 
@@ -169,7 +169,7 @@ def set_trigger_ci_variables(token,all_project_configuration):
                 if not variable_already_put :
                     send_message(SETUP_CHANNEL_URL, f"🔔 Le projet {project_name} a bien été configuré pour trigger le projet {project_to_trigger_name}. Pour plus d'information voir : {SETUP_CI_JOB_URL}")
             
-            set_new_ci_variable(headers, project_id, project_variables, TRIGGER_VARIABLE_CONFIGURATION_KEY, json.dumps(variable), False)
+            set_new_ci_variable(headers, project_id, project_variables, TRIGGER_VARIABLE_CONFIGURATION_KEY, json.dumps(project_configuration), False)
             set_new_ci_variable(headers, project_id, project_variables, SETUP_CICD_CONFIGURATION_PATH_VARIABLE_NAME, SETUP_CICD_CONFIGURATION_PATH, False)
 
 def set_trigger_project_allowlist(project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies, headers):
