@@ -96,7 +96,7 @@ def create_trigger_project_ci_variable(project, project_to_trigger, trigger_toke
 
     variable[project_to_trigger_name] = variable[project_to_trigger_name] | configuration_to_add
 
-    project_configuration = variable
+    project_configuration = project_configuration | variable
 
     return project_configuration
 
