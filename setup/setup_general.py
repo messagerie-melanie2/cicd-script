@@ -57,7 +57,7 @@ def set_config_path(token, projects_to_setup):
     for project in projects_to_setup :
         project_id = project.get("id")
         if project.get("change_ci") != False :
-            if project_id == 27032:
+            if project_id == 27188:
                 logger.info(f"Setting ci config path of {project.get('name')} project")
                 url = f"{GITLAB_URL}/api/v4/projects/{project_id}"
                 request("put", url, headers, files=files)
