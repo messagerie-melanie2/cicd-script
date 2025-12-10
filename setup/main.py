@@ -42,7 +42,7 @@ def main(args) :
         set_config_path(token,all_setup)
         for project_to_setup in all_setup :
             project_to_setup_id = project_to_setup.get("id")
-            if project_to_setup_id == 27032:
+            if project_to_setup_id == 27188:
                 project_to_setup_variables = get_build_project_variables(token, project_to_setup)
                 config_build_token(token, project_to_setup, project_to_setup_variables)
                 set_build_ci_variables(token, project_to_setup, project_to_setup_variables)
