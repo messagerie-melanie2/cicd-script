@@ -181,7 +181,7 @@ def create_payload(project_name, project_config, trigger_project, mapped_branch,
     if project_type == "gitlab" :
         focus_trigger = project_config.get("focus_trigger")
         variables_json = {}
-        for variable in DESCRIPTION_VARIABLES :
+        for variable in TRIGGER_DESCRIPTION_VARIABLES :
             if variable["tag"] in description :
                 variables_json[variable["name"]] = True
         
@@ -221,12 +221,12 @@ def create_url(project_config, mapped_branch, initial_branch) :
     project_type = project_config.get("type")
     url = ""
 
-    url_mapping = URL_MAPPING.get(project_type)
+    url_mapping = TRIGGER_URL_MAPPING.get(project_type)
     if url_mapping != None :
         url = url_mapping.get(mapped_branch)
         if url == None :
-            logger.warning(f"branch {initial_branch} not in URL_MAPPING of project type {project_type}. Branch {DEFAULT_BRANCH} will be taken by default")
-            url = url_mapping.get(DEFAULT_BRANCH)
+            logger.warning(f"branch {initial_branch} not in URL_MAPPING of project type {project_type}. Branch {TRIGGER_DEFAULT_BRANCH} will be taken by default")
+            url = url_mapping.get(TRIGGER_DEFAULT_BRANCH)
     else :
         logger.debug(f"Project type {project_type} doesn't have url_mapping.")
     

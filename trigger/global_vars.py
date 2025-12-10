@@ -13,8 +13,18 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
 )
 
+#=======================================================#
+#============== Trigger Global parameters ==============#
+#=======================================================#
+
 #Default values
-URL_MAPPING = {"jenkins": {"prod":"https://jenkins-prod.mel.edcs.fr/jenkins-prod/generic-webhook-trigger/invoke","preprod":"https://jenkins-preprod.mel.edcs.fr/jenkins-preprod/generic-webhook-trigger/invoke"}}
-DEFAULT_BRANCH = "prod"
-TRIGGER_PARAMETERS_FILE_NAME = "./trigger_parameters.yml"
-DESCRIPTION_VARIABLES = [{'tag': "--parent-recette",'name':"CI_PARENT_RECETTE"}]
+TRIGGER_URL_MAPPING_DEFAULT = {}
+TRIGGER_DEFAULT_BRANCH_DEFAULT = "prod"
+TRIGGER_PARAMETERS_FILE_NAME_DEFAULT = "./trigger_parameters.yml"
+TRIGGER_DESCRIPTION_VARIABLES_DEFAULT = [{'tag': "--parent-recette",'name':"CI_PARENT_RECETTE"}]
+
+TRIGGER_URL_MAPPING = env.json('TRIGGER_URL_MAPPING',TRIGGER_URL_MAPPING_DEFAULT)
+TRIGGER_DEFAULT_BRANCH = os.environ.get('TRIGGER_DEFAULT_BRANCH',TRIGGER_DEFAULT_BRANCH_DEFAULT)
+TRIGGER_PARAMETERS_FILE_NAME = os.environ.get('TRIGGER_PARAMETERS_FILE_NAME',TRIGGER_PARAMETERS_FILE_NAME_DEFAULT)
+TRIGGER_DESCRIPTION_VARIABLES_RAW = os.environ.get('TRIGGER_DESCRIPTION_VARIABLES',TRIGGER_DESCRIPTION_VARIABLES_DEFAULT)
+TRIGGER_DESCRIPTION_VARIABLES = json.loads(TRIGGER_DESCRIPTION_VARIABLES_RAW)
