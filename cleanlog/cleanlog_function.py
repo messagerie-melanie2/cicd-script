@@ -24,7 +24,7 @@ def check_week_limit(jobs, weeks_limit):
         last_job = jobs[-1]
         if last_job["started_at"] != None :
             last_job_date = datetime.strptime(last_job["started_at"][:-1], "%Y-%m-%dT%H:%M:%S.%f")
-            date_limit = datetime.now() - timedelta(weeks=weeks_limit*2)
+            date_limit = datetime.now() - timedelta(weeks=int(weeks_limit)*2)
             if last_job_date < date_limit:
                 limit_not_exceeded = False
     
@@ -98,7 +98,7 @@ def process_jobs(jobs, token, project_id, weeks_limit):
         weeks_limit (str): Week limit if exceeded, erase the job.
     """
     if weeks_limit != None :
-        date_limit = datetime.now() - timedelta(weeks=weeks_limit)
+        date_limit = datetime.now() - timedelta(weeks=int(weeks_limit))
 
     for job in jobs :
         if job["status"] not in CLEANLOG_STATUS_NO_LOG :
