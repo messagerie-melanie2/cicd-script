@@ -1,5 +1,5 @@
 # coding=utf-8
-from global_vars import *
+from cleanlog.global_vars import *
 from cleanlog.cleanlog_function import get_jobs_info, process_jobs
 
 logger = logging.getLogger(__name__)

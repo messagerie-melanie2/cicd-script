@@ -1,4 +1,4 @@
-from global_vars import *
+from cleanlog.global_vars import *
 from lib.helper import request
 
 logger = logging.getLogger(__name__)
