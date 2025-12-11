@@ -4,6 +4,8 @@ nav:
       - Script : 
         - Configuration des projets : setup/README.md
         - Trigger des projets : trigger/README.md
+        - Clean les logs des projets : cleanlog/README.md
 src_code:
   - setup/
   - trigger/
+  - cleanlog/

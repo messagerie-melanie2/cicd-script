@@ -47,36 +47,37 @@ def main(args):
 
 # Create arguments parser
 parser = argparse.ArgumentParser(
-    prog='CICD Python Helper',
-    description="Programme permettant de gérer les logs/artifacts des projets gitlab")
+    prog='CICD Python Helper')
 
 parser.add_argument(
     '-tok', '--token', 
     metavar='TOKEN', default=' ',
-    help="Token pour accéder à gitlab")
+    help="Token to use for authentication")
 parser.add_argument(
     '-p', '--project', 
     metavar='PROJECT_NAME', default=' ',
-    help="Nom du projet qui trigger")
+    help="Project that trigger name")
 parser.add_argument(
     '-b', '--branch', 
     metavar='BRANCH', default=' ',
-    help="Branche qui trigger")
+    help="Actual branch of the pipeline")
 parser.add_argument(
     '-desc', '--description', 
     metavar='DESCRIPTION', default=' ',
-    help="Decription du trigger")
+    help="Description of the pipeline")
 parser.add_argument(
     '-cbs', '--commit-before-sha', 
     metavar='COMMIT_BEFORE_SHA', default=' ',
-    help="Sha du commit précedent")
+    help="The commit sha of the commit before the actual one")
 parser.add_argument(
     '-cs', '--commit-sha', 
     metavar='COMMIT_SHA', default=' ',
-    help="Sha du commit actuelle")
+    help="The commit sha of the actual commit")
 
 # Run the arguments parser
 args = parser.parse_args()
+
+logger.debug(f"args : {args}")
 
 main(args)
 

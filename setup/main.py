@@ -55,8 +55,7 @@ def main(args) :
 
 # Create arguments parser and mutually exclusive group
 parser = argparse.ArgumentParser(
-    prog='CICD Python Helper',
-    description="Program for setting GitLab project")
+    prog='CICD Python Helper')
 group = parser.add_mutually_exclusive_group(required=True)
 
 #####
