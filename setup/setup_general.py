@@ -105,17 +105,22 @@ def set_schedule(headers, project_id, schedule_to_set):
             'active': (None, 'true'),
         }
 
-        schedule_created = request("post", url, headers, files=files)
+        request("post", url, headers, files=files)
 
     for key,value in schedule_to_set_variables.items() :
         logger.info(f"Getting {key} variable...")
         schedule_variable_info = []
-        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get("id")}/variables/{key}"
-        logging.info(url)
-        schedule_variable_info.append(request("get", url, headers))
 
         variable_payload = {"key": key, "value": value }
-        logging.info(schedule_variable_info)
+
+        #FOR GITLAB IN 18.7
+        #url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get("id")}/variables/{key}"
+        #schedule_variable_info.append(request("get", url, headers))
+
+        #FOR GITLAB < 18.7
+        if schedule_created != {} :
+            schedule_variable_info.append(variable_payload)
+        
         set_new_ci_variable(url, headers, project_id, schedule_variable_info, variable_payload)
 
 
