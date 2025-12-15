@@ -118,7 +118,7 @@ def set_schedule(headers, project_id, schedule_to_set):
         #schedule_variable_info.append(request("get", url, headers))
 
         #FOR GITLAB < 18.7
-        if not schedule_already_setup :
+        if schedule_already_setup :
             schedule_variable_info.append(variable_payload)
         
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get("id")}/variables"
