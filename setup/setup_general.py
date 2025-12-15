@@ -83,6 +83,9 @@ def set_schedule(headers, project_id, schedule_to_set):
     schedule_to_set_variables = schedule_to_set.get("variables")
     schedule_to_set_branch = schedule_to_set.get("branch")
 
+    logger.info(f"Creating {schedule_to_set_description} schedule...")
+
+    logger.info(f"Getting project schedules...")
     url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules"
     project_schedules = request("get", url, headers)
 
@@ -92,6 +95,7 @@ def set_schedule(headers, project_id, schedule_to_set):
             schedule_created = schedule
     
     if not schedule_already_setup :
+        logger.info(f"Schedule not created. Creating...")
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules"
         files = {
             'description': (None, schedule_to_set_description),
@@ -166,5 +170,6 @@ def config_schedule(token, project, schedules_to_set_default):
 
     logger.info(f"Schedule to set : {schedules_to_set}")
 
-    for schedule in schedules_to_set :
+    logger.info(f"Creating {project_name} schedules.")
+    for schedule in schedules_to_set.values() :
         set_schedule(headers, project_id, schedule)
