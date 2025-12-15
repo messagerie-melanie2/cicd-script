@@ -154,6 +154,7 @@ def config_schedule(token, project, schedules_to_set_default):
 
         for key,value in schedule.items() :
             logger.info(f"key: {key}, value : {value}")
+            logger.info(f"schedule_key: {schedule_key}")
             if key != "variables" :
                 schedules_to_set[schedule_key][key] = value
             else :
