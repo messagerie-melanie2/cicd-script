@@ -90,9 +90,14 @@ def set_schedule(headers, project_id, schedule_to_set):
     project_schedules = request("get", url, headers)
 
     for schedule in project_schedules :
+        owner = schedule.get("owner")
         if schedule_to_set_description in schedule.get("description") :
             schedule_already_setup = True
             schedule_created = schedule
+        if owner is not None :
+            if owner.get("username") != SETUP_GITLAB_ACCOUNT_USERNAME :
+                url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule.get("id")}/take_ownership"
+                request("post", url, headers)
     
     if not schedule_already_setup :
         logger.info(f"Schedule not created. Creating...")
