@@ -160,13 +160,17 @@ def set_trigger_ci_variables(token,all_project_configuration):
             logger.debug(f"project_variables : {project_variables}")
 
             for project_to_trigger_name,variable in project_configuration.items() :
-                variable_already_put = set_new_ci_variable(headers, project_id, project_variables, variable.get("token_name"), variable.get("token"), True)
+                variable_payload = {'key':variable.get("token_name"), 'value':variable.get("token"), 'masked': True}
+                variable_already_put = set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)
                 variable.pop("token")
                 if not variable_already_put :
                     send_message(SETUP_CHANNEL_URL, f"🔔 Le projet {project_name} a bien été configuré pour trigger le projet {project_to_trigger_name}. Pour plus d'information voir : {SETUP_CI_JOB_URL}")
             
-            set_new_ci_variable(headers, project_id, project_variables, TRIGGER_VARIABLE_CONFIGURATION_KEY, json.dumps(project_configuration), False)
-            set_new_ci_variable(headers, project_id, project_variables, SETUP_CICD_CONFIGURATION_PATH_VARIABLE_NAME, SETUP_CICD_CONFIGURATION_PATH, False)
+            variable_payload = {'key':TRIGGER_VARIABLE_CONFIGURATION_KEY, 'value':json.dumps(project_configuration), 'masked': False}
+            variable_already_put = set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)
+
+            variable_payload = {'key':SETUP_CICD_CONFIGURATION_PATH_VARIABLE_NAME, 'value':SETUP_CICD_CONFIGURATION_PATH, 'masked': False}
+            variable_already_put = set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)
 
 def set_trigger_project_allowlist(project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies, headers):
     """

@@ -8,12 +8,29 @@ SETUP_CI_JOB_URL = os.environ.get('CI_JOB_URL',"")
 SETUP_LOG_LEVEL_DEFAULT = "INFO"
 SETUP_CICD_CONFIGURATION_PATH_VARIABLE_NAME_DEFAULT = "CICD_CONFIGURATION_PATH"
 SETUP_CHANNEL_URL_DEFAULT = ""
+SETUP_SCHEDULE_TYPE_DEFAULT = {
+    "cleanlog": 
+    {
+        "description": "[rotate log] Schedule de rotation de log", 
+        "cron": "0 0 */5 * *", 
+        "cron_timezone": "Europe/Paris",
+        "variables":
+        {
+            "CLEANLOG_WEEKS_LIMIT" : 2,
+            "CI_COMMIT_MESSAGE": "[cleanlog] ci-clean-log "
+        }
+    }
+}
+SETUP_SCHEDULE_MANDATORY_DEFAULT = ["cleanlog"]
 
 SETUP_ACCEPTED_STATUS_CODE = [200,201,202]
 SETUP_LOG_LEVEL = os.environ.get("SETUP_LOG_LEVEL", SETUP_LOG_LEVEL_DEFAULT).upper()
 SETUP_CICD_CONFIGURATION_PATH_VARIABLE_NAME = os.environ.get('SETUP_CICD_CONFIGURATION_PATH_VARIABLE_NAME',SETUP_CICD_CONFIGURATION_PATH_VARIABLE_NAME_DEFAULT)
 SETUP_CICD_CONFIGURATION_PATH = os.environ.get(SETUP_CICD_CONFIGURATION_PATH_VARIABLE_NAME, '')
 SETUP_CHANNEL_URL = os.environ.get('SETUP_CHANNEL_URL',SETUP_CHANNEL_URL_DEFAULT)
+SETUP_SCHEDULE_TYPE_RAW = os.environ.get('SETUP_SCHEDULE_TYPE',SETUP_SCHEDULE_TYPE_DEFAULT)
+SETUP_SCHEDULE_TYPE = json.loads(SETUP_SCHEDULE_TYPE_RAW)
+SETUP_SCHEDULE_MANDATORY = env.list('SETUP_SCHEDULE_MANDATORY',SETUP_SCHEDULE_MANDATORY_DEFAULT)
 
 logging.basicConfig(
     level=getattr(logging, SETUP_LOG_LEVEL),
@@ -54,6 +71,38 @@ SETUP_BUILD_TOKEN_ACCESS_LEVEL_DEFAULT = 40
 SETUP_BUILD_ENABLE_BUILD_VARIABLE_NAME_DEFAULT = "ENABLE_BUILD"
 SETUP_BUILD_DOCKERHUB_TOKEN_VARIABLE_NAME_DEFAULT = "DOCKERHUB_TOKEN"
 SETUP_BUILD_DEPLOY_TOKEN_VARIABLE_NAME_DEFAULT = "DEPLOY_TOKEN"
+SETUP_BUILD_SCHEDULE_TYPE_DEFAULT = {
+    "buildall": 
+    {
+        "description": "Daily rebuild for containers images (security updates)", 
+        "cron": "0 20 * * *", 
+        "cron_timezone": "Europe/Paris",
+        "variables":
+        {
+            "CI_COMMIT_MESSAGE": "[buildall] Daily rebuild on PROD - ci-all & ci-check-before-push"
+        }
+    },
+    "cleanghostimage":
+    {
+        "description": "Daily cleaning for containers images (nobuild images)", 
+        "cron": "0 2 * * *", 
+        "cron_timezone": "Europe/Paris",
+        "variables":
+        {
+            "CI_COMMIT_MESSAGE": "[cleanghostimage] Daily cleaning 'NO_BUILD' - ci-clean-nobuild"
+        }
+    },
+    "cleandevimage":
+    {
+        "description": "Daily cleaning for containers images (dev images)", 
+        "cron": "30 1 * * *", 
+        "cron_timezone": "Europe/Paris",
+        "variables":
+        {
+            "CI_COMMIT_MESSAGE": "[cleandevimage] Daily cleaning 'DEV' - ci-clean-dev"
+        }
+    },
+}
 
 SETUP_BUILD_FOLDER_PATH = os.environ.get('SETUP_BUILD_FOLDER_PATH',SETUP_BUILD_FOLDER_PATH_DEFAULT)
 SETUP_BUILD_FILE_ENDSWITH = os.environ.get('SETUP_BUILD_FILE_ENDSWITH',SETUP_BUILD_FILE_ENDSWITH_DEFAULT)
@@ -65,3 +114,5 @@ SETUP_BUILD_DOCKERHUB_TOKEN_VARIABLE_NAME = os.environ.get('SETUP_BUILD_DOCKERHU
 SETUP_BUILD_DEPLOY_TOKEN_VARIABLE_NAME = os.environ.get('SETUP_BUILD_DEPLOY_TOKEN_VARIABLE_NAME',SETUP_BUILD_DEPLOY_TOKEN_VARIABLE_NAME_DEFAULT)
 SETUP_BUILD_DOCKERHUB_TOKEN = os.environ.get(SETUP_BUILD_DOCKERHUB_TOKEN_VARIABLE_NAME, '')
 SETUP_BUILD_DEPLOY_TOKEN = os.environ.get(SETUP_BUILD_DEPLOY_TOKEN_VARIABLE_NAME, '')
+SETUP_BUILD_SCHEDULE_TYPE_RAW = os.environ.get('SETUP_BUILD_SCHEDULE_TYPE',SETUP_BUILD_SCHEDULE_TYPE_DEFAULT)
+SETUP_BUILD_SCHEDULE_TYPE = json.loads(SETUP_BUILD_SCHEDULE_TYPE_RAW)

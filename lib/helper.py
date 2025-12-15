@@ -93,7 +93,7 @@ def add_argument_to_conf(project, arguments_dict, type) :
     
     return configuration_to_add
 
-def set_new_ci_variable(headers, project_id, project_variables, variable_key, variable_value, variable_masked) :
+def set_new_ci_variable(url, headers, project_id, project_variables, variable_payload) :
     """
     Creates or updates a CI/CD variable for a specific GitLab project.
 
@@ -101,34 +101,29 @@ def set_new_ci_variable(headers, project_id, project_variables, variable_key, va
     is created.
 
     Args:
+        url (str): the url to request
         headers (dict): HTTP headers including the GitLab access token.
         project_id (int): The ID of the project where variables are defined.
         project_variables (list): Existing variables retrieved from the GitLab API.
-        variable_key (str): The key/name of the variable.
-        variable_value (str): The value to set for the variable.
-        variable_masked (bool): Whether the variable should be masked in GitLab.
+        variable_payload (dict): Payload to create the variable (format: {'key': 'mykey','value':'value'}).
 
     Returns:
         variable_already_put (bool): True if the variable already existed, False if it was newly created.
     """
     variable_already_put = False
+    variable_key = variable_payload.get("key")
+    variable_value = variable_payload.get("value")
 
     for variable in project_variables :
         if variable.get("key") == variable_key :
             variable_already_put = True
     
     if variable_already_put :
-        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables/{variable_key}?value={variable_value}"
+        url = f"{url}/{variable_key}?value={variable_value}"
         request("put", url, headers)
     else :
         logger.info(f"Setup {variable_key} for {project_id} project")
-        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
-        payload = {
-            'key': variable_key,
-            'value': variable_value,
-            'masked': variable_masked,
-        }
-        request("post", url, headers, payload_data=payload)
+        request("post", url, headers, payload_data=variable_payload)
 
     return variable_already_put
 
