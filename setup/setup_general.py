@@ -63,6 +63,18 @@ def set_config_path(token, projects_to_setup):
                 request("put", url, headers, files=files)
 
 def set_schedule(headers, project_id, schedule_to_set):
+    """
+    Updates the CI configuration path for a list of GitLab projects.
+
+    For each project defined in `projects_to_setup`, this function sends a PUT request
+    to update the `ci_config_path` field in the GitLab API. Projects with
+    `change_ci` set to False are skipped.
+
+    Args:
+        token (str): The GitLab private token used for authentication.
+        projects_to_setup (list): A list of project configuration dictionaries loaded
+            from setup YAML files.
+    """
     schedule_already_setup = False
     schedule_created = {}
     schedule_to_set_description = schedule_to_set.get("description")
@@ -100,6 +112,18 @@ def set_schedule(headers, project_id, schedule_to_set):
 
 
 def config_schedule(token, project, schedules_to_set_default):
+    """
+    Updates the CI configuration path for a list of GitLab projects.
+
+    For each project defined in `projects_to_setup`, this function sends a PUT request
+    to update the `ci_config_path` field in the GitLab API. Projects with
+    `change_ci` set to False are skipped.
+
+    Args:
+        token (str): The GitLab private token used for authentication.
+        projects_to_setup (list): A list of project configuration dictionaries loaded
+            from setup YAML files.
+    """
     headers = {"PRIVATE-TOKEN": token}
     project_name = project.get('name')
     project_id = project.get("id")
