@@ -101,7 +101,7 @@ SETUP_BUILD_SCHEDULE_TYPE_DEFAULT = """{
         {
             "CI_COMMIT_MESSAGE": "[cleandevimage] Daily cleaning 'DEV' - ci-clean-dev"
         }
-    },
+    }
 }"""
 
 SETUP_BUILD_FOLDER_PATH = os.environ.get('SETUP_BUILD_FOLDER_PATH',SETUP_BUILD_FOLDER_PATH_DEFAULT)
