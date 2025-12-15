@@ -107,14 +107,14 @@ def set_schedule(headers, project_id, schedule_to_set):
 
         schedule_created = request("post", url, headers, files=files)
 
-    logger.info(f"Getting {schedule_created} variables...")
-    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get("id")}/variables"
-
-    schedule_variables_info = request("get", url, headers)
-
     for key,value in schedule_to_set_variables.items() :
+        logger.info(f"Getting {key} variable...")
+        schedule_variable_info = []
+        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get("id")}/variables/{key}"
+        schedule_variable_info.append(request("get", url, headers))
+
         variable_payload = {"key": key, "value": value }
-        set_new_ci_variable(url, headers, project_id, schedule_variables_info, variable_payload)
+        set_new_ci_variable(url, headers, project_id, schedule_variable_info, variable_payload)
 
 
 def config_schedule(token, project, schedules_to_set_default):
