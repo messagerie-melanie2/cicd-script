@@ -111,8 +111,8 @@ def set_schedule(headers, project_id, schedule_to_set):
 
     schedule_variables_info = request("get", url, headers)
 
-    for variable_payload in schedule_to_set_variables.items() :
-        logger.info(variable_payload)
+    for key,value in schedule_to_set_variables.items() :
+        variable_payload = {"key": key, "value": value }
         set_new_ci_variable(url, headers, project_id, schedule_variables_info, variable_payload)
 
 
