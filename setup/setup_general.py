@@ -114,7 +114,7 @@ def set_schedule(headers, project_id, schedule_to_set):
         schedule_variable_info.append(request("get", url, headers))
 
         variable_payload = {"key": key, "value": value }
-        logging.ingo(schedule_variable_info)
+        logging.info(schedule_variable_info)
         set_new_ci_variable(url, headers, project_id, schedule_variable_info, variable_payload)
 
 
