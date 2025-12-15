@@ -178,6 +178,8 @@ def config_schedule(token, project, schedules_to_set_default):
             
             logger.debug(f"Schedule to set after: {schedules_to_set}")
 
+        schedule["description"] = f"[{schedule_branch}] {schedule["description"]}"
+
     logger.info(f"Schedule to set : {schedules_to_set}")
 
     logger.info(f"Creating {project_name} schedules.")
