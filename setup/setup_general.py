@@ -151,7 +151,8 @@ def config_schedule(token, project, schedules_to_set_default):
         schedule["branch"] = schedule_branch
         schedule_key = f"{schedule_type}-{schedule_branch}"
         schedules_to_set[schedule_key] = schedules_to_set_default[schedule_type]
-
+        
+        print(schedule)
         for key,value in schedule.items() :
             logger.info(f"key: {key}, value : {value}")
             logger.info(f"schedule_key: {schedule_key}")
