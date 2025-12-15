@@ -96,29 +96,33 @@ def set_schedule(headers, project_id, schedule_to_set):
             schedule_created = schedule
         if owner is not None :
             if owner.get("username") != SETUP_GITLAB_ACCOUNT_USERNAME :
+                logger.info(f"Taking ownership of {schedule.get("description")} schedule...")
                 url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule.get("id")}/take_ownership"
                 request("post", url, headers)
     
-    if not schedule_already_setup :
-        logger.info(f"Schedule not created. Creating...")
-        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules"
-        files = {
+    files = {
             'description': (None, schedule_to_set_description),
             'ref': (None, schedule_to_set_branch),
             'cron': (None, schedule_to_set_cron),
             'cron_timezone': (None, schedule_to_set_cron_timezone),
             'active': (None, 'true'),
         }
-
+    
+    if not schedule_already_setup :
+        logger.info(f"Schedule not created. Creating...")
+        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules"
         schedule_created = request("post", url, headers, files=files)
+    else :
+        logger.info(f"Schedule created. Modifying...")
+        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get("id")}"
+        schedule_created = request("put", url, headers, files=files)
 
     for key,value in schedule_to_set_variables.items() :
-        logger.info(f"Getting {key} variable...")
         schedule_variable_info = []
-
         variable_payload = {"key": key, "value": value }
 
         #FOR GITLAB IN 18.7
+        #logger.info(f"Getting {key} variable...")
         #url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get("id")}/variables/{key}"
         #schedule_variable_info.append(request("get", url, headers))
 
@@ -185,7 +189,7 @@ def config_schedule(token, project, schedules_to_set_default):
 
         schedules_to_set[schedule_key]["description"] = f"[{schedule_branch}] {schedules_to_set[schedule_key]["description"]}"
 
-    logger.info(f"Schedule to set : {schedules_to_set}")
+    logger.debug(f"Schedule to set : {schedules_to_set}")
 
     logger.info(f"Creating {project_name} schedules.")
     for schedule in schedules_to_set.values() :
