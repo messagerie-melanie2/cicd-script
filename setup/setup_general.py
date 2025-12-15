@@ -107,6 +107,7 @@ def set_schedule(headers, project_id, schedule_to_set):
 
         schedule_created = request("post", url, headers, files=files)
 
+    logger.info(f"Getting {schedule_created} variables...")
     url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get("id")}/variables"
 
     schedule_variables_info = request("get", url, headers)
