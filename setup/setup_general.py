@@ -36,7 +36,7 @@ def read_setup_files(folder_path, file_endswith):
                         all_setup = all_setup + setup_yaml
     return all_setup
 
-def set_config_path(token, projects_to_setup):
+def set_config_path(token, project):
     """
     Updates the CI configuration path for a list of GitLab projects.
 
@@ -46,35 +46,28 @@ def set_config_path(token, projects_to_setup):
 
     Args:
         token (str): The GitLab private token used for authentication.
-        projects_to_setup (list): A list of project configuration dictionaries loaded
-            from setup YAML files.
+        project (dict): Project configuration loaded from setup YAML files.
     """
     files = {
         'ci_config_path': (None, SETUP_GITLAB_CI_CONFIG_PATH),
     }
     headers = {"PRIVATE-TOKEN": token}
+    project_id = project.get("id")
+    if project.get("change_ci") != False :
+        logger.info(f"Setting ci config path of {project.get('name')} project")
+        url = f"{GITLAB_URL}/api/v4/projects/{project_id}"
+        request("put", url, headers, files=files)
 
-    for project in projects_to_setup :
-        project_id = project.get("id")
-        if project.get("change_ci") != False :
-            if project_id == 27188:
-                logger.info(f"Setting ci config path of {project.get('name')} project")
-                url = f"{GITLAB_URL}/api/v4/projects/{project_id}"
-                request("put", url, headers, files=files)
-
-def set_schedule(headers, project_id, schedule_to_set):
+def set_schedule(token, project_id, schedule_to_set):
     """
-    Updates the CI configuration path for a list of GitLab projects.
-
-    For each project defined in `projects_to_setup`, this function sends a PUT request
-    to update the `ci_config_path` field in the GitLab API. Projects with
-    `change_ci` set to False are skipped.
+    Setting schedules and schedules variables of a project.
 
     Args:
         token (str): The GitLab private token used for authentication.
-        projects_to_setup (list): A list of project configuration dictionaries loaded
-            from setup YAML files.
+        project_id (id): Project id to setup schedule.
+        schedules_to_set (dict): A dict containing all schedule to set with their values for the project.
     """
+    headers = {"PRIVATE-TOKEN": token}
     schedule_already_setup = False
     schedule_created = {}
     schedule_to_set_description = schedule_to_set.get("description")
@@ -136,16 +129,15 @@ def set_schedule(headers, project_id, schedule_to_set):
 
 def config_schedule(token, project, schedules_to_set_default):
     """
-    Updates the CI configuration path for a list of GitLab projects.
-
-    For each project defined in `projects_to_setup`, this function sends a PUT request
-    to update the `ci_config_path` field in the GitLab API. Projects with
-    `change_ci` set to False are skipped.
+    Creation of a dictionnary of all schedule to setup for a project based on default schedule and modified by values on yaml configuration files.
 
     Args:
         token (str): The GitLab private token used for authentication.
-        projects_to_setup (list): A list of project configuration dictionaries loaded
-            from setup YAML files.
+        project (dict): Project configuration dictionaries loaded from setup YAML files.
+        schedules_to_set_default (dict): Default value of schedule based on schedule type.
+    
+    Returns:
+        schedules_to_set (dict): A dict containing all schedule to set with their values for the project.
     """
     headers = {"PRIVATE-TOKEN": token}
     project_name = project.get('name')
@@ -189,8 +181,4 @@ def config_schedule(token, project, schedules_to_set_default):
 
         schedules_to_set[schedule_key]["description"] = f"[{schedule_branch}] {schedules_to_set[schedule_key]["description"]}"
 
-    logger.debug(f"Schedule to set : {schedules_to_set}")
-
-    logger.info(f"Creating {project_name} schedules.")
-    for schedule in schedules_to_set.values() :
-        set_schedule(headers, project_id, schedule)
+    return schedules_to_set

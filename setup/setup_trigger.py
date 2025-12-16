@@ -231,7 +231,7 @@ def set_trigger_project_allowlist(project, project_to_trigger_name, project_to_t
             payload = {'target_group_id': project_info.get("namespace",{}).get("id")}
             request("post",url, headers, payload_data=payload)
 
-def set_trigger_allowlist(token, all_setup):
+def set_trigger_allowlist(token, project_to_trigger):
     """
     Applies allowlist rules for all GitLab projects defined in setup files.
 
@@ -240,16 +240,14 @@ def set_trigger_allowlist(token, all_setup):
 
     Args:
         token (str): GitLab private token for authentication.
-        all_setup (list): Project setup configurations loaded from YAML files.
+        project_to_trigger (dict): Project setup configuration loaded from YAML files.
     """
     headers = {"PRIVATE-TOKEN": token}
-
-    for project_to_trigger in all_setup :
-        projects_to_setup = project_to_trigger.get("projects")
-        project_to_trigger_type = project_to_trigger.get("type")
-        project_to_trigger_name = project_to_trigger.get("name")
-        project_to_trigger_dependencies = project_to_trigger.get("dependencies", [])
-        if project_to_trigger_type == "gitlab" :
-            project_to_trigger_id = project_to_trigger.get("id")
-            for project in projects_to_setup :
-                set_trigger_project_allowlist(project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies, headers)
+    projects_to_setup = project_to_trigger.get("projects")
+    project_to_trigger_type = project_to_trigger.get("type")
+    project_to_trigger_name = project_to_trigger.get("name")
+    project_to_trigger_dependencies = project_to_trigger.get("dependencies", [])
+    if project_to_trigger_type == "gitlab" :
+        project_to_trigger_id = project_to_trigger.get("id")
+        for project in projects_to_setup :
+            set_trigger_project_allowlist(project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies, headers)

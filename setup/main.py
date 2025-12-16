@@ -1,5 +1,5 @@
 from setup.global_vars import *
-from setup.setup_general import read_setup_files, set_config_path, config_schedule
+from setup.setup_general import read_setup_files, set_config_path, config_schedule, set_schedule
 from setup.setup_trigger import create_trigger_ci_variables, set_trigger_ci_variables, set_trigger_allowlist
 from setup.setup_build import config_build_token, get_build_project_variables, set_build_ci_variables
 
@@ -30,24 +30,35 @@ def main(args) :
     if (args.setup_trigger):
         all_setup = read_setup_files(SETUP_TRIGGER_FOLDER_PATH, SETUP_TRIGGER_FILE_ENDSWITH)
         for project_to_trigger in all_setup :
+            set_trigger_allowlist(token,project_to_trigger)
             projects_to_setup = project_to_trigger.get("projects")
-            set_config_path(token,projects_to_setup)
+            for project in projects_to_setup :
+                project_id = project.get("id")
+                if project_id == 27188:
+                    set_config_path(token,project)
+                    schedules_to_set_default = SETUP_SCHEDULE_TYPE
+                    schedules_to_set = config_schedule(token, project, schedules_to_set_default)
+                    for schedule in schedules_to_set.values() :
+                        set_schedule(token, project_id, schedule)
+
         all_project_configuration = create_trigger_ci_variables(token,all_setup)
         logger.debug(f"all_project_configuration : {all_project_configuration}")
         set_trigger_ci_variables(token, all_project_configuration)
-        set_trigger_allowlist(token,all_setup)
     
     if (args.setup_build):
         all_setup = read_setup_files(SETUP_BUILD_FOLDER_PATH, SETUP_BUILD_FILE_ENDSWITH)
-        set_config_path(token,all_setup)
         for project_to_setup in all_setup :
             project_to_setup_id = project_to_setup.get("id")
             if project_to_setup_id == 27188:
+                set_config_path(token,project_to_setup)
                 project_to_setup_variables = get_build_project_variables(token, project_to_setup)
                 config_build_token(token, project_to_setup, project_to_setup_variables)
                 set_build_ci_variables(token, project_to_setup, project_to_setup_variables)
                 schedules_to_set_default = SETUP_SCHEDULE_TYPE | SETUP_BUILD_SCHEDULE_TYPE
-                config_schedule(token, project_to_setup, schedules_to_set_default)
+                schedules_to_set = config_schedule(token, project_to_setup, schedules_to_set_default)
+                logger.debug(f"Schedule to set : {schedules_to_set}")
+                for schedule in schedules_to_set.values() :
+                    set_schedule(token, project_to_setup_id, schedule)
 
             
 
