@@ -3,19 +3,19 @@
 ## Module main
 Fonction main qui lance tel ou tel setup en fonction de l'argument donné en entrée.
 
-::: cicd-script.setup.main
+::: cicdscript.setup.main
 
 ## Module setup_general
 Regroupement des fonctions nécessaires à tous les setups (build, trigger...).
 
-cicd-script.setup.setup_general
+::: cicdscript.setup.setup_general
 
 ## Module setup_build
 Regroupement des fonctions nécessaires exclusivement au setup de build.
 
-::: cicd-script.setup.setup_build
+::: cicdscript.setup.setup_build
 
 ## Module setup_trigger
 Regroupement des fonctions nécessaires exclusivement au setup de trigger.
 
-::: cicd-script.setup.setup_trigger
+::: cicdscript.setup.setup_trigger
