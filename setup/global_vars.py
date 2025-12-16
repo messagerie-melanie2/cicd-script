@@ -79,7 +79,7 @@ SETUP_BUILD_SCHEDULE_TYPE_DEFAULT = """{
         "cron_timezone": "Europe/Paris",
         "variables":
         {
-            "CI_COMMIT_MESSAGE": "[buildall] Daily rebuild - ci-all & ci-check-before-push"
+            "CI_COMMIT_MESSAGE": "[buildall] Daily rebuild - ci-all ci-check-before-push"
         }
     },
     "cleanghostimage":
