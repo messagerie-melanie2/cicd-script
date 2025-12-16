@@ -59,7 +59,7 @@ def main(args) :
         if(args.pipeline_source == "schedule") :
             pipelines = sort_pipeline(new_sortedRes, args.debug_enabled)
             
-            pipelines_write_jsonnet(pipelines,args.generate_jsonnet_destination_file, args.generate_jsonnet_pipeline_folder, dockerfiles_branch_tag, args.token, args.project_id, args.debug_enabled)
+            pipelines_write_jsonnet(pipelines, args.generate_jsonnet_pipeline_folder, args.generate_jsonnet_destination_file, dockerfiles_branch_tag, args.token, args.project_id, args.debug_enabled)
         else :
             trigger_variable = {}
             
