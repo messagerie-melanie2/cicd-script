@@ -1,6 +1,6 @@
 # Documentation du code du trigger
 
-## Module main
+## Module main 
 Fonction main qui lance un clean des logs en fonction du parametre CLEANLOG_WEEKS_LIMIT.
 
 ::: cicdscript.cleanlog.main
