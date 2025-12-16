@@ -89,8 +89,8 @@ def set_schedule(token, project_id, schedule_to_set):
             schedule_created = schedule
         if owner is not None :
             if owner.get("username") != SETUP_GITLAB_ACCOUNT_USERNAME :
-                logger.info(f"Taking ownership of {schedule.get("description")} schedule...")
-                url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule.get("id")}/take_ownership"
+                logger.info(f"Taking ownership of {schedule.get('description')} schedule...")
+                url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule.get('id')}/take_ownership"
                 request("post", url, headers)
     
     files = {
@@ -107,7 +107,7 @@ def set_schedule(token, project_id, schedule_to_set):
         schedule_created = request("post", url, headers, files=files)
     else :
         logger.info(f"Schedule already created. Modifying...")
-        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get("id")}"
+        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get('id')}"
         schedule_created = request("put", url, headers, files=files)
 
     for key,value in schedule_to_set_variables.items() :
@@ -116,14 +116,14 @@ def set_schedule(token, project_id, schedule_to_set):
 
         #FOR GITLAB IN 18.7
         #logger.info(f"Getting {key} variable...")
-        #url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get("id")}/variables/{key}"
+        #url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get('id')}/variables/{key}"
         #schedule_variable_info.append(request("get", url, headers))
 
         #FOR GITLAB < 18.7
         if schedule_already_setup :
             schedule_variable_info.append(variable_payload)
         
-        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get("id")}/variables"
+        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get('id')}/variables"
         set_new_ci_variable(url, headers, project_id, schedule_variable_info, variable_payload)
 
 
@@ -148,7 +148,7 @@ def config_schedule(token, project, schedules_to_set_default):
     logger.info(f"Getting {project_name} default branch.")
     url = f"{GITLAB_URL}/api/v4/projects/{project_id}"
     project_info = request("get", url, headers)
-    project_default_branch = f"refs/heads/{project_info.get("default_branch")}"
+    project_default_branch = f"refs/heads/{project_info.get('default_branch')}"
 
     logger.info(f"Setting {project_name} schedules.")
 
@@ -179,6 +179,6 @@ def config_schedule(token, project, schedules_to_set_default):
             
             logger.debug(f"Schedule to set after: {schedules_to_set}")
 
-        schedules_to_set[schedule_key]["description"] = f"[{schedule_branch}] {schedules_to_set[schedule_key]["description"]}"
+        schedules_to_set[schedule_key]["description"] = f"[{schedule_branch}] {schedules_to_set[schedule_key]['description']}"
 
     return schedules_to_set

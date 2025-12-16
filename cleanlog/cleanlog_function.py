@@ -113,10 +113,10 @@ def process_jobs(jobs, token, project_id, weeks_limit):
                     if to_delete :
                         deleted = delete_job_artifacts(token,project_id,job)
                         if deleted :
-                            logging.info(f"job {job["id"]} is erased")
+                            logging.info(f"job {job['id']} is erased")
                         else :
-                            logging.info(f"job {job["id"]} couldn't be erased")
+                            logging.info(f"job {job['id']} couldn't be erased")
                 else :
-                    logging.info(f"job {job["id"]} is archived and can't be erased")
+                    logging.info(f"job {job['id']} is archived and can't be erased")
             else :
-                logging.info(f"job {job["id"]} is already erased")
+                logging.info(f"job {job['id']} is already erased")
