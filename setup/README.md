@@ -13,7 +13,7 @@ Regroupement des fonctions nécessaires à tous les setups (build, trigger...).
 ## Module setup_build
 Regroupement des fonctions nécessaires exclusivement au setup de build.
 
-::: cicd-script.setup.setup_build
+cicd-script.setup.setup_build
 
 ## Module setup_trigger
 Regroupement des fonctions nécessaires exclusivement au setup de trigger.
