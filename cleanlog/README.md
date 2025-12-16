@@ -8,4 +8,4 @@ Fonction main qui lance un clean des logs en fonction du parametre CLEANLOG_WEEK
 ## Module cleanlog_function
 Regroupement des fonctions nécessaires pour lancer un cleanlog.
 
-::: cicdscript.cleanlog.cleanlog_function.check_week_limit
+::: cicdscript.cleanlog.cleanlog_function.get_jobs_info
