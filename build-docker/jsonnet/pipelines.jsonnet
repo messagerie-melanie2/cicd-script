@@ -22,7 +22,7 @@ local build_pipeline(name) =
   {
     include:
     [{
-        artifact: "cicd-docker/pipelines_yaml/${PIPELINE_NAME}.yaml",
+        artifact: "${CI_PIPELINE_YAML_FOLDER_PATH}/${PIPELINE_NAME}.yaml",
         job: 'get-artifacts',
     }],
     strategy: 'depend',
@@ -62,7 +62,7 @@ local build_pipeline(name) =
           expire_in: '6 hours',
           paths:
           [
-          'cicd-docker/' ,
+          'cicd-script/' ,
           ]
       },
   },
