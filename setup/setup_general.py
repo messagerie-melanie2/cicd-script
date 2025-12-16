@@ -106,7 +106,7 @@ def set_schedule(token, project_id, schedule_to_set):
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules"
         schedule_created = request("post", url, headers, files=files)
     else :
-        logger.info(f"Schedule created. Modifying...")
+        logger.info(f"Schedule already created. Modifying...")
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get("id")}"
         schedule_created = request("put", url, headers, files=files)
 
