@@ -196,5 +196,5 @@ def set_trigger_allowlist(token, project_to_trigger):
                 project_info = get_project_info(token, project)
                 project_group["id"] = project_info.get("namespace",{}).get("id")
                 project_group["name"] = project_info.get("namespace",{}).get("name")
-                project_group["type"] = 'group'
+                project_group["instance_type"] = 'group'
                 set_project_allowlist(token, project_to_trigger, project_group)

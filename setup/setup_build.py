@@ -158,7 +158,7 @@ def set_build_allowlist(token, project) :
         set_project_allowlist(token, project, project_to_allow)
 
     for instance in project_instance_to_allow :
-        instance_type = instance.get('type')
+        instance_type = instance.get('instance_type')
         instance_id = instance.get('id')
         instance_name = instance.get('name')
         logger.info(f"Setting allowlist of {project_name} project and {instance_name} {instance_type} to allow each others")

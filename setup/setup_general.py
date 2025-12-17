@@ -199,7 +199,7 @@ def set_project_allowlist(token, project, instance_to_allow):
     headers = {"PRIVATE-TOKEN": token}
     project_name = project.get("name")
     instance_to_allow_name = instance_to_allow.get("name")
-    instance_to_allow_type = instance_to_allow.get("type",'project')
+    instance_to_allow_type = instance_to_allow.get("instance_type",'project')
     instance_to_allow_id = instance_to_allow.get("id")
     instance_to_allow_dependencies = instance_to_allow.get("dependencies", [])
 
@@ -223,7 +223,7 @@ def set_project_allowlist(token, project, instance_to_allow):
     for dependencies in instance_to_allow_dependencies :
         dependencies_id = dependencies.get("id")
         dependencies_name = dependencies.get("name")
-        dependencies_type = dependencies.get("type")
+        dependencies_type = dependencies.get("instance_type")
         logger.info(f"Adding {dependencies_name} {dependencies_type} to allowlists of {project_name} project...")
         payload_arg = f"target_{dependencies_type}_id"
         payload = {payload_arg: dependencies_id}
