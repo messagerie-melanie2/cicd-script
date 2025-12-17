@@ -204,10 +204,10 @@ def set_project_allowlist(token, project, instance_to_allow):
     instance_to_allow_id = instance_to_allow.get("id")
     instance_to_allow_dependencies = instance_to_allow.get("dependencies", [])
 
-    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope/"
     suffix = "allowlist?per_page=100"
     if instance_to_allow_type == 'group' :
         suffix = f"groups_{suffix}"
+    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope/{suffix}"
 
     enable_allowlist(token, project)
     
@@ -216,8 +216,6 @@ def set_project_allowlist(token, project, instance_to_allow):
     logger.info(f"Adding {instance_to_allow_name} {instance_to_allow_type} to allowlists of {project_name} project...")
     payload_arg = f"target_{instance_to_allow_type}_id"
     payload = {payload_arg: instance_to_allow_id}
-    logging.info(f"{url}")
-    logging.info(f"{payload}")
     set_new_allowlist(url, headers, project_allowlist, payload, instance_to_allow_id)
 
     logger.info(f"Adding {instance_to_allow_name} {instance_to_allow_type} dependencies to allowlists of {project_name} project...")
