@@ -217,6 +217,7 @@ def set_project_allowlist(token, project, instance_to_allow):
     logger.info(f"Adding {instance_to_allow_name} {instance_to_allow_type} to allowlists of {project_name} project...")
     payload_arg = f"target_{instance_to_allow_type}_id"
     payload = {payload_arg: instance_to_allow_id}
+    logging.info(f"{payload}")
     set_new_allowlist(url, headers, project_allowlist, payload, instance_to_allow_id)
 
     logger.info(f"Adding {instance_to_allow_name} {instance_to_allow_type} dependencies to allowlists of {project_name} project...")

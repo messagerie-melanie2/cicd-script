@@ -151,8 +151,6 @@ def set_build_allowlist(token, project) :
     project_name = project.get('name')
     project_instance_to_allow = project.get("instance_to_allow", [])
 
-    project_info = get_project_info(token, project)
-    project["namespace_id"] = project_info.get("namespace",{}).get("id")
     for project_to_allow_name, project_to_allow_id in SETUP_BUILD_MANDATORY_ALLOWLIST.items() :
         project_to_allow = {'name': project_to_allow_name, 'id': project_to_allow_id}
         set_project_allowlist(token, project, project_to_allow)
