@@ -134,8 +134,5 @@ def set_build_ci_variables(token, project, project_variables):
 
     variable_payload = {'key':SETUP_BUILD_DOCKERHUB_TOKEN_VARIABLE_NAME, 'value':SETUP_BUILD_DOCKERHUB_TOKEN, 'masked': True}
     set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)
-
-    enable_deploy = project.get("enable_deploy")
-    if enable_deploy :
-        variable_payload = {'key':SETUP_BUILD_DEPLOY_TOKEN_VARIABLE_NAME, 'value':SETUP_BUILD_DEPLOY_TOKEN, 'masked': True}
-        set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)
+    variable_payload = {'key':SETUP_BUILD_DEPLOY_TOKEN_VARIABLE_NAME, 'value':SETUP_BUILD_DEPLOY_TOKEN, 'masked': True}
+    set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)
