@@ -198,12 +198,13 @@ def set_project_allowlist(token, project, instance_to_allow):
     """
     headers = {"PRIVATE-TOKEN": token}
     project_name = project.get("name")
+    project_id = project.get("id")
     instance_to_allow_name = instance_to_allow.get("name")
     instance_to_allow_type = instance_to_allow.get("instance_type",'project')
     instance_to_allow_id = instance_to_allow.get("id")
     instance_to_allow_dependencies = instance_to_allow.get("dependencies", [])
 
-    url = f"{GITLAB_URL}/api/v4/projects/{instance_to_allow_id}/job_token_scope/"
+    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope/"
     suffix = "allowlist?per_page=100"
     if instance_to_allow_type == 'group' :
         suffix = f"groups_{suffix}"
