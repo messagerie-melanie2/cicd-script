@@ -244,20 +244,17 @@ def get_groups_project(token, group_id = 0):
     projects = []
 
     i = 0
-    error = False
+    stop = False
 
     #Max per page is only 100 so we have to loop to get all projects
-    while len(projects) == 100*i  and not error:
+    while len(projects) == 100*i  and not stop:
 
         url = GITLAB_URL + 'api/v4/groups/'+str(group_id)+'/projects?per_page=100&page='+str(i+1)
-        try :
-            r = request("get", url, headers)
-            r.raise_for_status()
-    
-        except requests.exceptions.HTTPError as err:
-            logging.info(f"Http Error: {err}")
-        else :
-            projects += r.json()
+        r = request("get", url, headers)
+        if r != {} :
+            projects += r
             i += 1
+        else : 
+            stop = True
     
     return(projects)
