@@ -1,5 +1,6 @@
 from setup.global_vars import *
-from lib.helper import request, send_message, set_new_ci_variable, set_new_allowlist, add_argument_to_conf
+from lib.helper import request, send_message, set_new_ci_variable, add_argument_to_conf
+from setup.setup_general import set_project_allowlist
 
 logger = logging.getLogger(__name__)
 
@@ -172,65 +173,6 @@ def set_trigger_ci_variables(token,all_project_configuration):
             variable_payload = {'key':SETUP_CICD_CONFIGURATION_PATH_VARIABLE_NAME, 'value':SETUP_CICD_CONFIGURATION_PATH, 'masked': False}
             variable_already_put = set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)
 
-def set_trigger_project_allowlist(project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies, headers):
-    """
-    Configures GitLab job token allowlists for a project.
-
-    Enables the allowlist, adds the target project and its dependencies,
-    and updates group-level allowlists of the target project when necessary.
-
-    Args:
-        project (dict): The project whose allowlist is being updated.
-        project_to_trigger_name (str): Name of the project that will be triggered.
-        project_to_trigger_id (int): ID of the project that will be triggered.
-        project_to_trigger_dependencies (list): List of dependency project dictionaries.
-        headers (dict): HTTP headers containing the GitLab authentication token.
-    """
-    project_name = project.get("name")
-    project_id = project.get("id")
-    logger.info(f"Setting allowlists of {project_name} project")
-
-    if project_id == 27032 :
-        logger.info(f"Enabling allowlists of {project_name} project...")
-        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope"
-        payload = {'enabled': True}
-        request("patch",url, headers, payload_data=payload)
-        
-        logger.info(f"Getting allowlists of {project_name} project...")
-        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope/allowlist"
-        project_allowlist = request("get",url, headers)
-        logger.debug(f"project_allowlist : {project_allowlist}")
-        
-        logger.info(f"Adding to allowlists of {project_name} project, {project_to_trigger_name} project...")
-        set_new_allowlist(headers, project_allowlist, project_id, project_to_trigger_id)
-
-        logger.info(f"Adding {project_to_trigger_name} project dependencies to allowlists of {project_name} project...")
-        for dependencies in project_to_trigger_dependencies :
-            dependencies_id = dependencies.get("id")
-            set_new_allowlist(headers, project_allowlist, project_id, dependencies_id)
-        
-        logger.info(f"Getting allowlists of {project_to_trigger_name} project...")
-        url = f"{GITLAB_URL}/api/v4/projects/{project_to_trigger_id}/job_token_scope/groups_allowlist?per_page=100"
-        project_to_trigger_allowlist = request("get", url, headers)
-        logger.debug(f"project_to_trigger_allowlist : {project_to_trigger_allowlist}")
-
-        project_to_trigger_allowlist_already_setup = False
-
-        url = f"{GITLAB_URL}/api/v4/projects/{project_id}"
-        logger.info(f"Getting {project_name} project info...")
-        project_info = request("get", url, headers)
-        logger.debug(f"project_info : {project_info}")
-
-        for project in project_to_trigger_allowlist :
-            if project.get("id") == project_info.get("namespace",{}).get("id") :
-                project_to_trigger_allowlist_already_setup = True
-        
-        if not project_to_trigger_allowlist_already_setup :
-            logger.info(f"Adding {project_name} namespace to allowlists of {project_name} project...")
-            url = f"{GITLAB_URL}/api/v4/projects/{project_to_trigger_id}/job_token_scope/groups_allowlist"
-            payload = {'target_group_id': project_info.get("namespace",{}).get("id")}
-            request("post",url, headers, payload_data=payload)
-
 def set_trigger_allowlist(token, project_to_trigger):
     """
     Applies allowlist rules for all GitLab projects defined in setup files.
@@ -242,7 +184,6 @@ def set_trigger_allowlist(token, project_to_trigger):
         token (str): GitLab private token for authentication.
         project_to_trigger (dict): Project setup configuration loaded from YAML files.
     """
-    headers = {"PRIVATE-TOKEN": token}
     projects_to_setup = project_to_trigger.get("projects")
     project_to_trigger_type = project_to_trigger.get("type")
     project_to_trigger_name = project_to_trigger.get("name")
@@ -250,4 +191,6 @@ def set_trigger_allowlist(token, project_to_trigger):
     if project_to_trigger_type == "gitlab" :
         project_to_trigger_id = project_to_trigger.get("id")
         for project in projects_to_setup :
-            set_trigger_project_allowlist(project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies, headers)
+            project_id = project.get("id")
+            if project_id == 27032 :
+                set_project_allowlist(token, project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies)

@@ -1,5 +1,5 @@
 from setup.global_vars import *
-from lib.helper import request, set_new_ci_variable
+from lib.helper import request, set_new_ci_variable, set_new_allowlist
 
 logger = logging.getLogger(__name__)
 
@@ -182,3 +182,58 @@ def config_schedule(token, project, schedules_to_set_default):
         schedules_to_set[schedule_key]["description"] = f"[{schedule_branch}] {schedules_to_set[schedule_key]['description']}"
 
     return schedules_to_set
+
+def set_project_allowlist(token, project, project_to_allow_name, project_to_allow_id, project_to_allow_dependencies = []):
+    """
+    Configures GitLab job token allowlists for a project.
+
+    Enables the allowlist, adds the target project and its dependencies,
+    and updates group-level allowlists of the target project when necessary.
+
+    Args:
+        project (dict): The project whose allowlist is being updated.
+        project_to_allow_name (str): Name of the project that need to be allowed.
+        project_to_allow_id (int): ID of the project that need to be allowed.
+        project_to_allow_dependencies (list): List of dependency project dictionaries.
+        headers (dict): HTTP headers containing the GitLab authentication token.
+    """
+    headers = {"PRIVATE-TOKEN": token}
+    project_name = project.get("name")
+    project_id = project.get("id")
+    logger.info(f"Setting allowlists of {project_name} project")
+
+    logger.info(f"Enabling allowlists of {project_name} project...")
+    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope"
+    payload = {'enabled': True}
+    request("patch",url, headers, payload_data=payload)
+    
+    logger.info(f"Getting allowlists of {project_name} project...")
+    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope/allowlist"
+    project_allowlist = request("get",url, headers)
+    logger.debug(f"project_allowlist : {project_allowlist}")
+    
+    logger.info(f"Adding to allowlists of {project_name} project, {project_to_allow_name} project...")
+    payload = {'target_project_id': project_to_allow_id}
+    set_new_allowlist(url, headers, project_allowlist, payload, project_to_allow_id)
+
+    logger.info(f"Adding {project_to_allow_name} project dependencies to allowlists of {project_name} project...")
+    for dependencies in project_to_allow_dependencies :
+        dependencies_id = dependencies.get("id")
+        payload = {'target_project_id': dependencies.get("id")}
+        set_new_allowlist(url, headers, project_allowlist, payload, dependencies_id)
+    
+    logger.info(f"Getting allowlists of {project_to_allow_name} project...")
+    url = f"{GITLAB_URL}/api/v4/projects/{project_to_allow_id}/job_token_scope/groups_allowlist?per_page=100"
+    project_to_trigger_allowlist = request("get", url, headers)
+    logger.debug(f"project_to_trigger_allowlist : {project_to_trigger_allowlist}")
+
+    url = f"{GITLAB_URL}/api/v4/projects/{project_id}"
+    logger.info(f"Getting {project_name} project info...")
+    project_info = request("get", url, headers)
+    logger.debug(f"project_info : {project_info}")
+
+    logger.info(f"Adding {project_name} namespace to allowlists of {project_name} project...")
+    url = f"{GITLAB_URL}/api/v4/projects/{project_to_allow_id}/job_token_scope/groups_allowlist"
+    namespace_id = project_info.get("namespace",{}).get("id")
+    payload = {'target_group_id': namespace_id}
+    set_new_allowlist(url, headers, project_allowlist, payload, namespace_id)

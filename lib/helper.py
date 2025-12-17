@@ -127,28 +127,26 @@ def set_new_ci_variable(url, headers, project_id, project_variables, variable_pa
 
     return variable_already_put
 
-def set_new_allowlist(headers, project_allowlist, project_id, project_to_allow_id) :
+def set_new_allowlist(url, headers, project_allowlist, allowlist_payload, instance_to_allow_id) :
     """
     Adds a project to a GitLab job token allowlist if it is not already included.
 
     Args:
         headers (dict): HTTP headers containing the GitLab authentication token.
         project_allowlist (list): List of projects currently in the allowlist.
-        project_id (int): The ID of the project whose allowlist is being modified.
+        allowlist_payload (dict): Payload to create allowlist.
         project_to_allow_id (int): The ID of the project to add to the allowlist.
 
     Returns:
         None
     """
-    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope/allowlist"
-    payload = {'target_project_id': project_to_allow_id}
     project_allowlist_already_setup = False
 
     for project in project_allowlist :
-        if project.get("id") == project_to_allow_id :
+        if project.get("id") == instance_to_allow_id :
             project_allowlist_already_setup = True
 
     if not project_allowlist_already_setup :
-        request("post",url, headers, payload_data=payload)
+        request("post",url, headers, payload_data=allowlist_payload)
     else : 
         logger.info("Already added to allowlist.")

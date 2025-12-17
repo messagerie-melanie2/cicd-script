@@ -1,5 +1,5 @@
 from setup.global_vars import *
-from setup.setup_general import read_setup_files, set_config_path, config_schedule, set_schedule
+from setup.setup_general import read_setup_files, set_config_path,set_project_allowlist, config_schedule, set_schedule
 from setup.setup_trigger import create_trigger_ci_variables, set_trigger_ci_variables, set_trigger_allowlist
 from setup.setup_build import config_build_token, get_build_project_variables, set_build_ci_variables
 
@@ -54,6 +54,8 @@ def main(args) :
                 project_to_setup_variables = get_build_project_variables(token, project_to_setup)
                 config_build_token(token, project_to_setup, project_to_setup_variables)
                 set_build_ci_variables(token, project_to_setup, project_to_setup_variables)
+                for project_to_allow_name, project_to_allow_id in SETUP_BUILD_MANDATORY_ALLOWLIST.items() :
+                    set_project_allowlist(token, project_to_setup, project_to_allow_name, project_to_allow_id)
                 schedules_to_set_default = SETUP_SCHEDULE_TYPE | SETUP_BUILD_SCHEDULE_TYPE
                 schedules_to_set = config_schedule(token, project_to_setup, schedules_to_set_default)
                 logger.debug(f"Schedule to set : {schedules_to_set}")
