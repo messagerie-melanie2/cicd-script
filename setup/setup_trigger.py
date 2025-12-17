@@ -1,5 +1,5 @@
 from setup.global_vars import *
-from lib.helper import request, send_message, set_new_ci_variable, add_argument_to_conf
+from lib.helper import request, send_message, set_new_ci_variable, add_argument_to_conf, get_project_info
 from setup.setup_general import set_project_allowlist
 
 logger = logging.getLogger(__name__)
@@ -186,11 +186,15 @@ def set_trigger_allowlist(token, project_to_trigger):
     """
     projects_to_setup = project_to_trigger.get("projects")
     project_to_trigger_type = project_to_trigger.get("type")
-    project_to_trigger_name = project_to_trigger.get("name")
-    project_to_trigger_dependencies = project_to_trigger.get("dependencies", [])
     if project_to_trigger_type == "gitlab" :
-        project_to_trigger_id = project_to_trigger.get("id")
         for project in projects_to_setup :
             project_id = project.get("id")
             if project_id == 27032 :
-                set_project_allowlist(token, project, project_to_trigger_name, project_to_trigger_id, project_to_trigger_dependencies)
+                set_project_allowlist(token, project, project_to_trigger)
+
+                project_group = {}
+                project_info = get_project_info(token, project)
+                project_group["id"] = project_info.get("namespace",{}).get("id")
+                project_group["name"] = project_info.get("namespace",{}).get("name")
+                project_group["type"] = 'group'
+                set_project_allowlist(token, project_to_trigger, project_group)

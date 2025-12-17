@@ -1,5 +1,6 @@
 from setup.global_vars import *
-from lib.helper import request, send_message, set_new_ci_variable
+from lib.helper import request, send_message, set_new_ci_variable, get_project_info, enable_allowlist, get_allowlist, set_new_allowlist, get_groups_project
+from setup.setup_general import set_project_allowlist
 
 logger = logging.getLogger(__name__)
 
@@ -136,3 +137,33 @@ def set_build_ci_variables(token, project, project_variables):
     set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)
     variable_payload = {'key':SETUP_BUILD_DEPLOY_TOKEN_VARIABLE_NAME, 'value':SETUP_BUILD_DEPLOY_TOKEN, 'masked': True}
     set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)
+
+def set_build_allowlist(token, project) :
+    """
+    Adds a project to a GitLab job token allowlist if it is not already included.
+
+    Args:
+        token (str): The GitLab private token used for authentication.
+        project (dict): The project info dictionary.
+        project_to_allow_name (str): The name of the project to add to the allowlist.
+        instance_to_allow_id (int): The ID of the project to add to the allowlist.
+    """
+    project_name = project.get('name')
+    project_instance_to_allow = project.get("instance_to_allow", [])
+
+    project_info = get_project_info(token, project)
+    project["namespace_id"] = project_info.get("namespace",{}).get("id")
+    for project_to_allow_name, project_to_allow_id in SETUP_BUILD_MANDATORY_ALLOWLIST.items() :
+        project_to_allow = {'name': project_to_allow_name, 'id': project_to_allow_id}
+        set_project_allowlist(token, project, project_to_allow)
+
+    for instance in project_instance_to_allow :
+        instance_type = instance.get('type')
+        instance_id = instance.get('id')
+        instance_name = instance.get('name')
+        logger.info(f"Setting allowlist of {project_name} project and {instance_name} {instance_type} to allow each others")
+        set_project_allowlist(token, project, instance)
+        if instance_type == 'group' :
+            group_projects = get_groups_project(token, instance_id)
+            for project_to_setup in group_projects :
+                set_project_allowlist(token, project_to_setup, project)

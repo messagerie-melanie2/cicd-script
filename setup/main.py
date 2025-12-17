@@ -1,7 +1,7 @@
 from setup.global_vars import *
-from setup.setup_general import read_setup_files, set_config_path,set_project_allowlist, config_schedule, set_schedule
+from setup.setup_general import read_setup_files, set_config_path, config_schedule, set_schedule
 from setup.setup_trigger import create_trigger_ci_variables, set_trigger_ci_variables, set_trigger_allowlist
-from setup.setup_build import config_build_token, get_build_project_variables, set_build_ci_variables
+from setup.setup_build import config_build_token, get_build_project_variables, set_build_ci_variables, set_build_allowlist
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,8 @@ def main(args) :
     2. Reads setup configuration files from the specified folder.
     3. Sets the CI configuration paths for each project.
     4. Creates and applies CI/CD variables for all projects.
-    5. Updates allowlists for projects to enable triggers.
+    5. Updates allowlists for projects to enable interaction.
+    6. Creates schedule if needed.
 
     Args:
         args (Namespace): Command-line arguments containing:
@@ -54,8 +55,7 @@ def main(args) :
                 project_to_setup_variables = get_build_project_variables(token, project_to_setup)
                 config_build_token(token, project_to_setup, project_to_setup_variables)
                 set_build_ci_variables(token, project_to_setup, project_to_setup_variables)
-                for project_to_allow_name, project_to_allow_id in SETUP_BUILD_MANDATORY_ALLOWLIST.items() :
-                    set_project_allowlist(token, project_to_setup, project_to_allow_name, project_to_allow_id)
+                set_build_allowlist(token, project_to_setup)
                 schedules_to_set_default = SETUP_SCHEDULE_TYPE | SETUP_BUILD_SCHEDULE_TYPE
                 schedules_to_set = config_schedule(token, project_to_setup, schedules_to_set_default)
                 logger.debug(f"Schedule to set : {schedules_to_set}")

@@ -13,11 +13,11 @@ def request(mode, url = '', headers = None, auth = None, payload_data = None, pa
     Args:
         mode (str): The HTTP method to use. Must be one of
             {"get", "post", "put", "patch"}.
-        url (str, optional): The target URL for the request. Defaults to ''.
-        headers (dict, optional): HTTP headers to include in the request.
-        payload_data (dict or bytes, optional): Data sent using the `data` parameter.
-        payload_json (dict, optional): Data sent as JSON using the `json` parameter.
-        files (dict, optional): Files to upload using multipart/form-data.
+        url (str): The target URL for the request. Defaults to ''.
+        headers (dict): HTTP headers to include in the request.
+        payload_data (dict or bytes): Data sent using the `data` parameter.
+        payload_json (dict): Data sent as JSON using the `json` parameter.
+        files (dict): Files to upload using multipart/form-data.
 
     Returns:
         response (dict): The JSON response content if the request succeeds.
@@ -127,6 +127,54 @@ def set_new_ci_variable(url, headers, project_id, project_variables, variable_pa
 
     return variable_already_put
 
+def enable_allowlist(token, project):
+    """
+    Enable the job token allowlist for a GitLab project.
+
+    Args:
+        token (str): Private token used for authentication.
+        project (dict): Dictionary representing the project.
+
+    Returns:
+        None
+    """
+    headers = {"PRIVATE-TOKEN": token}
+    project_name = project.get("name")
+    project_id = project.get("id")
+
+    logger.info(f"Enabling allowlists of {project_name} project...")
+    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope"
+    payload = {'enabled': True}
+    request("patch",url, headers, payload_data=payload)
+
+def get_allowlist(token, project, allowlist_type = 'project'):
+    """
+    Getting the job token allowlist for a GitLab project.
+
+    Args:
+        token (str): Private token used for authentication.
+        project (dict): Dictionary representing the project.
+        allowlist_type (str): Indicate if we want group allowlist or project allowlist
+
+    Returns:
+        None
+    """
+    headers = {"PRIVATE-TOKEN": token}
+    project_name = project.get("name")
+    project_id = project.get("id")
+
+    logger.info(f"Getting allowlists of {project_name} project...")
+    
+    suffix = "allowlist?per_page=100"
+    if allowlist_type == 'group' :
+        suffix = f"groups_{suffix}"
+
+    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/job_token_scope/{suffix}"
+    project_allowlist = request("get", url, headers)
+    logger.debug(f"project_allowlist : {project_allowlist}")
+
+    return project_allowlist
+
 def set_new_allowlist(url, headers, project_allowlist, allowlist_payload, instance_to_allow_id) :
     """
     Adds a project to a GitLab job token allowlist if it is not already included.
@@ -150,3 +198,66 @@ def set_new_allowlist(url, headers, project_allowlist, allowlist_payload, instan
         request("post",url, headers, payload_data=allowlist_payload)
     else : 
         logger.info("Already added to allowlist.")
+
+def get_project_info(token, project) :
+    """
+    Retrieve detailed information for a GitLab project.
+
+    Args:
+        token (str): Private access token for the GitLab API.
+        project (dict): The project configuration dictionary.
+
+    Returns:
+        project_info (dict): Parsed JSON response containing project information.
+
+    """
+    
+    headers = {"PRIVATE-TOKEN": token}
+    project_name = project.get("name")
+    project_id = project.get("id")
+
+    url = f"{GITLAB_URL}/api/v4/projects/{project_id}"
+    logger.info(f"Getting {project_name} project info...")
+    project_info = request("get", url, headers)
+    logger.debug(f"project_info : {project_info}")
+
+    return project_info
+
+def get_groups_project(token, group_id = 0):
+    """
+    Retrieve all projects for a GitLab group, handling pagination.
+
+    This function queries the GitLab API for the projects belonging to the
+    group identified by `group_id`. The GitLab API returns a maximum of 100
+    projects per page, so this function requests pages repeatedly and
+    concatenates the results until there are no more projects to fetch.
+
+    Args:
+        token (str): Private access token for the GitLab API.
+        group_id (int): ID of the GitLab group to query. Defaults to 0.
+
+    Returns:
+        projects (list): A list of project dictionaries as returned by the GitLab API.
+    """
+
+    headers = {"PRIVATE-TOKEN": token}
+    projects = []
+
+    i = 0
+    error = False
+
+    #Max per page is only 100 so we have to loop to get all projects
+    while len(projects) == 100*i  and not error:
+
+        url = GITLAB_URL + 'api/v4/groups/'+str(group_id)+'/projects?per_page=100&page='+str(i+1)
+        try :
+            r = request("get", url, headers)
+            r.raise_for_status()
+    
+        except requests.exceptions.HTTPError as err:
+            logging.info(f"Http Error: {err}")
+        else :
+            projects += r.json()
+            i += 1
+    
+    return(projects)
