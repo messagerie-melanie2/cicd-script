@@ -83,12 +83,12 @@ def create_trigger_project_ci_variable(project, project_to_trigger, trigger_toke
     if project_to_trigger_type == "gitlab" :
         project_to_trigger_id = project_to_trigger.get("id")
         configuration_to_add["id"] = project_to_trigger_id
-        configuration_to_add["token_name"] = f'{SETUP_GITLAB_VARIABLE_TRIGGER_KEY}_{project_to_trigger_id}'
+        configuration_to_add["token_name"] = f'{SETUP_TRIGGER_GITLAB_VARIABLE_TRIGGER_KEY}_{project_to_trigger_id}'
         configuration_to_add["token"] = trigger_token
     if project_to_trigger_type == "jenkins" :
         token_name = variable[project_to_trigger_name].get("token_name")
         if token_name == None :
-            configuration_to_add["token_name"] = SETUP_JENKINS_TRIGGER_TOKEN_NAME
+            configuration_to_add["token_name"] = SETUP_TRIGGER_JENKINS_TRIGGER_TOKEN_NAME
         else :
             configuration_to_add["token_name"] = token_name
 
