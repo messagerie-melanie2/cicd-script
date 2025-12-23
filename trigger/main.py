@@ -35,7 +35,7 @@ def main(args):
 
     trigger_config = env.json(TRIGGER_VARIABLE_CONFIGURATION_KEY_DEFAULT, {})
     trigger_parameters_local_file = read_trigger_parameters_local_file()
-    changes = get_changes(args.commit_before_sha,args.commit_sha)
+    changes = get_changes(args.changes_info_file)
 
     for project_name,project_config in trigger_config.items() :
         project_config = add_local_file_to_config(project_config, trigger_parameters_local_file)
@@ -66,13 +66,9 @@ parser.add_argument(
     metavar='DESCRIPTION', default=' ',
     help="Description of the pipeline")
 parser.add_argument(
-    '-cbs', '--commit-before-sha', 
-    metavar='COMMIT_BEFORE_SHA', default=' ',
-    help="The commit sha of the commit before the actual one")
-parser.add_argument(
-    '-cs', '--commit-sha', 
-    metavar='COMMIT_SHA', default=' ',
-    help="The commit sha of the actual commit")
+    '-cif', '--changes-info-file', 
+    metavar='FILE', default='changes.txt',
+    help="Fichier des changements du commit")
 
 # Run the arguments parser
 args = parser.parse_args()

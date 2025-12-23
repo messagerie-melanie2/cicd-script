@@ -7,26 +7,29 @@ logger = logging.getLogger(__name__)
 #================== Trigger function ===================#
 #=======================================================#
 
-def get_changes(commit_before_sha, commit_sha):
+def get_changes(changes_info_file):
     """
-    Launching a shell git command to get file changed based between two commit given by the pipeline.
+    Creating a list of changes by reading a file.
 
     Args:
-        commit_before_sha (str): The commit sha of the commit before the actual one.
-        commit_sha (str): The commit sha of the actual commit.
+        changes_info_file (str): Path of change info file.
 
     Returns:
         changes (str): Changed files between two commit.
     """
-    changes = ""
-    #Launch a git diff
-    try :
-        changes = subprocess.check_output(['git','diff','--name-only',commit_before_sha,commit_sha]).decode(sys.stdout.encoding)
-        changes = ' '.join(changes.splitlines())
-    except subprocess.CalledProcessError as err:
-        logger.info(f"Git diff failed...({err})")
-    else :
-        logger.debug(f"Changed files : {changes}")
+    #Create an array with the files changed during commit
+    changes = []
+    try:
+        # Read changes.txt
+        changes_file = open(changes_info_file, 'r')
+
+    except OSError as err:
+        logging.debug("changes.txt not found...")
+        changes_file = []
+    
+    for line in changes_file :
+        changes.append(line) 
+        # changes = ["/debian/3.4/Dockerfile",...]
 
     return changes
 
@@ -101,14 +104,14 @@ def check_if_branch_can_trigger(project_name, project_config, branch) :
 
     return branch_can_trigger
 
-def check_if_file_can_trigger(project_name, project_config, changes) :
+def check_if_file_can_trigger(project_name, project_config, changes_list) :
     """
     Checking if a trigger can be launched depending of trigger_files parameters and files changed of the pipeline launched.
 
     Args:
         project_name (str): Project to trigger name.
         project_config (dict): Project to trigger configuration.
-        changes (str): Changed files of the pipeline launched.
+        changes (list): Changed files of the pipeline launched.
 
     Returns:
         file_can_trigger (bool): Notice if a trigger can be launched.
@@ -119,14 +122,13 @@ def check_if_file_can_trigger(project_name, project_config, changes) :
     if trigger_files == None :
         file_can_trigger = True
     else :
-        changes_list = changes.split(" ")
         for change in changes_list :
             for file in trigger_files :
                 if fnmatch.fnmatch(change,'*' + file + '*') :
                     file_can_trigger = True
     
     if not file_can_trigger :
-        logger.info(f"{changes} changes is not in trigger_files : {trigger_files} for project {project_name}, trigger will not be launched")
+        logger.info(f"{changes_list} changes is not in trigger_files : {trigger_files} for project {project_name}, trigger will not be launched")
 
     return file_can_trigger
 
@@ -142,15 +144,14 @@ def get_mapped_branch(initial_branch, project_config) :
         mapped_branch (str): New branch to trigger according to branchs_mapping parameters.
     """
     branchs_mapping = project_config.get("branchs_mapping")
-    mapped_branch = initial_branch
 
     if branchs_mapping != None :
-        mapping = branchs_mapping.get("branch")
-        if mapping != None :
-            mapped_branch = mapping
-            logger.info(f"branch {mapped_branch} will be triggered")
-        else : 
-            logger.debug(f"branch {initial_branch} not in branchs_mapping")
+        for branch, mapping in branchs_mapping.items() :
+            if initial_branch == branch :
+                mapped_branch = mapping
+                logger.info(f"branch {mapped_branch} will be triggered")
+            else : 
+                logger.debug(f"branch {initial_branch} not in branchs_mapping")
     else : 
         logger.debug("branchs_mapping not in config")
     
@@ -167,7 +168,7 @@ def create_payload(project_name, project_config, trigger_project, mapped_branch,
         mapped_branch (str): Branch to trigger.
         initial_branch (str): Actual branch of the pipeline.
         description (str): Description of the pipeline.
-        changes (str): Changed files of the pipeline launched.
+        changes (list): Changed files of the pipeline launched.
 
     Returns:
         data (dict): Payload needed to request a trigger depending of the project to trigger type.
@@ -192,7 +193,7 @@ def create_payload(project_name, project_config, trigger_project, mapped_branch,
         data["variables[TRIGGER_DESCRIPTION]"] = description
         data["variables[TRIGGER_VARIABLES]"] = f"{variables_json}"
         if focus_trigger :
-            data["variables[CI_CHANGES_TRIGGER]"] = changes
+            data["variables[CI_CHANGES_TRIGGER]"] = " ".join(changes)
         
     elif project_type == "jenkins" :
         data["pipeline_name"] = project_name
