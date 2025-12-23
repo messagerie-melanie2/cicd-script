@@ -24,7 +24,7 @@ def get_changes(changes_info_file):
         changes_file = open(changes_info_file, 'r')
 
     except OSError as err:
-        logging.debug("changes.txt not found...")
+        logging.debug(f"changes.txt not found... Error : {err}")
         changes_file = []
     
     for line in changes_file :
