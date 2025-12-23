@@ -152,26 +152,25 @@ def set_trigger_ci_variables(token,all_project_configuration):
     headers = {"PRIVATE-TOKEN": token}
 
     for project_id,project_configuration in all_project_configuration.items() :
-        if project_id == 27032 :
-            project_name = project_configuration.pop('name')
+        project_name = project_configuration.pop('name')
 
-            url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
-            logger.info(f"Getting variables for {project_name} project")
-            project_variables = request("get", url, headers)
-            logger.debug(f"project_variables : {project_variables}")
+        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
+        logger.info(f"Getting variables for {project_name} project")
+        project_variables = request("get", url, headers)
+        logger.debug(f"project_variables : {project_variables}")
 
-            for project_to_trigger_name,variable in project_configuration.items() :
-                variable_payload = {'key':variable.get("token_name"), 'value':variable.get("token"), 'masked': True}
-                variable_already_put = set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)
-                variable.pop("token")
-                if not variable_already_put :
-                    send_message(SETUP_CHANNEL_URL, f"🔔 Le projet {project_name} a bien été configuré pour trigger le projet {project_to_trigger_name}. Pour plus d'information voir : {SETUP_CI_JOB_URL}")
-            
-            variable_payload = {'key':TRIGGER_VARIABLE_CONFIGURATION_KEY, 'value':json.dumps(project_configuration), 'masked': False}
+        for project_to_trigger_name,variable in project_configuration.items() :
+            variable_payload = {'key':variable.get("token_name"), 'value':variable.get("token"), 'masked': True}
             variable_already_put = set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)
+            variable.pop("token")
+            if not variable_already_put :
+                send_message(SETUP_CHANNEL_URL, f"🔔 Le projet {project_name} a bien été configuré pour trigger le projet {project_to_trigger_name}. Pour plus d'information voir : {SETUP_CI_JOB_URL}")
+        
+        variable_payload = {'key':TRIGGER_VARIABLE_CONFIGURATION_KEY, 'value':json.dumps(project_configuration), 'masked': False}
+        variable_already_put = set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)
 
-            variable_payload = {'key':SETUP_CICD_CONFIGURATION_PATH_VARIABLE_NAME, 'value':SETUP_CICD_CONFIGURATION_PATH, 'masked': False}
-            variable_already_put = set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)
+        variable_payload = {'key':SETUP_CICD_CONFIGURATION_PATH_VARIABLE_NAME, 'value':SETUP_CICD_CONFIGURATION_PATH, 'masked': False}
+        variable_already_put = set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)
 
 def set_trigger_allowlist(token, project_to_trigger):
     """
@@ -188,13 +187,11 @@ def set_trigger_allowlist(token, project_to_trigger):
     project_to_trigger_type = project_to_trigger.get("type")
     if project_to_trigger_type == "gitlab" :
         for project in projects_to_setup :
-            project_id = project.get("id")
-            if project_id == 27032 :
-                set_project_allowlist(token, project, project_to_trigger)
+            set_project_allowlist(token, project, project_to_trigger)
 
-                project_group = {}
-                project_info = get_project_info(token, project)
-                project_group["id"] = project_info.get("namespace",{}).get("id")
-                project_group["name"] = project_info.get("namespace",{}).get("name")
-                project_group["instance_type"] = 'group'
-                set_project_allowlist(token, project_to_trigger, project_group)
+            project_group = {}
+            project_info = get_project_info(token, project)
+            project_group["id"] = project_info.get("namespace",{}).get("id")
+            project_group["name"] = project_info.get("namespace",{}).get("name")
+            project_group["instance_type"] = 'group'
+            set_project_allowlist(token, project_to_trigger, project_group)
