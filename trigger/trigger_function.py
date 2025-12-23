@@ -144,6 +144,7 @@ def get_mapped_branch(initial_branch, project_config) :
         mapped_branch (str): New branch to trigger according to branchs_mapping parameters.
     """
     branchs_mapping = project_config.get("branchs_mapping")
+    mapped_branch = initial_branch
 
     if branchs_mapping != None :
         for branch, mapping in branchs_mapping.items() :
