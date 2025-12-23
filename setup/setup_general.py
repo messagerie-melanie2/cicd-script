@@ -142,7 +142,7 @@ def config_schedule(token, project, schedules_to_set_default):
     headers = {"PRIVATE-TOKEN": token}
     project_name = project.get('name')
     project_id = project.get("id")
-    project_schedules = project.get("schedule")
+    project_schedules = project.get("schedule",[])
     schedules_to_set = {}
 
     logger.info(f"Getting {project_name} default branch.")
