@@ -154,7 +154,7 @@ def config_schedule(token, project, schedules_to_set_default):
 
     logger.debug("Setting mandatory schedule...")
     for mandatory_schedule in SETUP_SCHEDULE_MANDATORY :
-        mandatory_schedule_branch = mandatory_schedule.get("branch")
+        mandatory_schedule_branch = schedules_to_set_default[mandatory_schedule].get("branch")
         if mandatory_schedule_branch == None :
             mandatory_schedule_branch = project_default_branch
         schedule_key = f"{mandatory_schedule}-{mandatory_schedule_branch}"
