@@ -44,6 +44,7 @@ local build_docker(stage, name, path, parent, version, branch, is_changed, is_tr
     #
     TAG: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:${VERSION}",
     OTHER_DOCKER_ARGS: docker_args,
+    BUILDKITD_FLAGS: "--oci-worker-no-process-sandbox",
   },
   image:
   {
