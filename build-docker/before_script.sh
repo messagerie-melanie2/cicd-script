@@ -73,6 +73,7 @@ main()
         [registry."docker.io"]
             mirrors = ["$REGISTRY_MIRROR"]
         """ > ~/.config/buildkit/buildkitd.toml 
+        cat ~/.config/buildkit/buildkitd.toml 
     fi
     #
     export DOCKER_PROXY_BUILD_ARGS="$DOCKER_DIGEST_BUILD_ARGS $DOCKER_FILE_DIGEST --opt build-arg:http_proxy=$http_proxy --opt build-arg:https_proxy=$https_proxy --opt build-arg:no_proxy=$NO_PROXY"
