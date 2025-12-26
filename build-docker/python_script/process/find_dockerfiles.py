@@ -57,9 +57,9 @@ def find_dockerfiles_parameters(info_from_df, info_from_path, triggered_project,
                 
                 docker_args = convert_variables_to_docker_args(info_from_parameters.variables,build_branch,debug)
 
-                allowed_push = True
+                allowed_push = "true"
                 if info_from_parameters.no_repo :
-                    allowed_push = False
+                    allowed_push = "false"
 
                 #Find if dockerfile is changed
                 is_changed = find_info_from_changesfile(changes,info_from_path.image_name,info_from_path.image_version_number,False,debug)
