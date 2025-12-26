@@ -70,7 +70,7 @@ main()
     then
         mkdir -p ~/.config/buildkit
         echo """[registry."docker.io"]
-  mirrors = ["$REGISTRY_MIRROR"]
+  mirrors = ['"$REGISTRY_MIRROR"']
         """ > ~/.config/buildkit/buildkitd.toml 
         cat ~/.config/buildkit/buildkitd.toml 
     fi
