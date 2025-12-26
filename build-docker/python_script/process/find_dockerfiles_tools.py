@@ -374,9 +374,9 @@ def check_if_triggered(stage_parent,triggered_project,trigger_changes):
     
     return is_triggered
 
-def convert_variables_to_kaniko_arg(variables, branch, debug):
+def convert_variables_to_docker_args(variables, branch, debug):
 
-    kaniko_args=""
+    docker_args=""
     if variables != None :
         for variable in variables:
             name = variable["name"]
@@ -407,12 +407,12 @@ def convert_variables_to_kaniko_arg(variables, branch, debug):
                     if debug :
                         print("no env type in {0} variable fields.".format(name))
                 
-                kaniko_args += "--build-arg {0}={1} ".format(name,value)
+                docker_args += "{0}{1}={2} ".format(DOCKER_BUILD_ARG_OPTION, name,value)
         
     if debug:
-        print("kaniko_args : " + kaniko_args)
+        print("docker_args : " + docker_args)
 
-    return kaniko_args
+    return docker_args
 
 def no_build_file_in_folder(subdir,debug = False):
     is_in_folder = False

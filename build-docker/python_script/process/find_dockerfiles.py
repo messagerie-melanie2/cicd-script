@@ -1,6 +1,6 @@
 from global_vars import *
 from process.class_pipeline import Parent,Dockerfile
-from process.find_dockerfiles_tools import find_info_from_parameters, convert_variables_to_kaniko_arg, find_info_from_changesfile, find_info_from_path, find_info_from_dockerfile, no_build_file_in_folder, check_if_triggered, create_multistage_parents
+from process.find_dockerfiles_tools import find_info_from_parameters, convert_variables_to_docker_args, find_info_from_changesfile, find_info_from_path, find_info_from_dockerfile, no_build_file_in_folder, check_if_triggered, create_multistage_parents
 from gitlab.gitlab_tools import get_repository_id
 
 #=======================================================#
@@ -55,15 +55,15 @@ def find_dockerfiles_parameters(info_from_df, info_from_path, triggered_project,
                     if check_if_triggered(stage_parent,triggered_project,trigger_changes) :
                         is_triggered = True
                 
-                kaniko_args = convert_variables_to_kaniko_arg(info_from_parameters.variables,build_branch,debug)
+                docker_args = convert_variables_to_docker_args(info_from_parameters.variables,build_branch,debug)
 
                 if info_from_parameters.no_repo :
-                    kaniko_args += "--no-push "
+                    docker_args += "--no-push "
 
                 #Find if dockerfile is changed
                 is_changed = find_info_from_changesfile(changes,info_from_path.image_name,info_from_path.image_version_number,False,debug)
                 # Add new Dockerfile to array
-                df_info = Dockerfile(info_from_path.path, info_from_path.image_name, df_parent,multistage_parents, info_from_parameters, df_version, build_branch, is_changed, is_triggered, kaniko_args) 
+                df_info = Dockerfile(info_from_path.path, info_from_path.image_name, df_parent,multistage_parents, info_from_parameters, df_version, build_branch, is_changed, is_triggered, docker_args) 
 
                 if(debug):
                     print(df_info)

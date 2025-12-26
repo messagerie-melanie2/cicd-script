@@ -7,7 +7,7 @@ local strContains(s, substr) = std.findSubstr(substr, s) != [];
 /**
  * Function to ...
  */
-local build_docker(stage, name, path, parent, version, branch, is_changed, is_triggered, job_needs, kaniko_args) =
+local build_docker(stage, name, path, parent, version, branch, is_changed, is_triggered, job_needs, docker_args) =
 {
   stage: stage,
   //
@@ -43,7 +43,7 @@ local build_docker(stage, name, path, parent, version, branch, is_changed, is_tr
     BUILD_BRANCH: branch,
     #
     TAG: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:${VERSION}",
-    OTHER_KANIKO_ARGS: kaniko_args,
+    OTHER_DOCKER_ARGS: docker_args,
   },
   image:
   {

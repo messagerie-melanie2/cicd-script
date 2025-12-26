@@ -31,13 +31,13 @@ def add_branch_to_version(parent, branch, token, project_id, trigger_variable):
     
     return new_parent
 
-def convert_multistage_parents_version_to_kaniko_arg(multistage_parent, debug):
+def convert_multistage_parents_version_to_docker_args(multistage_parent, debug):
 
-    kaniko_args=""
+    docker_args=""
     arg_name = "stage_" + multistage_parent.alias +"_version"
-    kaniko_args += "--build-arg {0}={1} ".format(arg_name,multistage_parent.version)
+    docker_args += "{0}{1}={2} ".format(DOCKER_BUILD_ARG_OPTION, arg_name,multistage_parent.version)
 
-    return kaniko_args
+    return docker_args
 
 def create_job_needs(parent, multistage_parents, mode):
     job_needs = "[{pipeline: '$PARENT_PIPELINE_ID',job: 'convert-jsonnet-to-json',}"
