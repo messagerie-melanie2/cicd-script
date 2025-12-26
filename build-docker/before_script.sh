@@ -69,9 +69,8 @@ main()
     if [ "$REGISTRY_MIRROR" != "" ]
     then
         mkdir -p ~/.config/buildkit
-        echo """
-        [registry."docker.io"]
-            mirrors = ["$REGISTRY_MIRROR"]
+        echo """[registry."docker.io"]
+  mirrors = ["$REGISTRY_MIRROR"]
         """ > ~/.config/buildkit/buildkitd.toml 
         cat ~/.config/buildkit/buildkitd.toml 
     fi
