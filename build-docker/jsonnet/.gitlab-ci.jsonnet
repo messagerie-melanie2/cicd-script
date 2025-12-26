@@ -70,6 +70,8 @@ local build_docker(stage, name, path, parent, version, branch, is_changed, is_tr
       # Call the entrypoint script, after going in the right directory (gitlab-runner starts in a directory that's not the workdir)
       # Kaniko Builder Entrypoint
       '/builder/entrypoint.sh'
+      'cp /tmp/${NAME}_metadata.json ./${NAME}_metadata.json'
+      'cat ./${NAME}_metadata.json'
     ]
   ,
   retry:
@@ -81,7 +83,7 @@ local build_docker(stage, name, path, parent, version, branch, is_changed, is_tr
   artifacts:
   {
     expire_in: '1 hours',
-    paths:['/tmp/${NAME}_metadata.json']
+    paths:['./${NAME}_metadata.json']
   },
 };
 local deploy_docker(stage, name, path, parent, version, branch, is_changed, is_triggered, job_to_deploy, deploy_jenkins) =
