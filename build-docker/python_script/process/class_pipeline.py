@@ -96,7 +96,7 @@ class MultiStageParent(Parent):
 class Dockerfile:
     """Class containing Dockerfile information"""
 
-    def __init__(self, path, name, parent, multistage_parents, parameters, version, branch, is_changed, is_triggered, docker_args):
+    def __init__(self, path, name, parent, multistage_parents, parameters, version, branch, is_changed, is_triggered, docker_args, allowed_push):
         self.path = path
         self.name = name
         self.version = version
@@ -107,6 +107,7 @@ class Dockerfile:
         self.is_changed = is_changed
         self.is_triggered = is_triggered
         self.docker_args = docker_args
+        self.allowed_push = allowed_push
     
     def __str__(self):
         return "Dockerfile with name '{0}', version '{1}', parent '{2}' and path '{3}' with branch '{4}'".format(self.name, self.version, self.parent, self.path, self.branch)
@@ -138,7 +139,7 @@ class Dockerfile:
         # return "'{2}{7}{9}{10}' : {0}('{8}{1}', '{2}', '{3}', {{name: '{4}', external: {5}}}, '{6}')".format(method, level, self.name, self.path, self.parent.name, str(self.parent.external).lower(), version, suffix, stage, DOCKER_IMAGE_TAG_SEPARATOR, self.version_number)
         #
         if not deploy :
-            return "'{2}:{5}{6}' : {0}('{7}{1}', '{2}', '{3}', {4}, '{5}', '{8}', {9}, {10}, {11}, '{12}')".format(method, level, self.name, self.path, parent_str, version, suffix, stage, self.branch, str(self.is_changed).lower(), str(self.is_triggered).lower(),job_needs, self.docker_args)
+            return "'{2}:{5}{6}' : {0}('{7}{1}', '{2}', '{3}', {4}, '{5}', '{8}', {9}, {10}, {11}, '{12}', '{13}')".format(method, level, self.name, self.path, parent_str, version, suffix, stage, self.branch, str(self.is_changed).lower(), str(self.is_triggered).lower(),job_needs, self.docker_args, self.allowed_push)
             # 'php-mce-rcube' : build_docker(0, 'php-mce-rcube', 'php/php-mce-rcube', {name: 'registry/php-mce-generic', external: false, is_building: false}, '7.3-fpm_1.0', 'prod', 'True', 'False', 'debian-mce-generic'),
         else :
             return "'deploy-{2}:{5}{6}' : {0}('{7}{1}', '{2}', '{3}', {4}, '{5}', '{8}', {9}, {10}, '{2}:{5}{6}', '{11}')".format(method, level, self.name, self.path, parent_str, version, suffix, stage, self.branch, str(self.is_changed).lower(), str(self.is_triggered).lower(), deploy_jenkins)

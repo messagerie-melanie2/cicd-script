@@ -57,13 +57,14 @@ def find_dockerfiles_parameters(info_from_df, info_from_path, triggered_project,
                 
                 docker_args = convert_variables_to_docker_args(info_from_parameters.variables,build_branch,debug)
 
+                allowed_push = True
                 if info_from_parameters.no_repo :
-                    docker_args += "--no-push "
+                    allowed_push = False
 
                 #Find if dockerfile is changed
                 is_changed = find_info_from_changesfile(changes,info_from_path.image_name,info_from_path.image_version_number,False,debug)
                 # Add new Dockerfile to array
-                df_info = Dockerfile(info_from_path.path, info_from_path.image_name, df_parent,multistage_parents, info_from_parameters, df_version, build_branch, is_changed, is_triggered, docker_args) 
+                df_info = Dockerfile(info_from_path.path, info_from_path.image_name, df_parent,multistage_parents, info_from_parameters, df_version, build_branch, is_changed, is_triggered, docker_args, allowed_push) 
 
                 if(debug):
                     print(df_info)
