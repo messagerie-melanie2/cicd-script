@@ -81,7 +81,7 @@ local build_docker(stage, name, path, parent, version, branch, is_changed, is_tr
   artifacts:
   {
     expire_in: '1 hours',
-    paths:['cicd-script/${NAME}/']
+    paths:['/tmp/${NAME}_metadata.json']
   },
 };
 local deploy_docker(stage, name, path, parent, version, branch, is_changed, is_triggered, job_to_deploy, deploy_jenkins) =
