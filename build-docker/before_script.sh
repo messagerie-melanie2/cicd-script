@@ -64,7 +64,7 @@ main()
     #
     ## Create a variable to store build args (image digest related)
     export DOCKER_DIGEST_BUILD_ARGS="--metadata-file"
-    export DOCKER_FILE_DIGEST="cicd-script/$NAME/metadata.json"
+    export DOCKER_FILE_DIGEST="~/$NAME/metadata.json"
     #
     if [ "$REGISTRY_MIRROR" != "" ]
     then
