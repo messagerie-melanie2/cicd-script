@@ -1,6 +1,6 @@
 from global_vars import *
-from build_docker.class_pipeline import Deploy
-from build_docker.find_dockerfiles_tools import find_info_from_changesfile
+from dockerbuild.class_pipeline import Deploy
+from dockerbuild.find_dockerfiles_tools import find_info_from_changesfile
 
 logger = logging.getLogger(__name__)
 

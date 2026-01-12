@@ -1,6 +1,6 @@
 # coding=utf-8
 from global_vars import *
-from build_docker.class_pipeline_tools import add_branch_to_version,convert_multistage_parents_version_to_docker_args,create_job_needs
+from dockerbuild.class_pipeline_tools import add_branch_to_version,convert_multistage_parents_version_to_docker_args,create_job_needs
 
 logger = logging.getLogger(__name__)
 

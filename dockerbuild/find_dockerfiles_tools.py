@@ -1,6 +1,6 @@
 # coding=utf-8
 from global_vars import *
-from build_docker.class_pipeline import InfoFromPath, InfoFromDockerfile, Deploy, Parameters, MultiStageParent
+from dockerbuild.class_pipeline import InfoFromPath, InfoFromDockerfile, Deploy, Parameters, MultiStageParent
 from lib.gitlab_helper import get_repository_id
 
 logger = logging.getLogger(__name__)

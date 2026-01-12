@@ -1,6 +1,6 @@
 from global_vars import *
-from build_docker.class_pipeline import Parent,Dockerfile
-from build_docker.find_dockerfiles_tools import find_info_from_parameters, convert_variables_to_docker_args, find_info_from_changesfile, find_info_from_path, find_info_from_dockerfile, no_build_file_in_folder, check_if_triggered, create_multistage_parents
+from dockerbuild.class_pipeline import Parent,Dockerfile
+from dockerbuild.find_dockerfiles_tools import find_info_from_parameters, convert_variables_to_docker_args, find_info_from_changesfile, find_info_from_path, find_info_from_dockerfile, no_build_file_in_folder, check_if_triggered, create_multistage_parents
 from lib.gitlab_helper import get_repository_id
 
 logger = logging.getLogger(__name__)

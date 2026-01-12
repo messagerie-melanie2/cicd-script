@@ -2,8 +2,8 @@
 from global_vars import *
 from lib.gitlab_helper import get_registry_info
 from lib.helper import get_changes
-from build_docker.find_dockerfiles import find_dockerfiles_r
-from build_docker.create_pipeline import sort_dockerfiles, set_parent_to_is_building, sort_pipeline, pipelines_write_jsonnet, write_jsonnet
+from dockerbuild.find_dockerfiles import find_dockerfiles_r
+from dockerbuild.create_pipeline import sort_dockerfiles, set_parent_to_is_building, sort_pipeline, pipelines_write_jsonnet, write_jsonnet
 
 logger = logging.getLogger(__name__)
 
