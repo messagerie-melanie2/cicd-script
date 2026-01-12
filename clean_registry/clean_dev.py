@@ -1,4 +1,4 @@
-from global_vars import *
+from clean_registry.global_vars import *
 from lib.gitlab_helper import get_branches, get_tags_in_repository,delete_tag_in_repository
 
 logger = logging.getLogger(__name__)

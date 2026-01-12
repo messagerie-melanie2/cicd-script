@@ -1,10 +1,10 @@
 # coding=utf-8
-from global_vars import *
+from clean_registry.global_vars import *
 from lib.gitlab_helper import get_registry_info
 from lib.helper import get_changes
-from dockerbuild.find_dockerfiles import find_dockerfiles_r
-from cleanimage.clean_no_build import clean_ghost_images
-from cleanimage.clean_dev import clean_dev_images
+from build_docker.find_dockerfiles import find_dockerfiles_r
+from clean_registry.clean_no_build import clean_ghost_images
+from clean_registry.clean_dev import clean_dev_images
 
 logger = logging.getLogger(__name__)
 

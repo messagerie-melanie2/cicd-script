@@ -1,5 +1,5 @@
 # coding=utf-8
-from global_vars import *
+from build_docker.global_vars import *
 from lib.gitlab_helper import find_tag_in_repository
 
 logger = logging.getLogger(__name__)
