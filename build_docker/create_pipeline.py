@@ -1,12 +1,14 @@
 from global_vars import *
-from process.class_pipeline import Deploy
-from process.find_dockerfiles_tools import find_info_from_changesfile
+from build_docker.class_pipeline import Deploy
+from build_docker.find_dockerfiles_tools import find_info_from_changesfile
+
+logger = logging.getLogger(__name__)
 
 #=======================================================#
 #============= Create Pipeline Functions ===============#
 #=======================================================#
 
-def sort_dockerfiles(dockerfiles, debug = False):
+def sort_dockerfiles(dockerfiles):
     
     # Setup variables
     res = dockerfiles
@@ -16,32 +18,27 @@ def sort_dockerfiles(dockerfiles, debug = False):
     roundCount = 1
     
     # Display debug information before doing the job
-    if(debug):
-        print("\n\rSorting following Dockerfiles, with a maximum of " + str(levels) + " levels...")
-        for elem in res:
-            print(elem)
+    logger.debug("Sorting following Dockerfiles, with a maximum of " + str(levels) + " levels...")
+    for elem in res:
+        logger.debug(elem)
 
-    if(debug):
-        print(">>> Searching for Dockerfiles with a parent outside this repo (DockerHub, other repo, ...)")
+    logger.debug(">>> Searching for Dockerfiles with a parent outside this repo (DockerHub, other repo, ...)")
     #
     for df in dockerfiles:
         if df.parent.external == True:
         # if df.parent not in [dfi.name for dfi in dockerfiles]:
-            if(debug):
-                print("Found : " + str(df))
+            logger.debug(f"Found : {df}")
             sortedRes[0].append(df)
             elementsToRemove.append(df)
 
     # Update list to remove already-handled elements
     res = [e for e in res if e not in elementsToRemove]
 
-    if(debug):
-        print(">>> Searching for other (= child) Dockerfiles")
+    logger.debug(">>> Searching for other (= child) Dockerfiles")
     #
     while (len(res) > 0 and roundCount < levels):
 
-        if(debug):
-            print("-- Loop level " + str(roundCount))
+        logger.debug(f"-- Loop level {roundCount}")
 
         # loop through Dockerfile element
         for elem in res:
@@ -50,8 +47,7 @@ def sort_dockerfiles(dockerfiles, debug = False):
                 if (elem.parent.name, elem.parent.version) in {
                     (df.name, df.version) for df in sortedRes[level]
                 }:
-                    if(debug):
-                        print("Found : " + str(elem))
+                    logger.debug(f"Found : {elem}")
 
                     sortedRes[level + 1].append(elem)
                     elementsToRemove.append(elem)
@@ -63,27 +59,25 @@ def sort_dockerfiles(dockerfiles, debug = False):
         res = [e for e in res if e not in elementsToRemove]
 
     if(len(res) > 0):
-        print("[WARN] Unable to sort all Dockerfiles... Check their content (maybe a wrong or not existing parent is specified ?)")
-        print("[INFO] Adding all these left Dockerfiles to the last level.")
+        logger.warning("Unable to sort all Dockerfiles... Check their content (maybe a wrong or not existing parent is specified ?)")
+        logger.info("Adding all these left Dockerfiles to the last level.")
         for elem in res:
 
-            print("- " + str(elem))
+            logger.info(f"- {elem}")
 
             # Build that image without searching for its parent
             elem.parent.external = True
-            if(debug):
-                print("Modified : " + str(elem))
+            logger.debug(f"Modified : {elem}")
 
             # Add it to the last stage
             sortedRes[levels - 1].append(elem)
     
     # Return the array, only with non-empty levels
     sortedRes = [e for e in sortedRes if len(e) > 0]
-    if(debug):
-        print("\n\rNumber of levels : " + str(len(sortedRes)))
+    logger.debug(f"Number of levels : {len(sortedRes)}")
     return sortedRes
 
-def set_parent_to_is_building(sortedRes,changes, debug) :
+def set_parent_to_is_building(sortedRes,changes) :
     
     new_sortedRes = copy.deepcopy(sortedRes)
     to_build_array = []
@@ -104,7 +98,7 @@ def set_parent_to_is_building(sortedRes,changes, debug) :
             else :
                 version_number = df.version
                 
-            if find_info_from_changesfile(changes,df.name,version_number,debug = debug) :
+            if find_info_from_changesfile(changes,df.name,version_number) :
                 if not is_to_build :
                     to_build_array.append(df)
                 is_to_build = True
@@ -119,8 +113,7 @@ def set_parent_to_is_building(sortedRes,changes, debug) :
             #Look if parent is building then set it to is_building
             for df_parent in to_build_array :
 
-                if debug :
-                    print("{0}:{1} will build does {2} is building ? with parent : {3}:{4} \n".format(df_parent.name,df_parent.version,df.name,df.parent.name,df.parent.version ))
+                logger.debug(f"{df_parent.name}:{df_parent.version} will build does {df.name} is building ? with parent : {df.parent.name}:{df.parent.version} ")
                     
                 if df.parent.name == df_parent.name and df.parent.version == df_parent.version:
                     if df_parent.parameters.is_up :
@@ -129,8 +122,7 @@ def set_parent_to_is_building(sortedRes,changes, debug) :
                     else :
                         df.parent.is_building = True
 
-                    if debug :
-                        print(df.name + " will build too because his parent " + df.parent.name +" is building.  \n")
+                    logger.debug(f"{df.name} will build too because his parent {df.parent.name} is building.")
                 
                 for multistage_parent in df.multistage_parents :
                     if multistage_parent.name == df_parent.name and multistage_parent.version == df_parent.version:
@@ -143,7 +135,7 @@ def set_parent_to_is_building(sortedRes,changes, debug) :
     
     return new_sortedRes, to_build_array
 
-def sort_pipeline(sortedRes,debug = False):
+def sort_pipeline(sortedRes):
     pipelines = {}
     for level in range(0,len(sortedRes)) :
         for dockerfile in sortedRes[level] :
@@ -168,21 +160,20 @@ def sort_pipeline(sortedRes,debug = False):
                             added = True
             if not added :
                 pipeline_name = "pipeline-others"
-                print(dockerfile.name)
-                print(dockerfile.parent.version)
-                print(level)
+                logger.info(dockerfile.name)
+                logger.info(dockerfile.parent.version)
+                logger.info(level)
                 if pipeline_name not in pipelines :
                     pipelines[pipeline_name] = [[dockerfile]]
                 else :
                     pipelines[pipeline_name][0].append(dockerfile)
 
-    if (debug) :                       
-        for pipeline_name in pipelines.keys() :
-            for level in pipelines[pipeline_name]:
-                for dockerfile in level :
-                    print(pipeline_name)
-                    print(pipelines[pipeline_name].index(level))
-                    print(dockerfile)
+    for pipeline_name in pipelines.keys() :
+        for level in pipelines[pipeline_name]:
+            for dockerfile in level :
+                logger.debug(pipeline_name)
+                logger.debug(pipelines[pipeline_name].index(level))
+                logger.debug(dockerfile)
     
     return pipelines
 
@@ -204,14 +195,13 @@ def write_jsonnet_object(df_file, df_obj, index, branch, token, project_id, mode
         if deploy :
             df_file.write("\n\t" + df_obj.toJsonnet(mode, JSONNET_DEPLOY_FUNCTION, CICD_STAGE_BUILD_LABEL, index + 1, branch, "", token, project_id, deploy, df_obj.parameters.deploy_jenkins, trigger_variable) + ",")
 
-def write_jsonnet(dockerfiles, to_build_dict, path, branch, token, project_id, trigger_variable ,debug = False):
+def write_jsonnet(dockerfiles, to_build_dict, path, branch, token, project_id, trigger_variable):
 
     try:
         # Read Dockerfile
         df_file = open(path, 'a')
     except OSError as err:
-        # if(debug):
-        print("Jsonnet file not found... ({0})".format(err))
+        logger.info(f"Jsonnet file not found... ({err})")
         return False
     else:
         # Write Jsonnet beginning
@@ -252,14 +242,13 @@ def write_jsonnet(dockerfiles, to_build_dict, path, branch, token, project_id, t
         # Close the file
         df_file.close()
 
-def write_pipelines_jsonnet(pipelines, path, debug = False):
+def write_pipelines_jsonnet(pipelines, path):
 
     try:
         # Read Dockerfile
         df_file = open(path, 'a')
     except OSError as err:
-        # if(debug):
-        print("Jsonnet file not found... ({0})".format(err))
+        logger.info(f"Jsonnet file not found... ({err})")
         return False
     else:
 
@@ -269,7 +258,7 @@ def write_pipelines_jsonnet(pipelines, path, debug = False):
         # Write jobs
 
         for pipeline_name in pipelines.keys():
-            df_file.write("\n\t'"+pipeline_name+"' : build_pipeline('"+pipeline_name+"'),")
+            df_file.write(f"\n\t'{pipeline_name}' : build_pipeline('{pipeline_name}'),")
         
         # Write Jsonnet end
         df_file.write("\n}")
@@ -277,13 +266,13 @@ def write_pipelines_jsonnet(pipelines, path, debug = False):
         # Close the file
         df_file.close()
 
-def pipelines_write_jsonnet(pipelines, pipeline_folder_path, origin_path_jsonnet, branch, token, project_id, debug = False):
+def pipelines_write_jsonnet(pipelines, pipeline_folder_path, origin_path_jsonnet, branch, token, project_id):
 
     for pipeline_name in pipelines.keys() :
         new_file_path = f"{pipeline_folder_path}/{pipeline_name}.jsonnet"
         os.makedirs(os.path.dirname(f"{pipeline_folder_path}/"), exist_ok=True)
         shutil.copy(origin_path_jsonnet, new_file_path)
-        write_jsonnet(pipelines[pipeline_name],{'mode':"all",'to_build':[]}, new_file_path, branch, token, project_id, {}, debug = debug)
+        write_jsonnet(pipelines[pipeline_name],{'mode':"all",'to_build':[]}, new_file_path, branch, token, project_id, {})
     
     os.makedirs(os.path.dirname(f"{pipeline_folder_path}/"), exist_ok=True)
     shutil.copy(f"{pipeline_folder_path}.jsonnet", f"{pipeline_folder_path}/pipelines.jsonnet")

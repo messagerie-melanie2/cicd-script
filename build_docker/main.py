@@ -1,39 +1,27 @@
 # coding=utf-8
 from global_vars import *
-from gitlab.gitlab_tools import get_registry_info
-from process.find_dockerfiles import find_dockerfiles_r
-from process.create_pipeline import sort_dockerfiles, set_parent_to_is_building, sort_pipeline, pipelines_write_jsonnet, write_jsonnet
-from clean.clean_no_build import clean_ghost_images
-from clean.clean_dev import clean_dev_images
+from lib.gitlab_helper import get_registry_info
+from lib.helper import get_changes
+from build_docker.find_dockerfiles import find_dockerfiles_r
+from build_docker.create_pipeline import sort_dockerfiles, set_parent_to_is_building, sort_pipeline, pipelines_write_jsonnet, write_jsonnet
+
+logger = logging.getLogger(__name__)
 
 def main(args) :
     #Find the registry of the project 
-    registry = get_registry_info(args.token, args.project_id, args.debug_enabled)
+    registry = get_registry_info(args.token, args.project_id)
 
     #Create an array with the files changed during commit
-    changes = []
-    try:
-            # Read changes.txt
-            changes_file = open(args.changes_info_file, 'r')
-
-    except OSError as err:
-        if args.debug_enabled :
-            print("changes.txt not found...")
-        changes_file = []
-    
-    for line in changes_file :
-        changes.append(line) 
-        # changes = ["/debian/3.4/Dockerfile",...]
+    changes = get_changes(args.changes_info_file)
 
     if(args.generate_jsonnet) :
         if (args.trigger_branch == RECETTE_KEY) :
             args.generate_jsonnet_branch_name = args.trigger_branch
 
     # Find all Dockerfiles in the current path
-    dockerfiles_to_build = find_dockerfiles_r(args.generate_jsonnet_current_repo, args.path, args.generate_jsonnet_branch_name if(args.generate_jsonnet) else NO_BRANCH, changes, registry, args.trigger_project, args.trigger_changes, args.debug_enabled)
-    print("\r")
-    print('[General] Scanning {0} to find Dockerfiles'.format(args.path))
-    print('\tFound {0} docker images to build.'.format(len(dockerfiles_to_build)))
+    logger.info(f"[General] Scanning {args.path} to find Dockerfiles")
+    dockerfiles_to_build = find_dockerfiles_r(args.generate_jsonnet_current_repo, args.path, args.generate_jsonnet_branch_name if(args.generate_jsonnet) else NO_BRANCH, changes, registry, args.trigger_project, args.trigger_changes)
+    logger.info(f'Found {len(dockerfiles_to_build)} docker images to build.')
 
     #####
     # Jsonnet generation to build Docker images
@@ -41,48 +29,36 @@ def main(args) :
     if(args.generate_jsonnet):
         job = '[Generate Jsonnet]'
         #
-        print("\r\n{0} Executing script with the following args :".format(job))
-        print("\r\t{0} : \t {1}".format('Destination file', args.generate_jsonnet_destination_file))
-        print("\r\t{0} : \t {1}".format('Using repository', args.generate_jsonnet_current_repo))
-        print("\r\t{0} : \t {1}".format('Using branch', args.generate_jsonnet_branch_name))
-        print("\r")
+        logger.info(f"{job} Executing script with the following args :")
+        logger.info(f"Destination file : {args.generate_jsonnet_destination_file}")
+        logger.info(f"Using repository : {args.generate_jsonnet_current_repo}")
+        logger.info(f"Using branch : {args.generate_jsonnet_branch_name}")
 
-        # if we are on main/master branch, we do not add '-branch' to the image tag
         dockerfiles_branch_tag = args.generate_jsonnet_branch_name
 
-        sortedRes = sort_dockerfiles(dockerfiles_to_build, args.debug_enabled)
-        print("\r\n{0} Sorted Dockerfiles to handle dependencies !".format(job))
+        sortedRes = sort_dockerfiles(dockerfiles_to_build)
+        logger.info(f"{job} Sorted Dockerfiles to handle dependencies !")
 
-        new_sortedRes, to_build_array = set_parent_to_is_building(sortedRes,changes, args.debug_enabled)
-        print("\r\n{0} Set child to build if their parent are !".format(job))
+        new_sortedRes, to_build_array = set_parent_to_is_building(sortedRes,changes)
+        logger.info(f"{job} Set child to build if their parent are !")
         
         if(args.pipeline_source == "schedule") :
-            pipelines = sort_pipeline(new_sortedRes, args.debug_enabled)
+            pipelines = sort_pipeline(new_sortedRes)
             
-            pipelines_write_jsonnet(pipelines, args.generate_jsonnet_pipeline_folder, args.generate_jsonnet_destination_file, dockerfiles_branch_tag, args.token, args.project_id, args.debug_enabled)
+            pipelines_write_jsonnet(pipelines, args.generate_jsonnet_pipeline_folder, args.generate_jsonnet_destination_file, dockerfiles_branch_tag, args.token, args.project_id)
         else :
             trigger_variable = {}
             
             try :
                 trigger_variable = json.loads(args.trigger_variables)
             except :
-                if args.debug_enabled :
-                    print("trigger variable is None")
+                logger.debug("trigger variable is None")
             
             os.makedirs(os.path.dirname(f"{args.generate_jsonnet_pipeline_folder}/"), exist_ok=True)
             shutil.copy(args.generate_jsonnet_destination_file, f"{args.generate_jsonnet_pipeline_folder}/pipelines.jsonnet")
-            write_jsonnet(new_sortedRes, {'mode':"build",'to_build':to_build_array}, f"{args.generate_jsonnet_pipeline_folder}/pipelines.jsonnet", dockerfiles_branch_tag, args.token, args.project_id, trigger_variable, args.debug_enabled)
+            write_jsonnet(new_sortedRes, {'mode':"build",'to_build':to_build_array}, f"{args.generate_jsonnet_pipeline_folder}/pipelines.jsonnet", dockerfiles_branch_tag, args.token, args.project_id, trigger_variable)
 
-        print("\r\n{0} Writed Jsonnet result to file !".format(job))
-
-    #####
-    # Finding tags of 'NO_BUILD' Docker images
-    #####
-    if(args.delete_ghost_image):
-        clean_ghost_images(registry,dockerfiles_to_build,args.token, args.project_id,args.debug_enabled)
-
-    if(args.delete_dev_image):
-        clean_dev_images(registry,args.token, args.project_id)
+        logger.info(f"{job} Writed Jsonnet result to file !")
 
 
 #=======================================================#
@@ -95,22 +71,9 @@ parser = argparse.ArgumentParser(
     description="Programme permettant de générer une liste de tags (images Docker) à partir d'une arborescence de fichiers (Dockerfile, versions, etc)")
 group = parser.add_mutually_exclusive_group(required=True)
 parser.add_argument(
-    '-d', '--debug-enabled', 
-    metavar='DEBUG', default=False,
-    help="Afficher plus de logs lors de l'exécution des fonctions")
-parser.add_argument(
     '-p', '--path', 
     metavar='DIR_PATH', default='.',
     help="Choisir le dossier utilisé comme cible pour la recherche des fichiers (Dockerfiles, versions, etc)")
-
-#####
-# Testing functions made in this script
-#####
-group.add_argument(
-    '-t', '--test-functions', 
-    action='store_true',
-    help="Exécuter des tests sur les fonctions définies et utilisées dans ce programme",
-    )
 
 #####
 # Jsonnet generation to build Docker images
@@ -184,34 +147,9 @@ parser.add_argument(
     metavar='CI_PIPELINE_SOURCE', default='',
     help="La source de la pipeline (schedule/trigger ...)")
 
-#####
-# Argument to delete dev image
-#####
-group.add_argument(
-    '-ddi', '--delete-dev-image',
-    action='store_true',
-    help="Lance la suppression de toutes les images de dev non utilisé")
-
-#####
-# Argument to delete ghost image
-#####
-group.add_argument(
-    '-dgi', '--delete-ghost-image',
-    action='store_true',
-    help="Lance la suppression de toutes les images fantomes")
-
 # Run the arguments parser
 args = parser.parse_args()
-
-if args.debug_enabled == 'false' :
-    args.debug_enabled = False
-elif args.debug_enabled == 'true' :
-    args.debug_enabled = True
     
-if(args.debug_enabled):
-    print(args)
+logger.debug(f"args: {args}")
 
 main(args)
-
-# End
-print("\r")
