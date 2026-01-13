@@ -3,7 +3,7 @@ from lib.global_vars import *
 #=======================================================#
 #================== Global parameters ==================#
 #=======================================================#
-BUILD_LOG_LEVEL_DEFAULT = "INFO"
+BUILD_DOCKER_LOG_LEVEL_DEFAULT = "INFO"
 DOCKER_FILE_NAME_DEFAULT = "Dockerfile"
 NOBUILD_FILE_NAME_DEFAULT = "NO_BUILD"
 PARENT_VERSIONS_FILE_NAME_DEFAULT = "parent_versions"
@@ -23,7 +23,7 @@ REPOSITORIES_WHITELIST_DEFAULT = []
 ENABLE_DEPLOY_DEFAULT = False
 DOCKER_BUILD_ARG_OPTION_DEFAULT = "--opt build-arg:"
 
-BUILD_LOG_LEVEL = os.environ.get("BUILD_LOG_LEVEL", BUILD_LOG_LEVEL_DEFAULT).upper()
+BUILD_DOCKER_LOG_LEVEL = os.environ.get("BUILD_DOCKER_LOG_LEVEL", BUILD_DOCKER_LOG_LEVEL_DEFAULT).upper()
 DOCKER_FILE_NAME = os.environ.get('DOCKER_FILE_NAME',DOCKER_FILE_NAME_DEFAULT)
 NOBUILD_FILE_NAME = os.environ.get('NOBUILD_FILE_NAME',NOBUILD_FILE_NAME_DEFAULT)
 PARENT_VERSIONS_FILE_NAME = os.environ.get('PARENT_VERSIONS_FILE_NAME',PARENT_VERSIONS_FILE_NAME_DEFAULT)
@@ -44,6 +44,6 @@ ENABLE_DEPLOY = env.bool("ENABLE_DEPLOY",ENABLE_DEPLOY_DEFAULT)
 DOCKER_BUILD_ARG_OPTION = os.environ.get('DOCKER_BUILD_ARG_OPTION',DOCKER_BUILD_ARG_OPTION_DEFAULT)
 
 logging.basicConfig(
-    level=getattr(logging, BUILD_LOG_LEVEL),
+    level=getattr(logging, BUILD_DOCKER_LOG_LEVEL),
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
 )

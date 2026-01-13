@@ -4,12 +4,12 @@ from lib.global_vars import *
 #=======================================================#
 #================== Global parameters ==================#
 #=======================================================#
-CLEAN_LOG_LEVEL_DEFAULT = "INFO"
+CLEAN_LOG_LOG_LEVEL_DEFAULT = "INFO"
 
-CLEAN_LOG_LEVEL = os.environ.get("CLEAN_LOG_LEVEL", CLEAN_LOG_LEVEL_DEFAULT).upper()
+CLEAN_LOG_LOG_LEVEL = os.environ.get("CLEAN_LOG_LOG_LEVEL", CLEAN_LOG_LOG_LEVEL_DEFAULT).upper()
 
 logging.basicConfig(
-    level=getattr(logging, CLEAN_LOG_LEVEL),
+    level=getattr(logging, CLEAN_LOG_LOG_LEVEL),
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
 )
 
