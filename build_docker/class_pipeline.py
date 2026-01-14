@@ -1,6 +1,8 @@
 # coding=utf-8
-from global_vars import *
-from process.class_pipeline_tools import add_branch_to_version,convert_multistage_parents_version_to_docker_args,create_job_needs
+from build_docker.global_vars import *
+from build_docker.class_pipeline_tools import add_branch_to_version,convert_multistage_parents_version_to_docker_args,create_job_needs
+
+logger = logging.getLogger(__name__)
 
 #=======================================================#
 #======================= Classes =======================#
@@ -132,14 +134,11 @@ class Dockerfile:
                     self.docker_args += convert_multistage_parents_version_to_docker_args(multistage_parent,True)
 
         # Build result string
-        parent_str = "{{name: '{0}', version: '{1}', external: {2}, is_building: {3}}}".format(self.parent.name, self.parent.version, str(self.parent.external).lower(), str(self.parent.is_building).lower())
-
+        parent_str = f"{{name: '{self.parent.name}', version: '{self.parent.version}', external: {str(self.parent.external).lower()}, is_building: {str(self.parent.is_building).lower()}}}"
         job_needs = create_job_needs(self.parent,self.multistage_parents,mode)
 
-        # return "'{2}{7}{9}{10}' : {0}('{8}{1}', '{2}', '{3}', {{name: '{4}', external: {5}}}, '{6}')".format(method, level, self.name, self.path, self.parent.name, str(self.parent.external).lower(), version, suffix, stage, DOCKER_IMAGE_TAG_SEPARATOR, self.version_number)
-        #
         if not deploy :
-            return "'{2}:{5}{6}' : {0}('{7}{1}', '{2}', '{3}', {4}, '{5}', '{8}', {9}, {10}, {11}, '{12}', '{13}')".format(method, level, self.name, self.path, parent_str, version, suffix, stage, self.branch, str(self.is_changed).lower(), str(self.is_triggered).lower(),job_needs, self.docker_args, self.allowed_push)
+            return f"'{self.name}:{version}{suffix}' : {method}('{stage}{level}', '{self.name}', '{self.path}', {parent_str}, '{version}', '{self.branch}', {str(self.is_changed).lower()}, {str(self.is_triggered).lower()}, {job_needs}, '{self.docker_args}', '{self.allowed_push}')"
             # 'php-mce-rcube' : build_docker(0, 'php-mce-rcube', 'php/php-mce-rcube', {name: 'registry/php-mce-generic', external: false, is_building: false}, '7.3-fpm_1.0', 'prod', 'True', 'False', 'debian-mce-generic'),
         else :
-            return "'deploy-{2}:{5}{6}' : {0}('{7}{1}', '{2}', '{3}', {4}, '{5}', '{8}', {9}, {10}, '{2}:{5}{6}', '{11}')".format(method, level, self.name, self.path, parent_str, version, suffix, stage, self.branch, str(self.is_changed).lower(), str(self.is_triggered).lower(), deploy_jenkins)
+            return f"'deploy-{self.name}:{version}{suffix}' : {method}('{stage}{level}', '{self.name}', '{self.path}', {parent_str}, '{version}', '{self.branch}', {str(self.is_changed).lower()}, {str(self.is_triggered).lower()}, '{self.name}:{version}{suffix}', '{deploy_jenkins}')"

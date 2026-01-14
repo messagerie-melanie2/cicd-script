@@ -1,5 +1,6 @@
 from setup.global_vars import *
-from lib.helper import request, send_message, set_new_ci_variable, add_argument_to_conf, get_project_info
+from lib.helper import request, send_message, add_argument_to_conf
+from lib.gitlab_helper import set_new_ci_variable, get_project_info
 from setup.setup_general import set_project_allowlist
 
 logger = logging.getLogger(__name__)
