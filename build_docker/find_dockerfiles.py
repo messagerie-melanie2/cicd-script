@@ -92,7 +92,7 @@ def find_dockerfiles_r(current_repo, path = ".", build_branch=NO_BRANCH, changes
     for subdir, dirs, files in os.walk(path):
         for filename in files:
             filepath = subdir + os.sep + filename
-
+            logger.debug(filepath)
             if filepath.endswith(DOCKER_FILE_NAME):
                 
                 info_from_path = find_info_from_path(filepath)
