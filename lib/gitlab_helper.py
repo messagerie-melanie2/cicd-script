@@ -1,5 +1,5 @@
 # coding=utf-8
-from global_vars import *
+from lib.global_vars import *
 from lib.helper import request
 
 logger = logging.getLogger(__name__)
