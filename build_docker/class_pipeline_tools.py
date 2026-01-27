@@ -1,6 +1,8 @@
 # coding=utf-8
-from global_vars import *
-from gitlab.gitlab_tools import find_tag_in_repository
+from build_docker.global_vars import *
+from lib.gitlab_helper import find_tag_in_repository
+
+logger = logging.getLogger(__name__)
 
 #=======================================================#
 #================ Classes Function Tools================#
@@ -15,29 +17,29 @@ def add_branch_to_version(parent, branch, token, project_id, trigger_variable):
         if(new_parent.is_building == True) :
             new_parent.version = "{0}-{1}".format(new_parent.version, branch)
         else :
-            if find_tag_in_repository(token,project_id,new_parent.repository_id,"{0}-{1}".format(new_parent.version, branch),True) == False:
+            if find_tag_in_repository(token,project_id,new_parent.repository_id,f"{new_parent.version}-{branch}") == False:
                 if(branch != RECETTE_KEY) :
-                    new_parent.version = "{0}-{1}".format(new_parent.version, PREPROD_KEY)
+                    new_parent.version = f"{new_parent.version}-{PREPROD_KEY}"
                 elif (branch == RECETTE_KEY):
-                    new_parent.version = "{0}-{1}".format(new_parent.version, PROD_KEY)
+                    new_parent.version = f"{new_parent.version}-{PROD_KEY}"
             else :
                 if (branch == RECETTE_KEY):
                     if "CI_PARENT_RECETTE" in trigger_variable:
-                        new_parent.version = "{0}-{1}".format(new_parent.version, branch)
+                        new_parent.version = f"{new_parent.version}-{branch}"
                     else :
-                        new_parent.version = "{0}-{1}".format(new_parent.version, PROD_KEY)
+                        new_parent.version = f"{new_parent.version}-{PROD_KEY}"
                 else :
-                    new_parent.version = "{0}-{1}".format(new_parent.version, branch)
+                    new_parent.version = f"{new_parent.version}-{branch}"
     
     return new_parent
 
-def convert_multistage_parents_version_to_kaniko_arg(multistage_parent, debug):
+def convert_multistage_parents_version_to_docker_args(multistage_parent, debug):
 
-    kaniko_args=""
-    arg_name = "stage_" + multistage_parent.alias +"_version"
-    kaniko_args += "--build-arg {0}={1} ".format(arg_name,multistage_parent.version)
+    docker_args=""
+    arg_name = f"stage_{multistage_parent.alias}_version"
+    docker_args += f"{DOCKER_BUILD_ARG_OPTION}{arg_name}={multistage_parent.version} "
 
-    return kaniko_args
+    return docker_args
 
 def create_job_needs(parent, multistage_parents, mode):
     job_needs = "[{pipeline: '$PARENT_PIPELINE_ID',job: 'convert-jsonnet-to-json',}"

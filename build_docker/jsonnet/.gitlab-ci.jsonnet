@@ -7,7 +7,7 @@ local strContains(s, substr) = std.findSubstr(substr, s) != [];
 /**
  * Function to ...
  */
-local build_docker(stage, name, path, parent, version, branch, is_changed, is_triggered, job_needs, kaniko_args) =
+local build_docker(stage, name, path, parent, version, branch, is_changed, is_triggered, job_needs, docker_args, allowed_push) =
 {
   stage: stage,
   //
@@ -43,7 +43,9 @@ local build_docker(stage, name, path, parent, version, branch, is_changed, is_tr
     BUILD_BRANCH: branch,
     #
     TAG: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:${VERSION}",
-    OTHER_KANIKO_ARGS: kaniko_args,
+    OTHER_DOCKER_ARGS: docker_args,
+    ALLOWED_PUSH: allowed_push,
+    BUILDKITD_FLAGS: "--oci-worker-no-process-sandbox",
   },
   image:
   {
@@ -68,7 +70,9 @@ local build_docker(stage, name, path, parent, version, branch, is_changed, is_tr
       #
       # Call the entrypoint script, after going in the right directory (gitlab-runner starts in a directory that's not the workdir)
       # Kaniko Builder Entrypoint
-      '$KBE'
+      '/builder/entrypoint.sh',
+      #'cp /tmp/${NAME}_metadata.json ./${NAME}_metadata.json',
+      #'cat ./${NAME}_metadata.json'
     ]
   ,
   retry:
@@ -80,7 +84,7 @@ local build_docker(stage, name, path, parent, version, branch, is_changed, is_tr
   artifacts:
   {
     expire_in: '1 hours',
-    paths:['cicd-docker/${NAME}/']
+    paths:['./${NAME}_metadata.json']
   },
 };
 local deploy_docker(stage, name, path, parent, version, branch, is_changed, is_triggered, job_to_deploy, deploy_jenkins) =

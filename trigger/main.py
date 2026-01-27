@@ -1,5 +1,6 @@
 from trigger.global_vars import *
-from trigger.trigger_function import read_trigger_parameters_local_file, get_changes, add_local_file_to_config, trigger
+from lib.helper import get_changes
+from trigger.trigger_function import read_trigger_parameters_local_file, add_local_file_to_config, trigger
 logger = logging.getLogger(__name__)
 
 #=======================================================#

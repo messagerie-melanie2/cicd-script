@@ -1,5 +1,5 @@
 from setup.global_vars import *
-from lib.helper import request, set_new_ci_variable, enable_allowlist, get_allowlist, set_new_allowlist
+from lib.gitlab_helper import request, set_new_ci_variable, enable_allowlist, get_allowlist, set_new_allowlist
 
 logger = logging.getLogger(__name__)
 

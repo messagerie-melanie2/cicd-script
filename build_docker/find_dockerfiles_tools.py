@@ -1,7 +1,9 @@
 # coding=utf-8
-from global_vars import *
-from process.class_pipeline import InfoFromPath, InfoFromDockerfile, Deploy, Parameters, MultiStageParent
-from gitlab.gitlab_tools import get_repository_id
+from build_docker.global_vars import *
+from build_docker.class_pipeline import InfoFromPath, InfoFromDockerfile, Deploy, Parameters, MultiStageParent
+from lib.gitlab_helper import get_repository_id
+
+logger = logging.getLogger(__name__)
 
 #=======================================================#
 #========= Find Dockerfiles Tools Functions ============#
@@ -9,14 +11,13 @@ from gitlab.gitlab_tools import get_repository_id
 
 ##### Tools functions
 
-def find_arg(content, name, debug = False):
+def find_arg(content, name):
 
     # Get all the lines containing a 'ARG $name' instruction
     matches = re.findall("^ARG " + name + ".*$", content, re.MULTILINE)
 
-    if(debug):
-        print("Matches : ")
-        print(matches)
+    logger.debug("Matches : ")
+    logger.debug(matches)
 
     # No need to check for a # (comment), the regex does it
 
@@ -30,8 +31,7 @@ def find_arg(content, name, debug = False):
         match = re.sub(r"ARG " + re.escape(name) + r"=(.*)", r'\1', match)
 
         if(len(match) > 0):
-            if(debug):
-                print("Result : " + match)
+            logger.debug(f"Result : {match}")
 
             if(match == 'true'):
                 return {'success': True, 'match': True}
@@ -41,12 +41,10 @@ def find_arg(content, name, debug = False):
 
             return {'success': True, 'match': match}
         else:
-            if(debug):
-                print("Dockerfile's 'ARG " + name + "' seem to be empty...")
+            logger.debug(f"Dockerfile's 'ARG {name}' seem to be empty...")
     
     else:
-        if(debug):
-            print("Dockerfile without 'ARG " + name + "'...")
+        logger.debug("Dockerfile without 'ARG {name}'...")
 
     return {'success': False, 'match': False}
 
@@ -63,44 +61,38 @@ def find_if_external(content, current_repo, df_from):
     
     return external
 
-def process_from_line(df_from, debug = False):
+def process_from_line(df_from):
     # Remove the 'FROM ' part of the string
     df_from_without_from = re.sub('FROM (.*)', r'\1', df_from)
-    if(debug):
-        print("processing... : " + df_from_without_from)
+    logger.debug(f"processing... : {df_from_without_from}")
 
     # Remove default value placeholders
     # like ':-${registry_default}' in '${registry:-${registry_default}}'
     # like '${parent_version_default}' in '${parent_version:-${parent_version_default}}'
     df_from_without_placeholder = re.sub(":-\${[a-zA-Z0-9_-]*}", '', df_from_without_from)
-    if(debug):
-        print("processing... : " + df_from_without_placeholder)
+    logger.debug(f"processing... : {df_from_without_placeholder}")
         
     # Remove variable placeholders
     # like '${registry}' in '${registry:-${registry_default}}'
     # like '${parent_version}' in '${parent_version:-${parent_version_default}}'
     df_from_without_placeholder = re.sub("\${[a-zA-Z0-9_-]*}", '', df_from_without_placeholder)
-    if(debug):
-        print("processing... : " + df_from_without_placeholder)
+    logger.debug(f"processing... : {df_from_without_placeholder}")
 
     # Remove version substring (after ':' like ':version')
     df_from_without_version = re.sub("(.*):[a-zA-Z0-9_.-]*", r'\1', df_from_without_placeholder)
-    if(debug):
-        print("processing... : " + df_from_without_version)
+    logger.debug(f"processing... : {df_from_without_version}")
     
     # Remove AS alias if multistage
     df_from_without_alias = re.sub("(.*) AS [a-zA-Z0-9_.-]*", r'\1', df_from_without_version)
-    if(debug):
-        print("processing... : " + df_from_without_alias)
+    logger.debug(f"processing... : {df_from_without_alias}")
 
     # Remove leading slash
     image_name = re.sub("/*([a-zA-Z0-9_/-]*)", r'\1', df_from_without_alias)
-    if(debug):
-        print("processing... : " + image_name)
+    logger.debug(f"processing... : {image_name}")
     
     return image_name
 
-def find_parent_name(content, current_repo, debug = False):
+def find_parent_name(content, current_repo):
         
     # Get the lines containing a 'FROM' instruction
     df_froms = re.findall("^FROM.*$", content, re.MULTILINE)
@@ -109,22 +101,20 @@ def find_parent_name(content, current_repo, debug = False):
 
         # Store the last line with a 'FROM' instruction
         df_from = df_froms[len(df_froms)-1]
-        if(debug):
-            print("processing... : " + df_from)
+        logger.debug("processing... : " + df_from)
 
         # Determine if parent is external or not (current repo or not)
         external = find_if_external(content,current_repo,df_from)
 
-        image_name = process_from_line(df_from,debug)
+        image_name = process_from_line(df_from)
 
         return [image_name, external]
 
     else:
-        # if(debug):
-        print("Dockerfile without FROM...")
+        logger.warning("Dockerfile without FROM...")
         return False
 
-def find_multistage_parents(content, current_repo, debug = False):
+def find_multistage_parents(content, current_repo):
         
     multistage_parents = []
     
@@ -142,7 +132,7 @@ def find_multistage_parents(content, current_repo, debug = False):
         from_line = from_line.group(1)
 
         #Get the docker name from this stage
-        multistage_parent["name"] = process_from_line(from_line,debug)
+        multistage_parent["name"] = process_from_line(from_line)
 
         multistage_alias = re.search("FROM .* AS (.*)",from_line)
         multistage_parent["alias"] = multistage_alias.group(1)
@@ -172,15 +162,14 @@ def find_multistage_parents(content, current_repo, debug = False):
         
         multistage_parents.append(multistage_parent)
 
-    if (debug) :
-        print("Multistage parents : ")
-        print(multistage_parents)
+    logger.debug("Multistage parents : ")
+    logger.debug(multistage_parents)
     
     return multistage_parents
 
 ##### Find functions
 
-def find_info_from_path(path, debug = False):
+def find_info_from_path(path):
     '''
     Extract information from the path himself
     '''
@@ -188,20 +177,15 @@ def find_info_from_path(path, debug = False):
     reg_result = re.search('(?:\./){0,1}((.*/)?([a-zA-Z0-9_-]*)/([0-9]+.[0-9]+))/Dockerfile', path)
 
     if(reg_result == None or len(reg_result.groups()) < InfoFromPath.count):
-
-        if(debug):
-            print("No info could be found (or not enough), check your path...")
+        logger.debug("No info could be found (or not enough), check your path...")
 
         return None
 
     else:
-
-        if(debug):
-            print(reg_result.groups())
-
+        logger.debug(reg_result.groups())
         return InfoFromPath(reg_result)
 
-def find_info_from_dockerfile(current_repo, path = DOCKER_FILE_NAME, debug = False):
+def find_info_from_dockerfile(current_repo, path = DOCKER_FILE_NAME):
     '''
     Extract information from the Dockerfile
     '''
@@ -211,7 +195,7 @@ def find_info_from_dockerfile(current_repo, path = DOCKER_FILE_NAME, debug = Fal
         df_file = open(path, 'r')
 
     except OSError as err:
-        print("{0} not found... ({1})".format(DOCKER_FILE_NAME, err))
+        logger.info(f"{DOCKER_FILE_NAME} not found... ({err})")
         return None
 
     else:
@@ -221,31 +205,25 @@ def find_info_from_dockerfile(current_repo, path = DOCKER_FILE_NAME, debug = Fal
 
         # Extract args
         args = [
-            find_arg(df_content, "parent_version_default", debug)["match"], # String
-            find_arg(df_content, "parent_version_replace_with", debug)["match"], # False, or replacement
-            # find_arg(df_content, "image_version_default", debug), # String
-            find_arg(df_content, "image_version_replace", debug)["match"], # Boolean
+            find_arg(df_content, "parent_version_default")["match"], # String
+            find_arg(df_content, "parent_version_replace_with")["match"], # False, or replacement
+            # find_arg(df_content, "image_version_default"), # String
+            find_arg(df_content, "image_version_replace")["match"], # Boolean
         ]
 
         # Add parent info
-        args += find_parent_name(df_content, current_repo, debug) # [String, Boolean]
+        args += find_parent_name(df_content, current_repo) # [String, Boolean]
 
         # Add dependencies info
         
-        args.append(find_multistage_parents(df_content, current_repo, debug))
+        args.append(find_multistage_parents(df_content, current_repo))
 
         if(args == None or len(args) < InfoFromDockerfile.count ):
-
-            if(debug):
-                print("No info could be found (or not enough), check your Dockerfile...")
-
+            logger.debug("No info could be found (or not enough), check your Dockerfile...")
             return None
 
         else:
-
-            if(debug):
-                print(args)
-
+            logger.debug(args)
             return InfoFromDockerfile(args)
 
 def set_fullname_parent_version(parent_version):
@@ -261,7 +239,7 @@ def set_fullname_parent_version(parent_version):
     
     return new_parent_version
 
-def find_info_from_parameters(subdir, default_version, debug = False):
+def find_info_from_parameters(subdir, default_version):
 
     parametersInfo = []
 
@@ -270,9 +248,8 @@ def find_info_from_parameters(subdir, default_version, debug = False):
             try:
                 parameters = yaml.safe_load(parameters_file)
             except yaml.YAMLError as exc:
-                if debug :
-                    print("{0} file not found... Will use default parent version.".format(PARAMETERS_FILE_NAME))
-                    print(exc)
+                logger.debug(f"{PARAMETERS_FILE_NAME} file not found... Will use default parent version.")
+                logger.debug(exc)
             else:
                 no_build = parameters['no_build']
                 no_repo = parameters['no_repo']
@@ -280,8 +257,7 @@ def find_info_from_parameters(subdir, default_version, debug = False):
                 try :
                     deploy_jenkins= parameters['deploy_jenkins']         
                 except Exception as e:
-                    if debug :
-                        print("deploy_jenkins not in parameters.yml")
+                    logger.debug("deploy_jenkins not in parameters.yml")
                     deploy_jenkins= PROD_KEY
 
                 try :
@@ -289,22 +265,19 @@ def find_info_from_parameters(subdir, default_version, debug = False):
                     for i in range(len(no_deploy)) :
                         no_deploy[i] = Deploy[no_deploy[i]]           
                 except Exception as e:
-                    if debug :
-                        print("no_deploy not in parameters.yml")
+                    logger.debug("no_deploy not in parameters.yml")
                     no_deploy= [Deploy.NONE]
 
                 try :
                     variables = parameters['variables']        
                 except Exception as e:
-                    if debug :
-                        print("variables not in parameters.yml")
+                    logger.debug("variables not in parameters.yml")
                     variables= None
                 
                 try :
                     multistage_parents = parameters['multistage_parents']        
                 except Exception as e:
-                    if debug :
-                        print("multistage not in parameters.yml")
+                    logger.debug("multistage not in parameters.yml")
                     multistage_parents= None
                 else :
                     for index,stage_info in enumerate(multistage_parents) :
@@ -316,9 +289,8 @@ def find_info_from_parameters(subdir, default_version, debug = False):
                     parametersInfo.append(Parameters(True,parent_version,no_build,no_repo,no_deploy,deploy_jenkins,variables,multistage_parents))
 
     except Exception as e:
-        if debug :
-            print("{0} file not found... Will use default parent version.".format(PARAMETERS_FILE_NAME))
-            print(e)
+        logger.debug(f"{PARAMETERS_FILE_NAME} file not found... Will use default parent version.")
+        logger.debug(e)
         
     if len(parametersInfo) == 0 :
         if len(default_version.split("_")) == 1 :
@@ -333,7 +305,7 @@ def find_info_from_parameters(subdir, default_version, debug = False):
     # return all values found
     return parametersInfo
 
-def find_info_from_changesfile(changes, df_name, df_version_number = "None", df_external = False, debug = False):
+def find_info_from_changesfile(changes, df_name, df_version_number = "None", df_external = False):
 
     is_changed = False
     changes_with_df = []
@@ -351,8 +323,7 @@ def find_info_from_changesfile(changes, df_name, df_version_number = "None", df_
             if df_version_number in change and ".md" not in change.lower():
                 is_changed = True
         
-        if debug :
-            print("{0} is {1}changed in the commit".format(df_name,"" if is_changed else "not ") )
+        logger.debug(f"{df_name} is {'' if is_changed else 'not '}changed in the commit" )
 
     return is_changed
 
@@ -360,7 +331,7 @@ def check_if_triggered(stage_parent,triggered_project,trigger_changes):
     is_triggered = False
 
     if triggered_project in stage_parent.project_dependency :
-        print(stage_parent.project_dependency)
+        logger.debug(stage_parent.project_dependency)
         #Check for focus trigger only if we have trigger changes
         if trigger_changes != "" :
             for file_dependency in stage_parent.files_dependency :
@@ -374,15 +345,15 @@ def check_if_triggered(stage_parent,triggered_project,trigger_changes):
     
     return is_triggered
 
-def convert_variables_to_kaniko_arg(variables, branch, debug):
+def convert_variables_to_docker_args(variables, branch):
 
-    kaniko_args=""
+    docker_args=""
     if variables != None :
         for variable in variables:
             name = variable["name"]
             
             if variable["default"] == None :
-                print("no default field in {0} variable fields. It will be skipped.".format(name))
+                logger.info(f"no default field in {name} variable fields. It will be skipped.")
             else:
                 value = variable["default"]
 
@@ -390,44 +361,38 @@ def convert_variables_to_kaniko_arg(variables, branch, debug):
                     try :
                         value = variable[branch]       
                     except Exception as e:
-                        if debug :
-                            print("no {0} field in {1} variable fields.".format(branch,name))
+                        logger.debug(f"no {branch} field in {name} variable fields.")
                 else :
                     try :
                         value = variable["dev"]       
                     except Exception as e:
-                        if debug :
-                            print("no dev field in {0} variable fields.".format(name))
+                        logger.debug(f"no dev field in {name} variable fields.")
                 
                 try :
                     if variable["type"] == "env":
                         var_env = os.environ.get(value)
                         value = var_env
                 except Exception as e:
-                    if debug :
-                        print("no env type in {0} variable fields.".format(name))
+                    logger.debug(f"no env type in {name} variable fields.")
                 
-                kaniko_args += "--build-arg {0}={1} ".format(name,value)
+                docker_args += f"{DOCKER_BUILD_ARG_OPTION}{name}={value} "
         
-    if debug:
-        print("kaniko_args : " + kaniko_args)
+    logger.debug("docker_args : " + docker_args)
 
-    return kaniko_args
+    return docker_args
 
-def no_build_file_in_folder(subdir,debug = False):
+def no_build_file_in_folder(subdir):
     is_in_folder = False
 
     try:
         # Try to find/read the NO_BUILD file
         df_file = open(subdir + os.sep + NOBUILD_FILE_NAME, 'r')
     except OSError as err:
-        if(debug):
-            print("No {0} file found, taking that image/version.".format(NOBUILD_FILE_NAME))
+        logger.debug(f"No {NOBUILD_FILE_NAME} file found, taking that image/version.")
     else:
         # Add this to the list of images to NOT build
         is_in_folder = True
-        if(debug):
-            print("{0} file found, skipping that image/version.".format(NOBUILD_FILE_NAME))
+        logger.debug("{NOBUILD_FILE_NAME} file found, skipping that image/version.")
 
     return is_in_folder
 

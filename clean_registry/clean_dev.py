@@ -1,13 +1,15 @@
-from global_vars import *
-from gitlab.gitlab_tools import get_branches, get_tags_in_repository,delete_tag_in_repository
+from clean_registry.global_vars import *
+from lib.gitlab_helper import get_branches, get_tags_in_repository,delete_tag_in_repository
 
-def clean_dev_images(registry,token,project_id, debug = False):
+logger = logging.getLogger(__name__)
+
+def clean_dev_images(registry,token,project_id):
     dev_tags_to_delete = []
 
-    branches = get_branches(token,project_id,debug)
+    branches = get_branches(token,project_id)
 
     for repository in registry :
-        tags = get_tags_in_repository(token,project_id,repository["id"],debug)
+        tags = get_tags_in_repository(token,project_id,repository["id"])
         for tag in tags :
             is_not_current_dev_tag = True
             for branch in branches:
@@ -26,11 +28,11 @@ def clean_dev_images(registry,token,project_id, debug = False):
 
     for tag in dev_tags_to_delete :
         if tag["repository_name"] not in REPOSITORIES_WHITELIST :
-            print("DEV : we have to delete " + tag["image_name"] + " tag")
+            logger.info(f"DEV : we have to delete {tag['image_name']} tag")
             deleted = delete_tag_in_repository(token,project_id,tag["repository_id"],tag["name"],True)
             if deleted :
-                print(tag["image_name"] + " tag is deleted")
+                logger.info(f"{tag['image_name']} tag is deleted")
             else :
-                print(tag["image_name"] + " tag couldn't be deleted")
+                logger.warning(f"{tag['image_name']} tag couldn't be deleted")
         else :
-            print(tag["image_name"] + " tag is whitelisted")
+            logger.info(f"{tag['image_name']} tag is whitelisted")
