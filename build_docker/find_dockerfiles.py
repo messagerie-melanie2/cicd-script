@@ -23,6 +23,10 @@ def find_dockerfiles_parameters(info_from_df, info_from_path, triggered_project,
             logger.debug(info_from_parameters)                    
 
         if(info_from_path != None and info_from_df != None):
+            
+            if "../" in info_from_path.path :
+                info_from_path.path = info_from_path.path.split("../")[-1]
+                
             for info_from_parameters in info_from_parameters_file:
                 docker_image_tag_separator = DOCKER_IMAGE_TAG_SEPARATOR
 
