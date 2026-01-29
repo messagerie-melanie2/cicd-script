@@ -17,7 +17,7 @@ def main(args) :
 
     # Find all Dockerfiles in the current path
     logger.info(f"[General] Scanning {args.path} to find Dockerfiles")
-    dockerfiles_to_build = find_dockerfiles_r(args.generate_jsonnet_current_repo, args.path, args.generate_jsonnet_branch_name if(args.generate_jsonnet) else NO_BRANCH, changes, registry, args.trigger_project, args.trigger_changes)
+    dockerfiles_to_build = find_dockerfiles_r(args.current_repo, args.path, NO_BRANCH, changes, registry)
     logger.info(f'Found {len(dockerfiles_to_build)} docker images to build.')
 
     #####
@@ -51,14 +51,6 @@ parser.add_argument(
     '-cr', '--current-repo', 
     metavar='REPO_NAME', default='cicd-docker',
     help="Nom du dépôt git actuel (afin d'identifier les images qui reposent sur un autre dépôt/repo)")
-parser.add_argument(
-    '-bn', '--branch-name', 
-    metavar='BRANCH_NAME', default=NO_BRANCH,
-    help="Nom de la branche git actuelle, à intégrer dans le tag des images Docker")
-parser.add_argument(
-    '-pf', '--pipeline-folder', 
-    metavar='FILE_PATH', default="/cicd-docker/pipelines",
-    help="Nom de la branche git actuelle, à intégrer dans le tag des images Docker")
 
 #####
 # Argument to find if parents needs to be build
