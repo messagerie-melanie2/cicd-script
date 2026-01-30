@@ -23,11 +23,11 @@ def main(args) :
     #####
     # Finding tags of 'NO_BUILD' Docker images
     #####
-    if(args.delete_ghost_image):
-        clean_ghost_images(registry,dockerfiles_to_build,args.token, args.project_id)
+    #if(args.delete_ghost_image):
+        #clean_ghost_images(registry,dockerfiles_to_build,args.token, args.project_id)
 
-    if(args.delete_dev_image):
-        clean_dev_images(registry,args.token, args.project_id)
+    #if(args.delete_dev_image):
+        #clean_dev_images(registry,args.token, args.project_id)
 
 
 #=======================================================#
