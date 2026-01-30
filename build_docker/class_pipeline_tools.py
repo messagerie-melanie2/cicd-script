@@ -18,9 +18,9 @@ def add_branch_to_version(parent, branch, token, project_id, trigger_variable):
             new_parent.version = "{0}-{1}".format(new_parent.version, branch)
         else :
             if find_tag_in_repository(token,project_id,new_parent.repository_id,f"{new_parent.version}-{branch}") == False:
-                if(branch != RECETTE_KEY) :
+                if(branch != RECETTE_KEY and branch != PROD_KEY) :
                     new_parent.version = f"{new_parent.version}-{PREPROD_KEY}"
-                elif (branch == RECETTE_KEY):
+                elif (branch == RECETTE_KEY or branch == PROD_KEY):
                     new_parent.version = f"{new_parent.version}-{PROD_KEY}"
             else :
                 if (branch == RECETTE_KEY):
