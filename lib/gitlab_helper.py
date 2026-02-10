@@ -162,7 +162,7 @@ def get_groups_project(token, group_id = 0):
     #Max per page is only 100 so we have to loop to get all projects
     while len(projects) == 100*i  and not stop:
 
-        url = GITLAB_URL + 'api/v4/groups/'+str(group_id)+'/projects?per_page=100&page='+str(i+1)
+        url = f"{GITLAB_URL}api/v4/groups/{group_id}/projects?per_page=100&page={i+1}"
         r = request("get", url, headers)
         if r != {} :
             projects += r
@@ -173,7 +173,21 @@ def get_groups_project(token, group_id = 0):
     return(projects)
 
 def get_registry_info(token, project_id = 0):
+    """
+    Retrieve all registry repositories for a GitLab project, handling pagination.
 
+    This function queries the GitLab API for the repositories belonging to the
+    project registry identified by `project_id`. The GitLab API returns a maximum of 100
+    projects per page, so this function requests pages repeatedly and
+    concatenates the results until there are no more projects to fetch.
+
+    Args:
+        token (str): Private access token for the GitLab API.
+        project_id (int): ID of the GitLab project to query. Defaults to 0.
+
+    Returns:
+        registry (list): A list of repositories dictionaries as returned by the GitLab API.
+    """
     headers = {"PRIVATE-TOKEN": token}
     registry = []
     i = 0
@@ -181,7 +195,7 @@ def get_registry_info(token, project_id = 0):
 
     #Max per page is only 100 so we have to loop to get all repositories
     while len(registry) == 100*i  and not error:
-        url = GITLAB_URL + 'api/v4/projects/'+str(project_id)+'/registry/repositories?per_page=100&page='+str(i+1)
+        url = f"{GITLAB_URL}api/v4/projects/{project_id}/registry/repositories?per_page=100&page={i+1}"
         response = request("get", url, headers)
         if response == {} :
             error = True
@@ -194,7 +208,17 @@ def get_registry_info(token, project_id = 0):
     return(registry)
 
 def get_repository_id(registry,df_name):
-    
+    """
+    Retrieve the registry repository id based on his name.
+
+    Args:
+        registry (list): A list of repositories dictionaries as returned by the GitLab API.
+        df_name (str): Registry repository name.
+
+    Returns:
+        repository_id (int): Registry repository ID.
+    """
+
     repository_id = -1 
 
     for repository in registry :
@@ -206,14 +230,40 @@ def get_repository_id(registry,df_name):
     return repository_id
 
 def get_tags_in_repository(token,project_id,repository_id):
+    """
+    Retrieve all tags of a registry project repository.
+
+    Args:
+        token (str): Private access token for the GitLab API.
+        project_id (int): ID of the GitLab project to query.
+        repository_id (int): Registry repository ID.
+
+    Returns:
+        tags (list): A list of tags dictionaries as returned by the GitLab API.
+    """
+
     tags = []
     headers = {"PRIVATE-TOKEN": token}
-    url = GITLAB_URL + 'api/v4/projects/'+str(project_id)+'/registry/repositories/'+str(repository_id)+'/tags?per_page=100'
+    url = f"{GITLAB_URL}api/v4/projects/{project_id}/registry/repositories/{repository_id}/tags?per_page=100"
     tags = request("get", url, headers)
     
     return tags
 
 def find_tag_in_repository(token,project_id,repository_id,tag_target):
+    """
+    Check if a specific tag exist in a registry project repository.
+
+    Get all tags of a registry project repository and find a specific one based on tag_target argument.
+
+    Args:
+        token (str): Private access token for the GitLab API.
+        project_id (int): ID of the GitLab project to query.
+        repository_id (int): Registry repository ID.
+        tag_target (str): Tag name to find.
+
+    Returns:
+        bool (bool): True if tag is in registry repository and False if else.
+    """
 
     tags = get_tags_in_repository(token,project_id,repository_id)
 
@@ -224,16 +274,111 @@ def find_tag_in_repository(token,project_id,repository_id,tag_target):
     return False
 
 def get_branches(token,project_id):
+    """
+    Retrieve branchs of a project repository.
+
+    Args:
+        token (str): Private access token for the GitLab API.
+        project_id (int): ID of the GitLab project to query.
+
+    Returns:
+        branches (list): A list of branches dictionaries as returned by the GitLab API.
+    """
+
     branches = []
     headers = {"PRIVATE-TOKEN": token}
-    url = GITLAB_URL + 'api/v4/projects/'+str(project_id)+'/repository/branches?per_page=100'
+    url = f"{GITLAB_URL}api/v4/projects/{project_id}/repository/branches?per_page=100"
     branches = request("get", url, headers)
     
     return branches
 
+def get_users(token,project_id):
+    """
+    Retrieve users of a project.
+
+    Args:
+        token (str): Private access token for the GitLab API.
+        project_id (int): ID of the GitLab project to query.
+
+    Returns:
+        users (list): A list of users dictionaries as returned by the GitLab API.
+    """
+
+    users = []
+    headers = {"PRIVATE-TOKEN": token}
+    url = f"{GITLAB_URL}api/v4/projects/{project_id}/users"
+
+    logger.info(f"Get users for {project_id} project")
+    users = request("get", url, headers)
+    logger.debug(f"users : {users}")
+    
+    return users
+
+def create_issue(token,project_id, issue_payload):
+    """
+    Create an issue for a project.
+
+    Args:
+        token (str): Private access token for the GitLab API.
+        project_id (int): ID of the GitLab project to query.
+        issue_payload (dict): Issues information to create
+
+    Returns:
+        users (list): A list of users dictionaries as returned by the GitLab API.
+    """
+
+    issue = {}
+    headers = {"PRIVATE-TOKEN": token}
+
+    url = f"{GITLAB_URL}api/v4/projects/{project_id}/issues"
+    logger.info(f"Create issue ({issue_payload}) for {project_id} project")
+    issue = request("post", url, headers, payload_data=issue_payload)
+    logger.debug(f"issue : {issue}")
+
+    return issue
+
+def create_issue_link(token, issue, issue_target):
+    """
+    Create an issue for a project.
+
+    Args:
+        token (str): Private access token for the GitLab API.
+        project_id (int): ID of the GitLab project to query.
+        issue_payload (dict): Issues information to create
+
+    Returns:
+        users (list): A list of users dictionaries as returned by the GitLab API.
+    """
+    headers = {"PRIVATE-TOKEN": token}
+    new_issue_link = {}
+
+    url = f'{GITLAB_URL}api/v4/projects/{issue["project_id"]}/issues/{issue["iid"]}/links'
+    params = {
+        'target_project_id': issue_target["project_id"],
+        'target_issue_iid': issue_target["iid"],
+    }
+
+    logger.info(f"Create issue link between ({issue}) and ({issue_target})")
+    new_issue_link = request("post", url, headers, params=params)
+    logger.debug(f"new_issue_link : {new_issue_link}")
+    
+    return new_issue_link
+
 #DELETE
 
 def delete_repository_in_registry(token,project_id,repository_id):
+    """
+    Delete a given registry repository.
+
+    Args:
+        token (str): Private access token for the GitLab API.
+        project_id (int): ID of the GitLab project to query.
+        repository_id (int): Registry repository ID.
+
+    Returns:
+        deleted (bool): True if deleted.
+    """
+
     deleted = False
     headers = {"PRIVATE-TOKEN": token}
     url = GITLAB_URL + 'api/v4/projects/'+str(project_id)+'/registry/repositories/'+str(repository_id)
@@ -245,6 +390,19 @@ def delete_repository_in_registry(token,project_id,repository_id):
     return deleted
 
 def delete_tag_in_repository(token,project_id,repository_id,tag_name):
+    """
+    Delete a given tag in a registry repository.
+
+    Args:
+        token (str): Private access token for the GitLab API.
+        project_id (int): ID of the GitLab project to query.
+        repository_id (int): Registry repository ID.
+        tag_name (str): Tag name to delete.
+
+    Returns:
+        deleted (bool): True if deleted.
+    """
+
     headers = {"PRIVATE-TOKEN": token}
     url = GITLAB_URL + 'api/v4/projects/'+str(project_id)+'/registry/repositories/'+str(repository_id)+'/tags/'+str(tag_name)
     deleted = False

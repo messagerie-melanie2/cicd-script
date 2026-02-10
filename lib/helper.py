@@ -2,7 +2,7 @@ from lib.global_vars import *
 
 logger = logging.getLogger(__name__)
 
-def request(mode, url = '', headers = None, auth = None, payload_data = None, payload_json = None, files = None):
+def request(mode, url = '', headers = None, auth = None, payload_data = None, payload_json = None, files = None, params = None):
     """
     Sends an HTTP request based on the specified mode.
 
@@ -17,7 +17,8 @@ def request(mode, url = '', headers = None, auth = None, payload_data = None, pa
         headers (dict): HTTP headers to include in the request.
         payload_data (dict or bytes): Data sent using the `data` parameter.
         payload_json (dict): Data sent as JSON using the `json` parameter.
-        files (dict): Files to upload using multipart/form-data.
+        files (dict): Data sent as JSON using the `files` parameter.
+        params (dict): Data sent as JSON using the `params` parameter.
 
     Returns:
         response (dict): The JSON response content if the request succeeds.
@@ -32,13 +33,13 @@ def request(mode, url = '', headers = None, auth = None, payload_data = None, pa
             case "get":
                 r = requests.get(url=url, headers=headers)
             case "post":
-                r = requests.post(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files)
+                r = requests.post(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params)
             case "put":
-                r = requests.put(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files)
+                r = requests.put(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params)
             case "patch":
-                r = requests.patch(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files)
+                r = requests.patch(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params)
             case "delete":
-                r = requests.delete(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files)
+                r = requests.delete(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params)
             case _:
                 logger.warning(f"request mode {mode} not supported")
         r.raise_for_status()

@@ -1,0 +1,71 @@
+from create_issue.global_vars import *
+from lib.gitlab_helper import create_issue, get_users
+
+logger = logging.getLogger(__name__)
+
+#=======================================================#
+#============== Create_issue Functions =================#
+#=======================================================#
+
+def check_field(issue, field_to_check) :
+    check = True
+    for mandatory_field in field_to_check :
+        if issue.get(mandatory_field) == None :
+            check = False
+    
+    return check
+
+def get_user_id(issue, project_user) :
+    assignee_username = issue.get("assignee_username")
+    user_id = 0
+    if assignee_username != None :
+        assignee_username = assignee_username.lower().split(",")
+        if len(assignee_username) > 1 :
+            logger.error("assignee_username for meta issue must have only one username.")
+        for user in project_user :
+            if user.get("username") == assignee_username[0] :
+                user_id = user.get("id")
+
+    return user_id 
+
+def get_due_date(issue):
+    due_date = issue.get("due_date")
+    if due_date == None :
+        due_date = datetime.now() + timedelta(days=CREATE_ISSUE_ISSUE_DEADLINE)
+        due_date = datetime.strftime(due_date, "%y-%m-%d")
+    
+    return due_date
+
+def create_issue_payload(issue, field_to_create):
+    issue_payload = {}
+    for field in field_to_create :
+        field_payload = issue.get(field)
+        if field_payload != None : 
+            issue_payload[field] = field_payload
+    
+    return issue_payload
+
+def set_and_create_issue(token, project_id, issue, project_user):
+    new_project_user = project_user.copy()
+    if check_field(issue, CREATE_ISSUE_ISSUE_MANDATORY_PARAMETER_DEFAULT) :
+        project_id = issue.get("project_id")
+        if project_id == None :
+            issue["project_id"] = project_id
+        
+        if new_project_user.get(project_id) == None :
+            new_project_user[project_id] = get_users(token, issue["project_id"])
+        
+        issue["assignee_id"] = get_user_id(issue, project_user[project_id])
+        issue["due_date"] = get_due_date(issue)
+        
+        if check_field(issue, CREATE_ISSUE_ISSUE_MANDATORY_FIELD_DEFAULT) : 
+            issue_payload = create_issue_payload(issue, CREATE_ISSUE_ISSUE_MANDATORY_FIELD + CREATE_ISSUE_ISSUE_OTHER_FIELD)
+            issue_created = create_issue(token, issue["project_id"], issue_payload)
+        else :
+            logger.error(f"Issue ({issue}) don't have all mandatory field : {CREATE_ISSUE_ISSUE_MANDATORY_FIELD_DEFAULT}")
+            sys.exit()
+    else :
+        logger.error(f"CREATE_ISSUE_META_ISSUE don't have all mandatory parameter : {CREATE_ISSUE_ISSUE_MANDATORY_PARAMETER_DEFAULT}")
+        sys.exit()
+
+    return issue_created,project_user
