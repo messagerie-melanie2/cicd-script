@@ -27,6 +27,9 @@ def get_user_id(issue, project_user, multiple_user) :
             if user.get("username") in assignee_username :
                 user_id.append(user.get("id"))
 
+    if len(user_id) == 0 : 
+        logger.warning(f"No user found with name : {issue.get("assignee_username")}")
+        
     return user_id 
 
 def get_due_date(issue):

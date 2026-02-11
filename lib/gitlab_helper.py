@@ -306,7 +306,7 @@ def get_users(token,project_id):
 
     users = []
     headers = {"PRIVATE-TOKEN": token}
-    url = f"{GITLAB_URL}api/v4/projects/{project_id}/users"
+    url = f"{GITLAB_URL}api/v4/projects/{project_id}/users?per_page=100"
 
     logger.info(f"Get users for {project_id} project")
     users = request("get", url, headers)
