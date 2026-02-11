@@ -49,7 +49,10 @@ def create_issue_payload(issue, field_to_create):
 def set_and_create_issue(token, project_id, issue, project_user, multiple_user):
     new_project_user = project_user.copy()
     issues_created = []
+    logger.info("Checking if issue have mandatory field...")
+    logger.debug(f"issue : {issue}")
     if check_field(issue, CREATE_ISSUE_ISSUE_MANDATORY_PARAMETER_DEFAULT) :
+        logger.info(f"Processing issue...")
         project_id = issue.get("project_id")
         if project_id == None :
             issue["project_id"] = project_id
@@ -65,6 +68,8 @@ def set_and_create_issue(token, project_id, issue, project_user, multiple_user):
             for id in assignee_id :
                 user_issue = issue.copy()
                 user_issue["assignee_id"] = id
+                logger.info("Checking issue with real values...")
+                logger.debug(f"issue : {issue}")
                 if check_field(user_issue, CREATE_ISSUE_ISSUE_MANDATORY_FIELD_DEFAULT) : 
                     issue_payload = create_issue_payload(user_issue, CREATE_ISSUE_ISSUE_MANDATORY_FIELD + CREATE_ISSUE_ISSUE_OTHER_FIELD)
                     issues_created.append(create_issue(token, user_issue["project_id"], issue_payload))
