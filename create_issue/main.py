@@ -35,8 +35,8 @@ def main(args) :
         issue = json.loads(issue_raw)
         issue,tmp_project_user = set_and_create_issue(args.token, args.project_id, issue, project_user)
         project_user = project_user | tmp_project_user
-        if meta_issue.get("iid") != None :
-            create_issue_link(args.token, issue, meta_issue)
+        if meta_issue[0].get("iid") != None :
+            create_issue_link(args.token, issue, meta_issue[0])
 
 
 
