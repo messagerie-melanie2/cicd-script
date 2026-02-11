@@ -53,16 +53,17 @@ def set_and_create_issue(token, project_id, issue, project_user, multiple_user):
     logger.debug(f"issue : {issue}")
     if check_field(issue, CREATE_ISSUE_ISSUE_MANDATORY_PARAMETER_DEFAULT) :
         logger.info(f"Processing issue...")
-        project_id = issue.get("project_id")
-        if project_id == None :
+        issue_project_id = issue.get("project_id")
+        if issue_project_id == None :
             issue["project_id"] = project_id
+            issue_project_id = project_id
         
-        if new_project_user.get(project_id) == None :
-            new_project_user[project_id] = get_users(token, issue["project_id"])
+        if new_project_user.get(issue_project_id) == None :
+            new_project_user[issue_project_id] = get_users(token, issue_project_id)
         
         issue["due_date"] = get_due_date(issue)
         
-        assignee_id = get_user_id(issue, project_user[project_id], multiple_user)
+        assignee_id = get_user_id(issue, new_project_user[issue_project_id], multiple_user)
 
         if multiple_user :
             for id in assignee_id :
