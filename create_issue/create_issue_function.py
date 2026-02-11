@@ -29,14 +29,14 @@ def get_user_id(issue, project_user, multiple_user) :
 
     if len(user_id) == 0 : 
         logger.warning(f"No user found with name : {issue.get("assignee_username")}")
-        
+
     return user_id 
 
 def get_due_date(issue):
     due_date = issue.get("due_date")
     if due_date == None :
         due_date = datetime.now() + timedelta(days=CREATE_ISSUE_ISSUE_DEADLINE)
-        due_date = datetime.strftime(due_date, "%y-%m-%d")
+        due_date = datetime.strftime(due_date, "%Y-%m-%d")
     
     return due_date
 
