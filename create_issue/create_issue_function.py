@@ -75,4 +75,4 @@ def set_and_create_issue(token, project_id, issue, project_user, multiple_user):
         logger.error(f"CREATE_ISSUE_META_ISSUE don't have all mandatory parameter : {CREATE_ISSUE_ISSUE_MANDATORY_PARAMETER_DEFAULT}")
         sys.exit()
 
-    return issue_created,project_user
+    return issues_created,project_user
