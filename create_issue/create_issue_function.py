@@ -65,18 +65,17 @@ def set_and_create_issue(token, project_id, issue, project_user, multiple_user):
         
         assignee_id = get_user_id(issue, new_project_user[issue_project_id], multiple_user)
 
-        if multiple_user :
-            for id in assignee_id :
-                user_issue = issue.copy()
-                user_issue["assignee_id"] = id
-                logger.info("Checking issue with real values...")
-                logger.debug(f"issue : {issue}")
-                if check_field(user_issue, CREATE_ISSUE_ISSUE_MANDATORY_FIELD_DEFAULT) : 
-                    issue_payload = create_issue_payload(user_issue, CREATE_ISSUE_ISSUE_MANDATORY_FIELD + CREATE_ISSUE_ISSUE_OTHER_FIELD)
-                    issues_created.append(create_issue(token, user_issue["project_id"], issue_payload))
-                else :
-                    logger.error(f"Issue ({issue}) don't have all mandatory field : {CREATE_ISSUE_ISSUE_MANDATORY_FIELD_DEFAULT}")
-                    sys.exit()
+        for id in assignee_id :
+            user_issue = issue.copy()
+            user_issue["assignee_id"] = id
+            logger.info("Checking issue with real values...")
+            logger.debug(f"issue : {issue}")
+            if check_field(user_issue, CREATE_ISSUE_ISSUE_MANDATORY_FIELD_DEFAULT) : 
+                issue_payload = create_issue_payload(user_issue, CREATE_ISSUE_ISSUE_MANDATORY_FIELD + CREATE_ISSUE_ISSUE_OTHER_FIELD)
+                issues_created.append(create_issue(token, user_issue["project_id"], issue_payload))
+            else :
+                logger.error(f"Issue ({issue}) don't have all mandatory field : {CREATE_ISSUE_ISSUE_MANDATORY_FIELD_DEFAULT}")
+                sys.exit()
     else :
         logger.error(f"CREATE_ISSUE_META_ISSUE don't have all mandatory parameter : {CREATE_ISSUE_ISSUE_MANDATORY_PARAMETER_DEFAULT}")
         sys.exit()

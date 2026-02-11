@@ -23,7 +23,7 @@ def main(args) :
             - project_id (int): Id of the project.
     """
     project_user = {}
-    meta_issue = {}
+    meta_issue = []
 
     if CREATE_ISSUE_META_ISSUE != {} :
         logger.info("Creating meta issue...")
@@ -37,8 +37,9 @@ def main(args) :
         logger.info(f"Creating issue {i} : {issue}...")
         issue,tmp_project_user = set_and_create_issue(args.token, args.project_id, issue, project_user, multiple_user=True)
         project_user = project_user | tmp_project_user
-        if meta_issue[0].get("iid") != None :
-            create_issue_link(args.token, issue, meta_issue[0])
+        if CREATE_ISSUE_META_ISSUE != {} :
+            if meta_issue[0].get("iid") != None :
+                create_issue_link(args.token, issue, meta_issue[0])
 
 
 
