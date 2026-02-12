@@ -25,7 +25,7 @@ def get_user_id(issue, project_user, multiple_user) :
             logger.error(f"assignee_username must have only one username for issue : {issue}.")
             sys.exit()
         for user in project_user :
-            if user.get("username") in assignee_username :
+            if user.get("username").lower() in assignee_username :
                 user_id.append(user.get("id"))
                 logger.info(f"User {user.get("username")} found with id : {user.get("id")}")
     
