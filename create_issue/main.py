@@ -32,16 +32,21 @@ def main(args) :
         meta_issue = issues_created[0]
         project_user = project_user | tmp_project_user
     
-    for i in range(1,CREATE_ISSUE_ISSUE_NUMBER + 1) :
-        issue_raw = os.environ.get(f"CREATE_ISSUE_ISSUE_{i}")
-        issue = json.loads(issue_raw)
-        logger.info(f"Creating issue {i} : {issue}...")
-        issues_created,tmp_project_user = set_and_create_issue(args.token, args.project_id, issue, project_user, multiple_user=True)
-        project_user = project_user | tmp_project_user
-        if CREATE_ISSUE_META_ISSUE != {} :
-            if meta_issue.get("iid") != None :
-                for issue in issues_created : 
-                    create_issue_link(args.token, issue, meta_issue)
+    issue_number = 1
+    while issue_number > 0 :
+        issue_raw = os.environ.get(f"CREATE_ISSUE_ISSUE_{issue_number}")
+        if issue_raw != "" :
+            issue_number += 1
+            issue = json.loads(issue_raw)
+            logger.info(f"Creating issue {issue_number} : {issue}...")
+            issues_created,tmp_project_user = set_and_create_issue(args.token, args.project_id, issue, project_user, multiple_user=True)
+            project_user = project_user | tmp_project_user
+            if CREATE_ISSUE_META_ISSUE != {} :
+                if meta_issue.get("iid") != None :
+                    for issue in issues_created : 
+                        create_issue_link(args.token, issue, meta_issue)
+        else :
+            issue_number = -1
 
 
 
