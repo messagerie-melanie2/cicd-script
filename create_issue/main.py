@@ -39,9 +39,9 @@ def main(args) :
         issues_created,tmp_project_user = set_and_create_issue(args.token, args.project_id, issue, project_user, multiple_user=True)
         project_user = project_user | tmp_project_user
         if CREATE_ISSUE_META_ISSUE != {} :
-            if meta_issue[0].get("iid") != None :
+            if meta_issue.get("iid") != None :
                 for issue in issues_created : 
-                    create_issue_link(args.token, issue, meta_issue[0])
+                    create_issue_link(args.token, issue, meta_issue)
 
 
 
