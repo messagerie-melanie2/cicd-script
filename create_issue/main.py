@@ -35,7 +35,7 @@ def main(args) :
     issue_number = 1
     while issue_number > 0 :
         issue_raw = os.environ.get(f"CREATE_ISSUE_ISSUE_{issue_number}")
-        if issue_raw != "" :
+        if issue_raw != None :
             issue_number += 1
             issue = json.loads(issue_raw)
             logger.info(f"Creating issue {issue_number} : {issue}...")
