@@ -20,13 +20,16 @@ def get_user_id(issue, project_user, multiple_user) :
     user_id = []
     if assignee_username != None :
         assignee_username = assignee_username.lower().split(",")
+        logger.debug(f"assignee_username: {assignee_username}")
         if len(assignee_username) > 1  and not multiple_user:
             logger.error(f"assignee_username must have only one username for issue : {issue}.")
             sys.exit()
         for user in project_user :
             if user.get("username") in assignee_username :
                 user_id.append(user.get("id"))
-
+                logger.info(f"User {user.get("username")} found with id : {user.get("id")}")
+    
+    logger.debug(f"user_id: {user_id}")
     if len(user_id) == 0 : 
         logger.warning(f"No user found with name : {issue.get("assignee_username")}")
 
