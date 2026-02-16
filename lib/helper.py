@@ -31,7 +31,7 @@ def request(mode, url = '', headers = None, auth = None, payload_data = None, pa
         r = requests.Response()
         match mode:
             case "get":
-                r = requests.get(url=url, headers=headers)
+                r = requests.get(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params)
             case "post":
                 r = requests.post(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params)
             case "put":

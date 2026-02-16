@@ -314,6 +314,29 @@ def get_users(token,project_id):
     
     return users
 
+def get_issues(token,project_id, issue_filter):
+    """
+    Create an issue for a project.
+
+    Args:
+        token (str): Private access token for the GitLab API.
+        project_id (int): ID of the GitLab project to query.
+        issue_payload (dict): Issues information to create
+
+    Returns:
+        users (list): A list of users dictionaries as returned by the GitLab API.
+    """
+
+    issues = {}
+    headers = {"PRIVATE-TOKEN": token}
+
+    url = f"{GITLAB_URL}api/v4/projects/{project_id}/issues"
+    logger.info(f"Get issues for {project_id} project with filter : {issue_filter}")
+    issues = request("get", url, headers, payload_data=issue_filter)
+    logger.debug(f"issues : {issues}")
+
+    return issues
+
 def create_issue(token,project_id, issue_payload):
     """
     Create an issue for a project.
