@@ -360,6 +360,29 @@ def create_issue(token,project_id, issue_payload):
 
     return issue
 
+def update_issue(token,project_id, issue_id, update_payload):
+    """
+    Update an issue for a project.
+
+    Args:
+        token (str): Private access token for the GitLab API.
+        project_id (int): ID of the GitLab project to query.
+        issue_payload (dict): Issues information to create
+
+    Returns:
+        users (list): A list of users dictionaries as returned by the GitLab API.
+    """
+
+    issue = {}
+    headers = {"PRIVATE-TOKEN": token}
+
+    url = f"{GITLAB_URL}api/v4/projects/{project_id}/issues/{issue_id}"
+    logger.info(f"Update issue ({issue_id}) for {project_id} project. New fields : {update_payload}")
+    issue = request("put", url, headers, payload_data=update_payload)
+    logger.debug(f"issue : {issue}")
+
+    return issue
+
 def create_issue_link(token, issue, issue_target):
     """
     Create an issue for a project.
