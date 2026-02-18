@@ -8,6 +8,16 @@ logger = logging.getLogger(__name__)
 #=======================================================#
 
 def check_field(issue, field_to_check) :
+    """
+    Check if all field needed are on a issue.
+
+    Args:
+        issue (dict): The issue json.
+        field_to_check (list): List of field to check in the issue.
+
+    Returns:
+        check (bool): True if all field are in the issue, False if else.
+    """
     check = True
     for mandatory_field in field_to_check :
         if issue.get(mandatory_field) == None :
@@ -16,6 +26,18 @@ def check_field(issue, field_to_check) :
     return check
 
 def get_user_id(issue, project_user, multiple_user) :
+    """
+    Get users ids depending of their username.
+
+    Args:
+        issue (dict): The issue json.
+        project_user (list): List of all user of the project
+        multiple_user (bool): Permit multiple user feature.
+
+    Returns:
+        user_id (list): List of all user ids needed.
+    """
+
     assignee_username = issue.get("assignee_username")
     user_id = []
     if assignee_username != None :
@@ -36,6 +58,15 @@ def get_user_id(issue, project_user, multiple_user) :
     return user_id 
 
 def get_due_date(issue):
+    """
+    Create a due_date if not given depending of CREATE_ISSUE_ISSUE_DEADLINE variable.
+
+    Args:
+        issue (dict): The issue json.
+
+    Returns:
+        due_date (date): Date where the issue must be due.
+    """
     due_date = issue.get("due_date")
     if due_date == None :
         due_date = datetime.now() + timedelta(days=CREATE_ISSUE_ISSUE_DEADLINE)
@@ -44,6 +75,16 @@ def get_due_date(issue):
     return due_date
 
 def create_issue_payload(issue, field_to_create):
+    """
+    Create issue payload to create based of field_to_create list.
+
+    Args:
+        issue (dict): The issue json.
+        field_to_create (list): List of field to fill in the issue payload.
+
+    Returns:
+        issue_payload (dict): Payload needed to create an issue with Gitlab API.
+    """
     issue_payload = {}
     for field in field_to_create :
         field_payload = issue.get(field)
@@ -53,6 +94,19 @@ def create_issue_payload(issue, field_to_create):
     return issue_payload
 
 def set_and_create_issue(token, project_id, issue, project_user, multiple_user):
+    """
+    Get issue information given and create it.
+
+    Args:
+        token (str): Private access token for the GitLab API.
+        project_id (int): ID of the GitLab project to query.
+        issue (dict): The issue json given.
+        project_user (dict): Dict of List of all user depending of the project
+        multiple_user (bool): Permit multiple user feature.
+
+    Returns:
+        issues_created,project_user (tuple_dict): Tuple composed of the issue created and an updated version of project_user with new project if necessary.
+    """
     new_project_user = project_user.copy()
     issues_created = []
     logger.info("Checking if issue have mandatory field...")
@@ -83,7 +137,7 @@ def set_and_create_issue(token, project_id, issue, project_user, multiple_user):
                 logger.error(f"Issue ({issue}) don't have all mandatory field : {CREATE_ISSUE_ISSUE_MANDATORY_FIELD_DEFAULT}")
                 sys.exit()
     else :
-        logger.error(f"CREATE_ISSUE_META_ISSUE don't have all mandatory parameter : {CREATE_ISSUE_ISSUE_MANDATORY_PARAMETER_DEFAULT}")
+        logger.error(f"Issue ({issue}) don't have all mandatory parameter : {CREATE_ISSUE_ISSUE_MANDATORY_PARAMETER_DEFAULT}")
         sys.exit()
 
     return issues_created,project_user

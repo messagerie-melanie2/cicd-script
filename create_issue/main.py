@@ -11,11 +11,11 @@ logger = logging.getLogger(__name__)
 
 def main(args) :
     """
-    Main entry point for deleting log of a project gitlab.
+    Main entry point for creating issue.
 
-    This function performs the full clean process:
-    1. Retrieves the jobs info of the project depending of CLEANLOG_WEEKS_LIMIT parameter.
-    2. Process jobs and delete those who exceed CLEANLOG_WEEKS_LIMIT parameter.
+    This function performs this process:
+    1. If asked, create a meta issue where to link every other issue created.
+    2. Create every issue asked thanks to CREATE_ISSUE_ISSUE_1 to CREATE_ISSUE_ISSUE_n variables.
 
     Args:
         args (Namespace): Command-line arguments containing:
