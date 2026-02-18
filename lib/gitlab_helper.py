@@ -1,6 +1,6 @@
 # coding=utf-8
-from ..lib.global_vars import *
-from ..lib.helper import request
+from lib.global_vars import *
+from lib.helper import request
 
 logger = logging.getLogger(__name__)
 #=======================================================#
