@@ -36,10 +36,6 @@ def main(args) :
             for project in projects_to_setup :
                 project_id = project.get("id")
                 set_config_path(token,project)
-                schedules_to_set_default = SETUP_SCHEDULE_TYPE
-                schedules_to_set = config_schedule(token, project, schedules_to_set_default)
-                for schedule in schedules_to_set.values() :
-                    set_schedule(token, project_id, schedule)
 
         all_project_configuration = create_trigger_ci_variables(token,all_setup)
         logger.debug(f"all_project_configuration : {all_project_configuration}")
@@ -54,11 +50,27 @@ def main(args) :
             config_build_token(token, project_to_setup, project_to_setup_variables)
             set_build_ci_variables(token, project_to_setup, project_to_setup_variables)
             set_build_allowlist(token, project_to_setup)
+    
+    if (args.setup_schedule):
+        all_build_setup = read_setup_files(SETUP_BUILD_FOLDER_PATH, SETUP_BUILD_FILE_ENDSWITH)
+        all_trigger_setup = read_setup_files(SETUP_TRIGGER_FOLDER_PATH, SETUP_TRIGGER_FILE_ENDSWITH)
+        for project_to_trigger in all_trigger_setup :
+            projects_to_setup = project_to_trigger.get("projects")
+            for project in projects_to_setup :
+                project_id = project.get("id")
+                schedules_to_set_default = SETUP_SCHEDULE_TYPE
+                schedules_to_set = config_schedule(token, project, schedules_to_set_default)
+                for schedule in schedules_to_set.values() :
+                    set_schedule(token, project_id, schedule)
+        
+        for project_to_setup in all_build_setup :
+            project_to_setup_id = project_to_setup.get("id")
             schedules_to_set_default = SETUP_SCHEDULE_TYPE | SETUP_BUILD_SCHEDULE_TYPE
             schedules_to_set = config_schedule(token, project_to_setup, schedules_to_set_default)
             logger.debug(f"Schedule to set : {schedules_to_set}")
             for schedule in schedules_to_set.values() :
                 set_schedule(token, project_to_setup_id, schedule)
+
 
             
 
@@ -84,6 +96,14 @@ group.add_argument(
 #####
 group.add_argument(
     '-st', '--setup-trigger', 
+    action='store_true',
+    help="Setup project to use trigger feature")
+
+#####
+# Argument to launch setup schedule
+#####
+group.add_argument(
+    '-ss', '--setup-schedule', 
     action='store_true',
     help="Setup project to use trigger feature")
 

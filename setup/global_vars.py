@@ -48,7 +48,7 @@ logging.basicConfig(
 #=======================================================#
 
 #Default values
-SETUP_TRIGGER_FOLDER_PATH_DEFAULT = "trigger-project/setup/"
+SETUP_TRIGGER_FOLDER_PATH_DEFAULT = "setup/"
 SETUP_TRIGGER_FILE_ENDSWITH_DEFAULT = "triggers.yml"
 SETUP_TRIGGER_DESCRIPTION_DEFAULT = "Trigger cree par L'administrateur"
 SETUP_TRIGGER_GITLAB_VARIABLE_TRIGGER_KEY_DEFAULT = "TRIGGER_TOKEN"
@@ -63,7 +63,7 @@ SETUP_TRIGGER_JENKINS_TRIGGER_TOKEN_NAME = os.environ.get('SETUP_TRIGGER_JENKINS
 #=======================================================#
 #=============== Build Global parameters ===============#
 #=======================================================#
-SETUP_BUILD_FOLDER_PATH_DEFAULT = "build-docker/setup/"
+SETUP_BUILD_FOLDER_PATH_DEFAULT = "setup/"
 SETUP_BUILD_FILE_ENDSWITH_DEFAULT = "build.yml"
 SETUP_BUILD_TOKEN_NAME_DEFAULT = "CICD_API_TOKEN"
 SETUP_BUILD_TOKEN_SCOPE_DEFAULT = ["api","read_api","read_repository","write_repository","read_registry","write_registry"]
