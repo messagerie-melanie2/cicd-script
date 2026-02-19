@@ -171,7 +171,7 @@ def config_schedule(token, project, schedules_to_set_default):
         schedule["branch"] = schedule_branch
         schedule_key = f"{schedule_type}-{schedule_branch}"
         logger.debug(f"schedule_key: {schedule_key}")
-        schedules_to_set[schedule_key] = schedules_to_set_default.get(schedule_type,{}).copy()
+        schedules_to_set[schedule_key] = schedules_to_set_default.get(schedule_type,SETUP_BUILD_DEFAULT_SCHEDULE).copy()
         
         for key,value in schedule.items() :
             logger.debug(f"Schedule to set before: {schedules_to_set}")
