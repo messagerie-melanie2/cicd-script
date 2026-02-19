@@ -158,7 +158,7 @@ def config_schedule(token, project, schedules_to_set_default):
         if mandatory_schedule_branch == None :
             mandatory_schedule_branch = project_default_branch
         schedule_key = f"{mandatory_schedule}-{mandatory_schedule_branch}"
-        schedules_to_set[schedule_key] = schedules_to_set_default[mandatory_schedule].copy()
+        schedules_to_set[schedule_key] = copy.deepcopy(schedules_to_set_default[mandatory_schedule])
         schedules_to_set[schedule_key]["description"] = f"[{mandatory_schedule_branch}] {schedules_to_set[schedule_key]['description']}"
         schedules_to_set[schedule_key]["branch"] = mandatory_schedule_branch
     logger.debug(f"Mandatory default schedule : {schedules_to_set}")
@@ -171,7 +171,7 @@ def config_schedule(token, project, schedules_to_set_default):
         schedule["branch"] = schedule_branch
         schedule_key = f"{schedule_type}-{schedule_branch}"
         logger.debug(f"schedule_key: {schedule_key}")
-        schedules_to_set[schedule_key] = schedules_to_set_default.get(schedule_type,SETUP_BUILD_DEFAULT_SCHEDULE).copy()
+        schedules_to_set[schedule_key] = copy.deepcopy(schedules_to_set_default.get(schedule_type,SETUP_BUILD_DEFAULT_SCHEDULE))
         
         for key,value in schedule.items() :
             logger.debug(f"Schedule to set before: {schedules_to_set}")

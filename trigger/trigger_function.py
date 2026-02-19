@@ -63,7 +63,7 @@ def add_local_file_to_config(config, trigger_parameters_local_file) :
     Returns:
         new_config (dict): New configuration with override values.
     """
-    new_config = config.copy()
+    new_config = copy.deepcopy(config)
     for project in trigger_parameters_local_file :
         project_name = project.get('name')
         project_type = project.get('type')

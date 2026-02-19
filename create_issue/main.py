@@ -27,7 +27,7 @@ def main(args) :
 
     if CREATE_ISSUE_META_ISSUE != {} :
         logger.info("Creating meta issue...")
-        meta_issue = CREATE_ISSUE_META_ISSUE.copy()
+        meta_issue = copy.deepcopy(CREATE_ISSUE_META_ISSUE)
         issues_created,tmp_project_user = set_and_create_issue(args.token, args.project_id, meta_issue, project_user, multiple_user=False)
         meta_issue = issues_created[0]
         project_user = project_user | tmp_project_user

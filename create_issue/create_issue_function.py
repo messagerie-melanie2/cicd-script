@@ -107,7 +107,7 @@ def set_and_create_issue(token, project_id, issue, project_user, multiple_user):
     Returns:
         issues_created,project_user (tuple_dict): Tuple composed of the issue created and an updated version of project_user with new project if necessary.
     """
-    new_project_user = project_user.copy()
+    new_project_user = copy.deepcopy(project_user)
     issues_created = []
     logger.info("Checking if issue have mandatory field...")
     logger.debug(f"issue : {issue}")
@@ -126,7 +126,7 @@ def set_and_create_issue(token, project_id, issue, project_user, multiple_user):
         assignee_id = get_user_id(issue, new_project_user[issue_project_id], multiple_user)
 
         for id in assignee_id :
-            user_issue = issue.copy()
+            user_issue = copy.deepcopy(issue)
             user_issue["assignee_id"] = id
             logger.info("Checking issue with real values...")
             logger.debug(f"issue : {issue}")
