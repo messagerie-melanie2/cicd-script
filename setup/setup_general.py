@@ -227,7 +227,7 @@ def set_project_allowlist(token, project, instance_to_allow):
     for dependencies in instance_to_allow_dependencies :
         dependencies_id = dependencies.get("id")
         dependencies_name = dependencies.get("name")
-        dependencies_type = dependencies.get("instance_type")
+        dependencies_type = dependencies.get("instance_type",'project')
         logger.info(f"Adding {dependencies_name} {dependencies_type} to allowlists of {project_name} project...")
         payload_arg = f"target_{dependencies_type}_id"
         payload = {payload_arg: dependencies_id}

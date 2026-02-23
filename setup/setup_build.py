@@ -146,8 +146,6 @@ def set_build_allowlist(token, project) :
     Args:
         token (str): The GitLab private token used for authentication.
         project (dict): The project info dictionary.
-        project_to_allow_name (str): The name of the project to add to the allowlist.
-        instance_to_allow_id (int): The ID of the project to add to the allowlist.
     """
     project_name = project.get('name')
     project_instance_to_allow = project.get("instance_to_allow", [])
