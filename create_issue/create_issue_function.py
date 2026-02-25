@@ -57,7 +57,7 @@ def get_user_id(issue, project_user, multiple_user) :
 
     return user_id 
 
-def create_description(project_dir, description_template_path):
+def create_description(project_dir, description_template_path, issue_number):
     """
     Create a description with a template and data given by the user.
 
@@ -73,15 +73,15 @@ def create_description(project_dir, description_template_path):
     data_parameter = 1
     render_data = {}
     while data_parameter > 0 :
-        data_key = os.environ.get(f"CREATE_ISSUE_ISSUE_TEMPLATE_DATA_{data_parameter}_KEY")
-        data_type = os.environ.get(f"CREATE_ISSUE_ISSUE_TEMPLATE_DATA_{data_parameter}_TYPE","str")
+        data_key = os.environ.get(f"CREATE_ISSUE_ISSUE_{issue_number}_TEMPLATE_DATA_{data_parameter}_KEY")
+        data_type = os.environ.get(f"CREATE_ISSUE_ISSUE_{issue_number}_TEMPLATE_DATA_{data_parameter}_TYPE","str")
         
         if data_type == "str" :
-            data_value = os.environ.get(f"CREATE_ISSUE_ISSUE_TEMPLATE_DATA_{data_parameter}_VALUE")
+            data_value = os.environ.get(f"CREATE_ISSUE_ISSUE_{issue_number}_TEMPLATE_DATA_{data_parameter}_VALUE")
         elif data_type == "list" :
-            data_value = env.list(f"CREATE_ISSUE_ISSUE_TEMPLATE_DATA_{data_parameter}_VALUE")
+            data_value = env.list(f"CREATE_ISSUE_ISSUE_{issue_number}_TEMPLATE_DATA_{data_parameter}_VALUE")
         elif data_type == "dict" :
-            data_value = env.list(f"CREATE_ISSUE_ISSUE_TEMPLATE_DATA_{data_parameter}_VALUE")
+            data_value = env.list(f"CREATE_ISSUE_ISSUE_{issue_number}_TEMPLATE_DATA_{data_parameter}_VALUE")
             data_value = json.loads(data_value)
         
         if data_key != None and data_value != None :
@@ -128,7 +128,7 @@ def create_issue_payload(issue, field_to_create):
     
     return issue_payload
 
-def set_and_create_issue(token, project_id, project_dir, issue, project_user, description_template_path, multiple_user):
+def set_and_create_issue(token, project_id, project_dir, issue, issue_number, project_user, description_template_path, multiple_user):
     """
     Get issue information given and create it.
 
@@ -137,6 +137,7 @@ def set_and_create_issue(token, project_id, project_dir, issue, project_user, de
         project_id (int): ID of the GitLab project.
         project_dir (str): Path the GitLab project.
         issue (dict): The issue json given.
+        issue_number (int): The issue number given.
         project_user (dict): Dict of List of all user depending of the project.
         description_template_path (str): Path of description template.
         multiple_user (bool): Permit multiple user feature.
@@ -161,7 +162,7 @@ def set_and_create_issue(token, project_id, project_dir, issue, project_user, de
         issue["due_date"] = get_due_date(issue)
 
         if description_template_path != None :
-            issue["description"] = create_description(project_dir, description_template_path)
+            issue["description"] = create_description(project_dir, description_template_path, issue_number)
         
         assignee_id = get_user_id(issue, new_project_user[issue_project_id], multiple_user)
 

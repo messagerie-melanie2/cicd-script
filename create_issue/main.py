@@ -40,7 +40,7 @@ def main(args) :
             issue_number += 1
             issue = json.loads(issue_raw)
             logger.info(f"Creating issue {issue_number} : {issue}...")
-            issues_created,tmp_project_user = set_and_create_issue(args.token, args.project_id, args.project_dir, issue, project_user, description_template_path, multiple_user=True)
+            issues_created,tmp_project_user = set_and_create_issue(args.token, args.project_id, args.project_dir, issue, issue_number, project_user, description_template_path, multiple_user=True)
             project_user = project_user | tmp_project_user
             if CREATE_ISSUE_META_ISSUE != {} :
                 if meta_issue.get("iid") != None :
