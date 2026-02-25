@@ -74,7 +74,16 @@ def create_description(project_dir, description_template_path):
     render_data = {}
     while data_parameter > 0 :
         data_key = os.environ.get(f"CREATE_ISSUE_ISSUE_TEMPLATE_DATA_{data_parameter}_KEY")
-        data_value = os.environ.get(f"CREATE_ISSUE_ISSUE_TEMPLATE_DATA_{data_parameter}_VALUE")
+        data_type = os.environ.get(f"CREATE_ISSUE_ISSUE_TEMPLATE_DATA_{data_parameter}_TYPE","str")
+        
+        if data_type == "str" :
+            data_value = os.environ.get(f"CREATE_ISSUE_ISSUE_TEMPLATE_DATA_{data_parameter}_VALUE")
+        elif data_type == "list" :
+            data_value = env.list(f"CREATE_ISSUE_ISSUE_TEMPLATE_DATA_{data_parameter}_VALUE")
+        elif data_type == "dict" :
+            data_value = env.list(f"CREATE_ISSUE_ISSUE_TEMPLATE_DATA_{data_parameter}_VALUE")
+            data_value = json.loads(data_value)
+        
         if data_key != None and data_value != None :
             data_parameter += 1
             render_data[data_key]=data_value
