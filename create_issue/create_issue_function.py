@@ -69,8 +69,8 @@ def create_description(project_dir, description_template_path, issue_number):
     Returns:
         description (str): Description created based on template + data given.
     """
-    env = jinja2.Environment(loader=jinja2.FileSystemLoader(project_dir))
-    template = env.get_template(description_template_path)
+    jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(project_dir))
+    template = jinja_env.get_template(description_template_path)
     data_parameter = 1
     render_data = {}
     logger.info("Creating description based on template...")
