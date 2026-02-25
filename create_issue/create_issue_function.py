@@ -64,6 +64,7 @@ def create_description(project_dir, description_template_path, issue_number):
     Args:
         project_dir (str): Path the GitLab project.
         description_template_path (str): Path of description template.
+        issue_number (int): The issue number given.
 
     Returns:
         description (str): Description created based on template + data given.
