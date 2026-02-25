@@ -58,6 +58,16 @@ def get_user_id(issue, project_user, multiple_user) :
     return user_id 
 
 def create_description(project_dir, description_template_path):
+    """
+    Create a description with a template and data given by the user.
+
+    Args:
+        project_dir (str): Path the GitLab project.
+        description_template_path (str): Path of description template.
+
+    Returns:
+        description (str): Description created based on template + data given.
+    """
     env = jinja2.Environment(loader=jinja2.FileSystemLoader(project_dir))
     template = env.get_template(description_template_path)
     data_parameter = 1
@@ -115,9 +125,11 @@ def set_and_create_issue(token, project_id, project_dir, issue, project_user, de
 
     Args:
         token (str): Private access token for the GitLab API.
-        project_id (int): ID of the GitLab project to query.
+        project_id (int): ID of the GitLab project.
+        project_dir (str): Path the GitLab project.
         issue (dict): The issue json given.
-        project_user (dict): Dict of List of all user depending of the project
+        project_user (dict): Dict of List of all user depending of the project.
+        description_template_path (str): Path of description template.
         multiple_user (bool): Permit multiple user feature.
 
     Returns:
