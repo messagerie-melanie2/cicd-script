@@ -38,7 +38,6 @@ def main(args) :
         if issue_raw != None :
             issue_raw = os.path.expandvars(issue_raw)
             description_template_path = os.environ.get(f"CREATE_ISSUE_ISSUE_{issue_number}_DESCRIPTION_TEMPLATE_PATH")
-            issue_number += 1
             issue = json.loads(issue_raw)
             logger.info(f"Creating issue {issue_number} : {issue}...")
             issues_created,tmp_project_user = set_and_create_issue(args.token, args.project_id, args.project_dir, issue, issue_number, project_user, description_template_path, multiple_user=True)
@@ -47,6 +46,7 @@ def main(args) :
                 if meta_issue.get("iid") != None :
                     for issue in issues_created : 
                         create_issue_link(args.token, issue, meta_issue)
+            issue_number += 1
         else :
             issue_number = -1
 
