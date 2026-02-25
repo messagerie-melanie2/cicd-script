@@ -73,6 +73,7 @@ def create_description(project_dir, description_template_path, issue_number):
     template = env.get_template(description_template_path)
     data_parameter = 1
     render_data = {}
+    logger.info("Creating description based on template...")
     while data_parameter > 0 :
         data_key = os.environ.get(f"CREATE_ISSUE_ISSUE_{issue_number}_TEMPLATE_DATA_{data_parameter}_KEY")
         data_type = os.environ.get(f"CREATE_ISSUE_ISSUE_{issue_number}_TEMPLATE_DATA_{data_parameter}_TYPE","str")
@@ -85,6 +86,10 @@ def create_description(project_dir, description_template_path, issue_number):
             data_value = env.list(f"CREATE_ISSUE_ISSUE_{issue_number}_TEMPLATE_DATA_{data_parameter}_VALUE")
             data_value = json.loads(data_value)
         
+        logger.debug(f"data_key: {data_key}")
+        logger.debug(f"data_type: {data_type}")
+        logger.debug(f"data_value: {data_value}")
+
         if data_key != None and data_value != None :
             data_parameter += 1
             render_data[data_key]=data_value
