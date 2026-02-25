@@ -57,6 +57,32 @@ def get_user_id(issue, project_user, multiple_user) :
 
     return user_id 
 
+def create_description(project_dir, description_template_path):
+    """
+    Create a description with a template and data given by the user.
+
+    Args:
+        project_dir (str): Path the GitLab project.
+        description_template_path (str): Path of description template.
+
+    Returns:
+        description (str): Description created based on template + data given.
+    """
+    env = jinja2.Environment(loader=jinja2.FileSystemLoader(project_dir))
+    template = env.get_template(description_template_path)
+    data_parameter = 1
+    render_data = {}
+    while data_parameter > 0 :
+        data_key = os.environ.get(f"CREATE_ISSUE_ISSUE_TEMPLATE_DATA_{data_parameter}_KEY")
+        data_value = os.environ.get(f"CREATE_ISSUE_ISSUE_TEMPLATE_DATA_{data_parameter}_VALUE")
+        if data_key != None and data_value != None :
+            data_parameter += 1
+            render_data[data_key]=data_value
+    
+    description = template.render(render_data)
+
+    return description
+
 def get_due_date(issue):
     """
     Create a due_date if not given depending of CREATE_ISSUE_ISSUE_DEADLINE variable.
@@ -93,15 +119,17 @@ def create_issue_payload(issue, field_to_create):
     
     return issue_payload
 
-def set_and_create_issue(token, project_id, issue, project_user, multiple_user):
+def set_and_create_issue(token, project_id, project_dir, issue, project_user, description_template_path, multiple_user):
     """
     Get issue information given and create it.
 
     Args:
         token (str): Private access token for the GitLab API.
-        project_id (int): ID of the GitLab project to query.
+        project_id (int): ID of the GitLab project.
+        project_dir (str): Path the GitLab project.
         issue (dict): The issue json given.
-        project_user (dict): Dict of List of all user depending of the project
+        project_user (dict): Dict of List of all user depending of the project.
+        description_template_path (str): Path of description template.
         multiple_user (bool): Permit multiple user feature.
 
     Returns:
@@ -122,6 +150,9 @@ def set_and_create_issue(token, project_id, issue, project_user, multiple_user):
             new_project_user[issue_project_id] = get_users(token, issue_project_id)
         
         issue["due_date"] = get_due_date(issue)
+
+        if description_template_path != None :
+            issue["description"] = create_description(project_dir, description_template_path)
         
         assignee_id = get_user_id(issue, new_project_user[issue_project_id], multiple_user)
 

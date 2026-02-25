@@ -34,12 +34,13 @@ def main(args) :
     
     issue_number = 1
     while issue_number > 0 :
-        issue_raw = os.environ.get(f"CREATE_ISSUE_ISSUE_{issue_number}")
+        issue_raw = os.path.expandvars(os.environ.get(f"CREATE_ISSUE_ISSUE_{issue_number}"))
+        description_template_path = os.path.expandvars(os.environ.get(f"CREATE_ISSUE_ISSUE_{issue_number}_DESCRIPTION_TEMPLATE_PATH"))
         if issue_raw != None :
             issue_number += 1
             issue = json.loads(issue_raw)
             logger.info(f"Creating issue {issue_number} : {issue}...")
-            issues_created,tmp_project_user = set_and_create_issue(args.token, args.project_id, issue, project_user, multiple_user=True)
+            issues_created,tmp_project_user = set_and_create_issue(args.token, args.project_id, args.project_dir, issue, project_user, description_template_path, multiple_user=True)
             project_user = project_user | tmp_project_user
             if CREATE_ISSUE_META_ISSUE != {} :
                 if meta_issue.get("iid") != None :
@@ -47,9 +48,6 @@ def main(args) :
                         create_issue_link(args.token, issue, meta_issue)
         else :
             issue_number = -1
-
-
-
 
             
 
@@ -73,6 +71,10 @@ parser.add_argument(
     '-pid', '--project-id', 
     metavar='PROJECT', default=0,
     help="Id of the project")
+parser.add_argument(
+    '-pdi', '--project-dir', 
+    metavar='PROJECT', default='',
+    help="Directory of the project")
 
 # Run the arguments parser
 args = parser.parse_args()
