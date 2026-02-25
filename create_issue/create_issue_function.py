@@ -88,6 +88,8 @@ def create_description(project_dir, description_template_path, issue_number):
         if data_key != None and data_value != None :
             data_parameter += 1
             render_data[data_key]=data_value
+        else :
+            data_parameter = -1
     
     description = template.render(render_data)
 
