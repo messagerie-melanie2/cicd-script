@@ -261,9 +261,18 @@ def find_info_from_parameters(subdir, default_version):
                     deploy_jenkins= PROD_KEY
 
                 try :
-                    no_deploy= parameters['no_deploy'] 
-                    for i in range(len(no_deploy)) :
-                        no_deploy[i] = Deploy[no_deploy[i]]           
+                    no_deploy= parameters['no_deploy']
+                    if not no_repo :
+                        if isinstance(no_deploy,bool) :
+                            if no_deploy :
+                                no_deploy= [Deploy.ALL]
+                            else :
+                                no_deploy= [Deploy.NONE]
+                        elif isinstance(no_deploy,list) :
+                            for i in range(len(no_deploy)) :
+                                no_deploy[i] = Deploy[no_deploy[i]]
+                    else :
+                        no_deploy= [Deploy.ALL] 
                 except Exception as e:
                     logger.debug("no_deploy not in parameters.yml")
                     no_deploy= [Deploy.NONE]
