@@ -50,7 +50,7 @@ def create_job_needs(parent, multistage_parents, mode):
         if not parent.external and parent.is_building :
             job_needs += ",{ job: '" + parent.name + ":" + parent.version + "',optional: true}"
     
-    job_already_here = []
+    job_already_here = [parent.name + ":" + parent.version]
     for multistage_parent in multistage_parents :
         job_name = multistage_parent.name + ":" + multistage_parent.version
         if not multistage_parent.external and multistage_parent.is_building and job_name not in job_already_here:
