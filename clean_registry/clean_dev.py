@@ -29,7 +29,7 @@ def clean_dev_images(registry,token,project_id):
     for tag in dev_tags_to_delete :
         if tag["repository_name"] not in REPOSITORIES_WHITELIST :
             logger.info(f"DEV : we have to delete {tag['image_name']} tag")
-            deleted = delete_tag_in_repository(token,project_id,tag["repository_id"],tag["name"],True)
+            deleted = delete_tag_in_repository(token,project_id,tag["repository_id"],tag["name"])
             if deleted :
                 logger.info(f"{tag['image_name']} tag is deleted")
             else :
