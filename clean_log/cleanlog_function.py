@@ -60,7 +60,7 @@ def get_jobs_info(token, project_id, weeks_limit):
         
         i += 1
     
-    logging.debug(f"Jobs : {jobs}")
+    logger.debug(f"Jobs : {jobs}")
     
     return(jobs)
 
@@ -100,23 +100,26 @@ def process_jobs(jobs, token, project_id, weeks_limit):
     if weeks_limit != None :
         date_limit = datetime.now() - timedelta(weeks=int(weeks_limit))
 
+    logger.debug(f"date_limit: {date_limit}")
     for job in jobs :
+        logger.debug(f"job_id: {job['id']}")
         if job["status"] not in CLEANLOG_STATUS_NO_LOG :
             if job["erased_at"] == None :
                 if job["archived"] == False :
                     to_delete = True
                     if weeks_limit != None and job["started_at"] != None:
                         job_date = datetime.strptime(job["started_at"][:-1], "%Y-%m-%dT%H:%M:%S.%f")
+                        logger.debug(f"job_date: {job_date}")
                         if job_date >= date_limit:
                             to_delete = False
 
                     if to_delete :
                         deleted = delete_job_artifacts(token,project_id,job)
                         if deleted :
-                            logging.info(f"job {job['id']} is erased")
+                            logger.info(f"job {job['id']} is erased")
                         else :
-                            logging.info(f"job {job['id']} couldn't be erased")
+                            logger.info(f"job {job['id']} couldn't be erased")
                 else :
-                    logging.info(f"job {job['id']} is archived and can't be erased")
+                    logger.info(f"job {job['id']} is archived and can't be erased")
             else :
-                logging.info(f"job {job['id']} is already erased")
+                logger.info(f"job {job['id']} is already erased")
