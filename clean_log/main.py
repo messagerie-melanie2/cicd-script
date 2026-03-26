@@ -21,6 +21,7 @@ def main(args) :
             - token (bool): Token to use for authentication.
             - project_id (int): Id of the project.
     """
+    logger.debug(f"CLEANLOG_WEEKS_LIMIT: {CLEANLOG_WEEKS_LIMIT}")
     jobs = get_jobs_info(args.token,args.project_id,CLEANLOG_WEEKS_LIMIT)
     process_jobs(jobs,args.token,args.project_id,CLEANLOG_WEEKS_LIMIT)
 
