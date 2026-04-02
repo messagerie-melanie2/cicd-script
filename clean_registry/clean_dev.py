@@ -23,6 +23,7 @@ def clean_dev_images(registry,token,project_id):
             if is_not_current_dev_tag :
                 dev_tags_to_delete.append({"repository_id":repository["id"],"repository_name":repository["name"],"name":tag["name"],"image_name":repository["name"] + "_" + tag["name"]})
 
+    logger.debug(f"dev_tags_to_delete: {dev_tags_to_delete}")
     #Regex : Need 1.0-branch and not only 1.0
     #filtered_dev_tags_to_delete = [tag for tag in dev_tags_to_delete if re.search(r"-[^\s]+$", tag["name"].split(DOCKER_IMAGE_TAG_SEPARATOR)[-1])]
 
