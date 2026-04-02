@@ -55,7 +55,7 @@ class Deploy(Enum):
 class Parameters:
     """Class containing Dockerfile's parameters information"""
 
-    def __init__(self, is_up, parent_version, no_build, no_repo, no_deploy, deploy_jenkins, variables, multistage_parents):
+    def __init__(self, is_up, parent_version, no_build, no_repo, no_deploy, deploy_jenkins, variables, multistage_parents, latest):
         self.is_up = is_up
         self.parent_version = parent_version
         self.no_build = no_build
@@ -64,6 +64,7 @@ class Parameters:
         self.deploy_jenkins = deploy_jenkins
         self.variables = variables
         self.multistage_parents = multistage_parents
+        self.latest = latest
 
     def __str__(self):
         return "Parameters with parent_version '{0}', no_build is {1} and  no_repo is {2}".format(self.parent_version, str(self.no_build), str(self.no_repo))
@@ -138,7 +139,7 @@ class Dockerfile:
         job_needs = create_job_needs(self.parent,self.multistage_parents,mode)
 
         if not deploy :
-            return f"'{self.name}:{version}{suffix}' : {method}('{stage}{level}', '{self.name}', '{self.path}', {parent_str}, '{version}', '{self.branch}', {str(self.is_changed).lower()}, {str(self.is_triggered).lower()}, {job_needs}, '{self.docker_args}', '{self.allowed_push}')"
+            return f"'{self.name}:{version}{suffix}' : {method}('{stage}{level}', '{self.name}', '{self.path}', {parent_str}, '{version}', '{self.branch}', {str(self.is_changed).lower()}, {str(self.is_triggered).lower()}, {job_needs}, '{self.docker_args}', '{self.allowed_push}', '{self.parameters.latest}')"
             # 'php-mce-rcube' : build_docker(0, 'php-mce-rcube', 'php/php-mce-rcube', {name: 'registry/php-mce-generic', external: false, is_building: false}, '7.3-fpm_1.0', 'prod', 'True', 'False', 'debian-mce-generic'),
         else :
             return f"'deploy-{self.name}:{version}{suffix}' : {method}('{stage}{level}', '{self.name}', '{self.path}', {parent_str}, '{version}', '{self.branch}', {str(self.is_changed).lower()}, {str(self.is_triggered).lower()}, '{self.name}:{version}{suffix}', '{deploy_jenkins}')"
