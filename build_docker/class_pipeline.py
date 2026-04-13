@@ -139,7 +139,7 @@ class Dockerfile:
         job_needs = create_job_needs(self.parent,self.multistage_parents,mode)
 
         if not deploy :
-            return f"'{self.name}:{version}{suffix}' : {method}('{stage}{level}', '{self.name}', '{self.path}', {parent_str}, '{version}', '{self.branch}', {str(self.is_changed).lower()}, {str(self.is_triggered).lower()}, {job_needs}, '{self.docker_args}', '{self.allowed_push}', '{str(self.parameters.latest).lower()}')"
+            return f"'{self.name}:{version}{suffix}' : {method}('{stage}{level}', '{self.name}', '{self.path}', {parent_str}, '{version}', '{self.branch}', {str(self.is_changed).lower()}, {str(self.is_triggered).lower()}, {job_needs}, '{self.docker_args}', '{self.allowed_push}', {str(self.parameters.latest).lower()})"
             # 'php-mce-rcube' : build_docker(0, 'php-mce-rcube', 'php/php-mce-rcube', {name: 'registry/php-mce-generic', external: false, is_building: false}, '7.3-fpm_1.0', 'prod', 'True', 'False', 'debian-mce-generic'),
         else :
             return f"'deploy-{self.name}:{version}{suffix}' : {method}('{stage}{level}', '{self.name}', '{self.path}', {parent_str}, '{version}', '{self.branch}', {str(self.is_changed).lower()}, {str(self.is_triggered).lower()}, '{self.name}:{version}{suffix}', '{deploy_jenkins}')"
