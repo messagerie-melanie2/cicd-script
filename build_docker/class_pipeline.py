@@ -67,7 +67,7 @@ class Parameters:
         self.latest = latest
 
     def __str__(self):
-        return "Parameters with parent_version '{0}', no_build is {1} and  no_repo is {2}".format(self.parent_version, str(self.no_build), str(self.no_repo))
+        return f"Parameters with parent_version :'{self.parent_version}'\n no_build : {self.no_build}\n no_repo : {self.no_repo}\n no_deploy : {self.no_deploy}\n deploy_jenkins : {self.deploy_jenkins}\n variables : {self.variables}\n multistage_parents : {self.multistage_parents}\n latest : {self.latest}"
     
 class Parent:
     """Class containing Dockerfile's parent information"""
