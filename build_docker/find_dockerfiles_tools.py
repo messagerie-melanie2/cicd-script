@@ -294,8 +294,11 @@ def find_info_from_parameters(subdir, default_version):
                         multistage_parents[index] = stage_info_with_fullname
 
                 for parent_version in parameters['parent_version']:
+                    is_latest = parent_version.get("latest")
+                    if is_latest == None:
+                        is_latest = False
                     parent_version = set_fullname_parent_version(parent_version)        
-                    parametersInfo.append(Parameters(True,parent_version,no_build,no_repo,no_deploy,deploy_jenkins,variables,multistage_parents))
+                    parametersInfo.append(Parameters(True,parent_version,no_build,no_repo,no_deploy,deploy_jenkins,variables,multistage_parents,is_latest))
 
     except Exception as e:
         logger.debug(f"{PARAMETERS_FILE_NAME} file not found... Will use default parent version.")
@@ -309,7 +312,7 @@ def find_info_from_parameters(subdir, default_version):
             version_name=default_version.split("_")[0]
             version_number=default_version.split("_")[1]
 
-        parametersInfo.append(Parameters(True,{'version_name':version_name,'version_number':version_number,'fullname':default_version},False,False,[Deploy.NONE], PROD_KEY, None))
+        parametersInfo.append(Parameters(True,{'version_name':version_name,'version_number':version_number,'fullname':default_version},False,False,[Deploy.NONE], PROD_KEY, None, False))
 
     # return all values found
     return parametersInfo

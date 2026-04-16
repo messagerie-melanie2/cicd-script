@@ -7,7 +7,7 @@ local strContains(s, substr) = std.findSubstr(substr, s) != [];
 /**
  * Function to ...
  */
-local build_docker(stage, name, path, parent, version, branch, is_changed, is_triggered, job_needs, docker_args, allowed_push) =
+local build_docker(stage, name, path, parent, version, branch, is_changed, is_triggered, job_needs, docker_args, allowed_push, latest) =
 {
   stage: stage,
   //
@@ -46,7 +46,7 @@ local build_docker(stage, name, path, parent, version, branch, is_changed, is_tr
     OTHER_DOCKER_ARGS: docker_args,
     ALLOWED_PUSH: allowed_push,
     BUILDKITD_FLAGS: "--oci-worker-no-process-sandbox",
-  },
+  } + if latest == true then {TAG_LATEST: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:latest",} else {},
   image:
   {
       # name: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/cicd-docker/kaniko-executor:v1.9.1-debug",
