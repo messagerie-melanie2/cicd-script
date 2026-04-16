@@ -264,6 +264,7 @@ def trigger(project_name, project_config, trigger_project, branch, description, 
         if check_if_file_can_trigger(project_name, project_config, changes) :
             logger.info(f"Launch triggering process of {project_name} project")
             mapped_branch = get_mapped_branch(branch, project_config)
+            description = (description[:200] + '..') if len(description) > 200 else description #FIX Name is too long bug when launching a gitlab pipeline
             data = create_payload(project_name, project_config, trigger_project, mapped_branch, branch, description, changes)
             url = create_url(project_config, mapped_branch, branch)
             request_auth = create_request_auth(project_config, token)
