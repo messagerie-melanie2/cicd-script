@@ -42,7 +42,7 @@ def main(args) :
         new_sortedRes, to_build_array = set_parent_to_is_building(sortedRes,changes)
         logger.info(f"{job} Set child to build if their parent are !")
         
-        if(args.pipeline_source == "schedule") :
+        if(args.pipeline_source == "schedule" or args.trigger_project == "snum/detn/gmcd/docker-tools") :
             pipelines = sort_pipeline(new_sortedRes)
             
             pipelines_write_jsonnet(pipelines, args.generate_jsonnet_pipeline_folder, args.generate_jsonnet_destination_file, dockerfiles_branch_tag, args.token, args.project_id)
