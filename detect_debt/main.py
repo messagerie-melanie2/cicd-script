@@ -19,9 +19,13 @@ def main(args) :
 
     # Analyse la dette   
     for df in dockerfiles:
+        # On check que les dockerfiles dont les parents sont dans notre repo
         if not df.parent.external:
-            if df.parameters.parent_version['version_number'] != dockerfiles[df.parent.name].version.max():
-                logger.info(f"Found technical debt for {df.name} at {df.path}, using parent version {df.parameters.parent_version['version_number']} but could be using dockerfiles['df.parent_name'].version.max()")
+            # On regarde s'il existe une version plus récente du parent
+            parents = [x for x in dockerfiles if x.name == df.parent.name]
+            latest = max([x.path.split('/')[-1] for x in parents])
+            if df.parameters.parent_version['version_number'] < latest :
+                logger.info(f"Found technical debt for {df.name} at {df.path}, using parent version {df.parameters.parent_version['version_number']} but could be using version {latest}")
 
 # Créer ou modifie l'issue de la dette technique   
 
