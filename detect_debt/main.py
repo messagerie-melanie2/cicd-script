@@ -20,7 +20,7 @@ def main(args) :
     # Analyse la dette   
     for df in dockerfiles:
         if not df.parent.external:
-            if df.parameters.parent_version['version_number'] != dockerfiles[df.parent_name].version.max():
+            if df.parameters.parent_version['version_number'] != dockerfiles[df.parent.name].version.max():
                 logger.info(f"Found technical debt for {df.name} at {df.path}, using parent version {df.parameters.parent_version['version_number']} but could be using dockerfiles['df.parent_name'].version.max()")
 
 # Créer ou modifie l'issue de la dette technique   
