@@ -5,11 +5,7 @@ from detect_debt.global_vars import *
 logger = logging.getLogger(__name__)
 
 def main(args) : 
-
-    # Récupérer les infos des paths dans un projet  *-docker  
-    registry = get_registry_info(args.token, args.project_id) # pas besoin du registry pour le script mais on prends les infos quand même
-    logger.debug(f"Contenu registry, args.token : {args.token} et args.project_id {args.project_id}") 
-    
+   
     # Optimimser la feature pour ne checker que les nouvelles images / les changements dans les commits ?
     
     logger.info(f"[General] Scanning {args.path} to find Dockerfiles")
@@ -21,7 +17,11 @@ def main(args) :
     for df in dockerfiles:
         logger.debug(df)
 
-# Analyse la dette   
+    # Analyse la dette   
+    for df in dockerfiles:
+        if not df.parent.external:
+            if df.parameters.parent_version['version_number'] != dockerfiles[df.parent_name].version.max():
+                logger.info(f"Found technical debt for {df.name} at {df.path}, using parent version {df.parameters.parent_version['version_number']} but could be using dockerfiles['df.parent_name'].version.max()")
 
 # Créer ou modifie l'issue de la dette technique   
 
@@ -43,16 +43,6 @@ parser.add_argument(
     '-p', '--path', 
     metavar='DIR_PATH', default='.',
     help="Choisir le dossier utilisé comme cible pour la recherche des fichiers (Dockerfiles, versions, etc)")
-
-parser.add_argument(
-    '-tok', '--token', 
-    metavar='TOKEN_STRING', default='',
-    help="Token to get registry")
-
-parser.add_argument(
-    '-pid', '--project-id', 
-    metavar='ID', default='',
-    help="L'id du projet pour récupéré sa registry")
 
 parser.add_argument(
     '-cr', '--current-repo', 
