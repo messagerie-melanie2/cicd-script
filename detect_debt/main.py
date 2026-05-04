@@ -1,4 +1,5 @@
-from lib.gitlab_helper import get_issues, get_registry_info, create_issue, get_issues, update_issue 
+from lib.gitlab_helper import get_issues, create_issue, get_issues, update_issue, get_registry_info
+from lib.helper import get_user_id
 from build_docker.find_dockerfiles import find_dockerfiles_r
 from detect_debt.global_vars import *
 
@@ -12,7 +13,7 @@ def main(args) :
     
     logger.info(f"Found {len(dockerfiles)} Dockerfiles")
     
-    description = ""
+    description = "| Dockerfile | Parent actuel | Dernière version |\n|------------|---------------|-----------------|"
 
     # Creating a dict of all dockerfiles with their versions
     versions = {}
@@ -28,10 +29,10 @@ def main(args) :
             latest = max(versions[df.parent.name])
             if df.parameters.parent_version['version_number'] < latest :
                 logger.debug(f"Found technical debt for {df.name} at {df.path}, using parent {df.parent.name} {df.parameters.parent_version['version_number']} but could be using version {latest}")
-                description += f"{df.path} using parent {df.parent.name} {df.parameters.parent_version['version_number']} but could be using version {latest}\n"
+                description += f"{df.path} | {df.parent.name} {df.parameters.parent_version['version_number']} | {latest}\n"
 
     # Creating/modifying debt issue
-    payload = {'title' : 'Technical debt', 'description' : description, 'labels' : 'En développement', 'assignee_id' : 9401}
+    payload = {'title' : DETECT_DEBT_ISSUE_TITLE_DEFAULT, 'description' : description, 'labels' : DETECT_DEBT_ISSUE_LABEL_DEFAULT, 'assignee_username' : DETECT_DEBT_ISSUE_ASSIGNEE_USERNAME_DEFAULT}
     logger.info(f"Payload created : {payload}")
 
     issue_filter = {'search': 'Technical debt'}
