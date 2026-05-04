@@ -43,7 +43,7 @@ def main(args) :
 
     # Crée ou modifie l'issue de la dette technique
     
-    payload = {'description': description, 'labels':'En développement'}
+    payload = {'title' : 'Technical debt', 'description' : description, 'labels' : 'En développement', 'assignee_id' : 9401}
     logger.info(f"Payload created : {payload}")
 
     issue_filter = {'search': 'Technical debt'}
