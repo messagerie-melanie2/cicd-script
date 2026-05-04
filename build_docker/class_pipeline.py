@@ -135,7 +135,12 @@ class Dockerfile:
                     self.docker_args += convert_multistage_parents_version_to_docker_args(multistage_parent,True)
 
         # Build result string
-        parent_str = f"{{name: '{self.parent.name}', version: '{self.parent.version}', external: {str(self.parent.external).lower()}, is_building: {str(self.parent.is_building).lower()}}}"
+        parent_dict = {
+            'name': self.parent.name, 
+            'version': self.parent.version, 
+            'external': int(self.parent.external),
+            'is_building': int(self.parent.is_building)
+            }
         job_needs = create_job_needs(self.parent,self.multistage_parents,mode)
         registry_push = {
             'name': BUILD_DOCKER_CI_PUSH_REGISTRY,
@@ -153,7 +158,7 @@ class Dockerfile:
                 'stage': f'{stage}{level}', #0
                 'name': self.name, # php-mce-rcube
                 'path': self.path, # php/php-mce-rcube
-                'parent': parent_str, # {name: 'registry/php-mce-generic', external: false, is_building: false}
+                'parent': parent_dict, # {name: 'registry/php-mce-generic', external: false, is_building: false}
                 'version': version, # 7.3-fpm_1.0
                 'branch': self.branch, # prod
                 'is_changed': int(self.is_changed), # true
@@ -171,7 +176,7 @@ class Dockerfile:
             payload = {
                 'stage': f'{stage}{level}', #0
                 'name': self.name, # php-mce-rcube
-                'parent': parent_str, # {name: 'registry/php-mce-generic', external: false, is_building: false}
+                'parent': parent_dict, # {name: 'registry/php-mce-generic', external: false, is_building: false}
                 'version': version, # 7.3-fpm_1.0
                 'is_changed': int(self.is_changed), # true
                 'is_triggered': int(self.is_triggered), # false
