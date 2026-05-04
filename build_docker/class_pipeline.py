@@ -156,12 +156,12 @@ class Dockerfile:
                 'parent': parent_str, # {name: 'registry/php-mce-generic', external: false, is_building: false}
                 'version': version, # 7.3-fpm_1.0
                 'branch': self.branch, # prod
-                'is_changed': str(self.is_changed).lower(), # true
-                'is_triggered': str(self.is_triggered).lower(), # false
+                'is_changed': self.is_changed, # true
+                'is_triggered': self.is_triggered, # false
                 'job_needs': job_needs, # debian-mce-generic
                 'docker_args': self.docker_args, # --opt build-arg:
                 'allowed_push': self.allowed_push, # True
-                'latest': str(self.parameters.latest).lower(), # true
+                'latest': self.parameters.latest, # true
                 'registry_push': registry_push, #registry where we push
                 'registry_pull': registry_pull, #registry where we pull
             }
@@ -173,8 +173,8 @@ class Dockerfile:
                 'name': self.name, # php-mce-rcube
                 'parent': parent_str, # {name: 'registry/php-mce-generic', external: false, is_building: false}
                 'version': version, # 7.3-fpm_1.0
-                'is_changed': str(self.is_changed).lower(), # true
-                'is_triggered': str(self.is_triggered).lower(), # false
+                'is_changed': self.is_changed, # true
+                'is_triggered': self.is_triggered, # false
                 'job_to_deploy': f'{self.name}:{version}{suffix}', # php-mce-rcube:7.4-fpm_1.0-prod
                 'deploy_jenkins': deploy_jenkins, # https://myjenkins.com/webhook
             }
