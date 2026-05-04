@@ -39,9 +39,9 @@ def main(args) :
     obtained_issues = get_issues(args.token, args.project_id, issue_filter)
 
     if not obtained_issues:
-        created_issue = create_issue(args.token, args.project_id, payload)
+        create_issue(args.token, args.project_id, payload)
     else:
-        updated_issue = update_issue(args.token, args.project_id, obtained_issues[0]["iid"], payload)
+        update_issue(args.token, args.project_id, obtained_issues[0]["iid"], payload)
 
 #=======================================================#
 #====================== Arguments ======================#
