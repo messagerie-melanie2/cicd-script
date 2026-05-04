@@ -52,9 +52,11 @@ def main(args) :
     logger.debug(f"Obtained issues : {obtained_issues}")
 
     if not obtained_issues:
+        logger.debug("Creating issue ...")
         created_issue = create_issue(args.token, args.project_id, payload)
         logger.debug(f"Created issue : {created_issue}")
     else:
+        logger.debug("Updating issue ...") 
         updated_issue = update_issue(args.token, args.project_id, obtained_issues[0]["iid"], payload)
         logger.debug(f"Updated issue : {updated_issue}")
 
