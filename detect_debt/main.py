@@ -28,7 +28,7 @@ def main(args) :
             latest = max(versions[df.parent.name])
             if df.parameters.parent_version['version_number'] < latest :
                 logger.debug(f"Found technical debt for {df.name} at {df.path}, using parent {df.parent.name} {df.parameters.parent_version['version_number']} but could be using version {latest}")
-                description += f"{df.path}, using parent {df.parent.name} {df.parameters.parent_version['version_number']} but could be using version {latest}\n"
+                description += f"{df.path} using parent {df.parent.name} {df.parameters.parent_version['version_number']} but could be using version {latest}\n"
 
     # Creating/modifying debt issue
     payload = {'title' : 'Technical debt', 'description' : description, 'labels' : 'En développement', 'assignee_id' : 9401}
