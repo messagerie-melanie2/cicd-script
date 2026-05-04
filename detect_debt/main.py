@@ -55,7 +55,7 @@ def main(args) :
         created_issue = create_issue(args.token, args.project_id, payload)
         logger.debug(f"Created issue : {created_issue}")
     else:
-        updated_issue = update_issue(args.token, args.project_id, obtained_issues[0].id, payload)
+        updated_issue = update_issue(args.token, args.project_id, obtained_issues[0]["iid"], payload)
         logger.debug(f"Updated issue : {updated_issue}")
 
 #=======================================================#
