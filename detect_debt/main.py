@@ -44,19 +44,19 @@ def main(args) :
     # Crée ou modifie l'issue de la dette technique
     
     payload = {'description': description, 'labels':'En développement'}
-    logger.info(f"Payload created : " {payload})
+    logger.info(f"Payload created : {payload}")
 
     issue_filter = {'search': 'Technical debt'}
 
     obtained_issues = get_issues(args.token, args.project_id, issue_filter)
-    logger.debug(f"Obtained issues :" {obtained_issues})
+    logger.debug(f"Obtained issues : {obtained_issues}")
 
-    if not issues:
+    if not obtained_issues:
         created_issue = create_issue(args.token, args.project_id, payload)
-        logger.debug(f"Created issue :" {created_issue})
+        logger.debug(f"Created issue : {created_issue}")
     else:
-        updated_issue = update_issue(args.token, args.project_id, issues[0].id, payload)
-        logger.debug(f"Updated issue :" {updated_issue})
+        updated_issue = update_issue(args.token, args.project_id, obtained_issues[0].id, payload)
+        logger.debug(f"Updated issue : {updated_issue}")
 
 #=======================================================#
 #====================== Arguments ======================#
