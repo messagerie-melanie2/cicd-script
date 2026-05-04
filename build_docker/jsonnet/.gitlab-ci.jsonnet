@@ -3,7 +3,7 @@ local build_docker(payload) =
   stage: payload.stage,
   //
   rules:
-      if (payload.parent.is_building == true || payload.is_triggered == true || payload.is_changed == true)
+      if (payload.parent.is_building == 1 || payload.is_triggered == 1 || payload.is_changed == 1)
       then 
       [{
         when: 'on_success'
@@ -42,7 +42,7 @@ local build_docker(payload) =
     CI_PULL_REGISTRY: payload.registry_pull.name,
     CI_PULL_REGISTRY_USER: payload.registry_pull.username,
     CI_PULL_REGISTRY_PASSWORD: payload.registry_pull.password,
-  } + if payload.latest == true then {TAG_LATEST: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:latest",} else {},
+  } + if payload.latest == 1 then {TAG_LATEST: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:latest",} else {},
   image:
   {
       # name: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/cicd-docker/kaniko-executor:v1.9.1-debug",
@@ -88,7 +88,7 @@ local deploy_docker(payload) =
   stage: payload.stage,
   //
   rules:
-    if (payload.parent.is_building == true || payload.is_triggered == true || payload.is_changed == true)
+    if (payload.parent.is_building == 1 || payload.is_triggered == 1 || payload.is_changed == 1)
     then 
     [{
       when: 'on_success'
