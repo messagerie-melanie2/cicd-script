@@ -1,4 +1,4 @@
-from lib.gitlab_helper import get_registry_info
+from lib.gitlab_helper import get_issues, get_registry_info, create_issue, get_issues, update_issue 
 from build_docker.find_dockerfiles import find_dockerfiles_r
 from detect_debt.global_vars import *
 
@@ -13,6 +13,8 @@ def main(args) :
     dockerfiles = find_dockerfiles_r(args.current_repo, args.path)
     
     logger.info(f"Found {len(dockerfiles)} Dockerfiles")
+    
+    description = ""
 
     for df in dockerfiles:
         logger.debug(df)
@@ -22,17 +24,39 @@ def main(args) :
         # On check que les dockerfiles dont les parents sont dans notre repo
         if not df.parent.external:
             # On regarde s'il existe une version plus récente du parent
-            parents = [x for x in dockerfiles if x.name == df.parent.name]
+            parents = [x for x in dockerfiles if x.name == df.parent.name] # o(n²) c'est pas très propre mais c'est la vie
+
+# claude qui me passe une solution smart en o(n), construire une map de version avant la boucle
+# versions = {}
+# for x in dockerfiles:
+#     if x.name not in versions:
+#         versions[x.name] = []
+#     versions[x.name].append(x.path.split('/')[-1])
+
+# et puis
+# latest = max(versions[df.parent.name])
+
             latest = max([x.path.split('/')[-1] for x in parents])
             if df.parameters.parent_version['version_number'] < latest :
-                logger.info(f"Found technical debt for {df.name} at {df.path}, using parent version {df.parameters.parent_version['version_number']} but could be using version {latest}")
+                logger.debug(f"Found technical debt for {df.name} at {df.path}, using parent {df.parent.name} {df.parameters.parent_version['version_number']} but could be using version {latest}")
+                description += f"{df.path}, using parent {df.parent.name} {df.parameters.parent_version['version_number']} but could be using version {latest}\n"
 
-# Créer ou modifie l'issue de la dette technique   
+    # Crée ou modifie l'issue de la dette technique
+    
+    payload = {'description': description, 'labels':'En développement'}
+    logger.info(f"Payload created : " {payload})
 
-# create_issue
+    issue_filter = {'search': 'Technical debt'}
 
-# Prendre exemple sur clean-registry
+    obtained_issues = get_issues(args.token, args.project_id, issue_filter)
+    logger.debug(f"Obtained issues :" {obtained_issues})
 
+    if not issues:
+        created_issue = create_issue(args.token, args.project_id, payload)
+        logger.debug(f"Created issue :" {created_issue})
+    else:
+        updated_issue = update_issue(args.token, args.project_id, issues[0].id, payload)
+        logger.debug(f"Updated issue :" {updated_issue})
 
 #=======================================================#
 #====================== Arguments ======================#
@@ -52,6 +76,16 @@ parser.add_argument(
     '-cr', '--current-repo', 
     metavar='REPO_NAME', default='cicd-docker',
     help="Nom du dépôt git actuel (afin d'identifier les images qui reposent sur un autre dépôt/repo)")
+
+parser.add_argument(
+    '-tok', '--token', 
+    metavar='TOKEN', default='',
+    help="Token to use for authentication")
+
+parser.add_argument(
+    '-pid', '--project-id', 
+    metavar='PROJECT', default=0,
+    help="Id of the project")
 
 # Run the arguments parser
 args = parser.parse_args()
