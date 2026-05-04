@@ -1,4 +1,5 @@
 from lib.gitlab_helper import get_issues, create_issue, get_issues, update_issue 
+from lib.helper import get_user_id
 from build_docker.find_dockerfiles import find_dockerfiles_r
 from detect_debt.global_vars import *
 
@@ -12,7 +13,7 @@ def main(args) :
     
     logger.info(f"Found {len(dockerfiles)} Dockerfiles")
     
-    description = "| Dockerfile | Parent actuel | Dernière version |\n|------------|---------------|-----------------|"
+    description = "| Dockerfile | Parent actuel | Dernière version |\n|------------|---------------|-----------------|\n"
 
     # Creating a dict of all dockerfiles with their versions
     versions = {}
