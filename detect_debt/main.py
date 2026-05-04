@@ -1,5 +1,4 @@
-from lib.gitlab_helper import get_issues, create_issue, get_issues, update_issue, get_registry_info
-from lib.helper import get_user_id
+from lib.gitlab_helper import get_issues, create_issue, get_issues, update_issue 
 from build_docker.find_dockerfiles import find_dockerfiles_r
 from detect_debt.global_vars import *
 
@@ -32,7 +31,12 @@ def main(args) :
                 description += f"{df.path} | {df.parent.name} {df.parameters.parent_version['version_number']} | {latest}\n"
 
     # Creating/modifying debt issue
-    payload = {'title' : DETECT_DEBT_ISSUE_TITLE_DEFAULT, 'description' : description, 'labels' : DETECT_DEBT_ISSUE_LABEL_DEFAULT, 'assignee_username' : DETECT_DEBT_ISSUE_ASSIGNEE_USERNAME_DEFAULT}
+    payload = {
+        'title' : DETECT_DEBT_ISSUE_TITLE_DEFAULT,
+        'description' : description, 
+        'labels' : DETECT_DEBT_ISSUE_LABEL_DEFAULT, 
+        'assignee_username' : DETECT_DEBT_ISSUE_ASSIGNEE_USERNAME_DEFAULT
+    }
     logger.info(f"Payload created : {payload}")
 
     issue_filter = {'search': 'Technical debt'}

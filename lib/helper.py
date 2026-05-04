@@ -120,4 +120,35 @@ def get_changes(changes_info_file):
         changes.append(line) 
         # changes = ["/debian/3.4/Dockerfile",...]
 
-    return changes
+    return changes 
+
+def get_user_id(assignee_username, project_user, multiple_user) :
+    """
+    Get users ids depending of their username.
+
+    Args:
+        issue (dict): The issue json.
+        project_user (list): List of all user of the project
+        multiple_user (bool): Permit multiple user feature.
+
+    Returns:
+        user_id (list): List of all user ids needed.
+    """
+
+    user_id = []
+    if assignee_username != None :
+        assignee_username = assignee_username.lower().split(",")
+        logger.debug(f"assignee_username: {assignee_username}")
+        if len(assignee_username) > 1  and not multiple_user:
+            logger.error(f"assignee_username must have only one username because multiple user is false")
+            sys.exit()
+        for user in project_user :
+            if user.get("username").lower() in assignee_username :
+                user_id.append(user.get("id"))
+                logger.info(f"User {user.get("username")} found with id : {user.get("id")}")
+    
+    logger.debug(f"user_id: {user_id}")
+    if len(user_id) == 0 : 
+        logger.warning(f"No user found with name : {assignee_username}")
+
+    return user_id 
