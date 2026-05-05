@@ -148,9 +148,9 @@ class Dockerfile:
             'password': BUILD_DOCKER_CI_PUSH_REGISTRY_PASSWORD,
         }
         registry_pull = {
-            'name': BUILD_DOCKER_CI_PUSH_REGISTRY,
-            'username': BUILD_DOCKER_CI_PUSH_REGISTRY_USERNAME,
-            'password': BUILD_DOCKER_CI_PUSH_REGISTRY_PASSWORD,
+            'name': BUILD_DOCKER_CI_PULL_REGISTRY,
+            'username': BUILD_DOCKER_CI_PULL_REGISTRY_USERNAME,
+            'password': BUILD_DOCKER_CI_PULL_REGISTRY_PASSWORD,
         }
 
         if not deploy :
