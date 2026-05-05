@@ -45,16 +45,16 @@ def create_job_needs(parent, multistage_parents, mode):
     job_needs = [{'pipeline': '$PARENT_PIPELINE_ID','job': 'convert-jsonnet-to-json',}]
 
     if mode == "all" :
-        job_needs.append({ 'job': f"{parent.name}:{parent.version}",'optional': 'true'})
+        job_needs.append({ 'job': f"{parent.name}:{parent.version}",'optional': True})
     else :
         if not parent.external and parent.is_building :
-            job_needs.append({ 'job': f"{parent.name}:{parent.version}",'optional': 'true'})
+            job_needs.append({ 'job': f"{parent.name}:{parent.version}",'optional': True})
     
     job_already_here = [parent.name + ":" + parent.version]
     for multistage_parent in multistage_parents :
         job_name = multistage_parent.name + ":" + multistage_parent.version
         if not multistage_parent.external and multistage_parent.is_building and job_name not in job_already_here:
-            job_needs.append({ 'job': job_name,'optional': 'true'})
+            job_needs.append({ 'job': job_name,'optional': True})
             job_already_here.append(job_name)
 
     return job_needs
