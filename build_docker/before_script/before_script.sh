@@ -61,7 +61,7 @@ main()
     ## Replace all simple quotes with double quotes (with Jsonnet-adapted syntax : \' becomes \\\' )
     DOCKER_CFG=$(echo "$DOCKER_CFG" | tr "'" "\"")
 
-    echo $DOCKER_CFG
+    export -p
     ## Write the config in the appropriate file
     echo $DOCKER_CFG > ~/.docker/config.json
 
