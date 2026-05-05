@@ -1,5 +1,4 @@
-from lib.gitlab_helper import get_issues, create_issue, get_issues, update_issue 
-from lib.helper import get_user_id
+from lib.gitlab_helper import get_issues, create_issue, get_issues, update_issue, get_user_id, get_users
 from build_docker.find_dockerfiles import find_dockerfiles_r
 from detect_debt.global_vars import *
 
@@ -22,7 +21,7 @@ def main(args) :
             versions[x.name] = []
         versions[x.name].append(x.path.split('/')[-1])
 
-    # Debt analysis   
+    # Analysing debt 
     for df in dockerfiles:
         # Check only dockerfiles which depend on internal parent
         if not df.parent.external:
@@ -32,15 +31,20 @@ def main(args) :
                 description += f"{df.path} | {df.parent.name} {df.parameters.parent_version['version_number']} | {latest}\n"
 
     # Creating/modifying debt issue
+    obtained_users = get_users(args.token, args.project_id)
+
+    obtained_users_id = get_user_id(DETECT_DEBT_ISSUE_ASSIGNEE_USERNAME_DEFAULT, obtained_users, False)
+
     payload = {
         'title' : DETECT_DEBT_ISSUE_TITLE_DEFAULT,
         'description' : description, 
         'labels' : DETECT_DEBT_ISSUE_LABEL_DEFAULT, 
-        'assignee_username' : DETECT_DEBT_ISSUE_ASSIGNEE_USERNAME_DEFAULT
+        'assignee_id' : obtained_users_id
     }
+
     logger.info(f"Payload created : {payload}")
 
-    issue_filter = {'search': 'Technical debt'}
+    issue_filter = {'search': DETECT_DEBT_ISSUE_TITLE_DEFAULT}
 
     obtained_issues = get_issues(args.token, args.project_id, issue_filter)
 
