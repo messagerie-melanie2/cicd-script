@@ -20,14 +20,16 @@ def main(args) :
         if df.name not in versions:
             versions[df.name] = []
         versions[df.name].append(df.path.split('/')[-1])
+    logger.debug(f"Versions found : {versions}")
 
     # Analysing debt 
     for df in obtained_dockerfiles:
         # Check only dockerfiles which depend on internal parent
         if not df.parent.external:
             latest = max(versions[df.parent.name])
-            if df.parameters.parent_version['version_number'] < latest :
-                logger.debug(f"Found technical debt for {df.name} at {df.path}, using parent {df.parent.name} {df.parameters.parent_version['version_number']} but could be using version {latest}")
+            logger.debug(f"{df.name} having parent {df.parent.name} {df.parent.version['version_number']}")
+            if df.parent.version['version_number'] < latest :
+                logger.debug(f"Found technical debt for {df.name} at {df.path}, using parent {df.parent.name} {df.parent.version['version_number']} but could be using version {latest}")
                 description += f"{df.path} | {df.parent.name} {df.parameters.parent_version['version_number']} | {latest}\n"
 
     # Creating/modifying debt issue
