@@ -33,18 +33,18 @@ def main(args) :
     # Creating/modifying debt issue
     obtained_users = get_users(args.token, args.project_id)
 
-    obtained_users_id = get_user_id(DETECT_DEBT_ISSUE_ASSIGNEE_USERNAME_DEFAULT, obtained_users, False)
+    obtained_users_id = get_user_id(DETECT_DEBT_ISSUE_ASSIGNEE_USERNAME, obtained_users, False)
 
     payload = {
-        'title' : DETECT_DEBT_ISSUE_TITLE_DEFAULT,
+        'title' : DETECT_DEBT_ISSUE_TITLE,
         'description' : description, 
-        'labels' : DETECT_DEBT_ISSUE_LABEL_DEFAULT, 
+        'labels' : DETECT_DEBT_ISSUE_LABEL, 
         'assignee_id' : obtained_users_id
     }
 
     logger.info(f"Payload created : {payload}")
 
-    issue_filter = {'search': DETECT_DEBT_ISSUE_TITLE_DEFAULT}
+    issue_filter = {'search': DETECT_DEBT_ISSUE_TITLE}
 
     obtained_issues = get_issues(args.token, args.project_id, issue_filter)
 
