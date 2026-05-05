@@ -120,4 +120,6 @@ def get_changes(changes_info_file):
         changes.append(line) 
         # changes = ["/debian/3.4/Dockerfile",...]
 
-    return changes
+    return changes 
+
+
