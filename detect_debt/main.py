@@ -1,8 +1,10 @@
-from lib.gitlab_helper import get_issues, create_issue, get_issues, update_issue, get_user_id, get_users
 from build_docker.find_dockerfiles import find_dockerfiles_r
+from lib.gitlab_helper import get_issues, create_issue, get_issues, update_issue, get_user_id, get_users
 from detect_debt.global_vars import *
 
 logger = logging.getLogger(__name__)
+
+logger.info(logger)
 
 def main(args) : 
    
