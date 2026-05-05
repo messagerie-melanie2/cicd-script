@@ -142,11 +142,6 @@ class Dockerfile:
             'is_building': int(self.parent.is_building)
             }
         job_needs = create_job_needs(self.parent,self.multistage_parents,mode)
-        registry_push = {
-            'name': BUILD_DOCKER_CI_PUSH_REGISTRY,
-            'username': BUILD_DOCKER_CI_PUSH_REGISTRY_USERNAME,
-            'password': BUILD_DOCKER_CI_PUSH_REGISTRY_PASSWORD,
-        }
         registry_pull = {
             'name': BUILD_DOCKER_CI_PULL_REGISTRY,
             'username': BUILD_DOCKER_CI_PULL_REGISTRY_USERNAME,
@@ -167,9 +162,23 @@ class Dockerfile:
                 'docker_args': self.docker_args, # --opt build-arg:
                 'allowed_push': self.allowed_push, # True
                 'latest': int(self.parameters.latest), # true
-                'registry_push': registry_push, #registry where we push
-                'registry_pull': registry_pull, #registry where we pull
+                'registry_push': {}, #registry where we push
+                'registry_pull': {}, #registry where we pull
             }
+            if BUILD_DOCKER_CI_PUSH_REGISTRY_VARIABLE_NAME != BUILD_DOCKER_CI_PUSH_REGISTRY_VARIABLE_NAME_DEFAULT :
+                payload['registry_push'] = {#registry where we push
+                    'name': BUILD_DOCKER_CI_PUSH_REGISTRY,
+                    'username': BUILD_DOCKER_CI_PUSH_REGISTRY_USERNAME,
+                    'password': BUILD_DOCKER_CI_PUSH_REGISTRY_PASSWORD,
+                }
+            
+            if BUILD_DOCKER_CI_PULL_REGISTRY_VARIABLE_NAME != BUILD_DOCKER_CI_PULL_REGISTRY_VARIABLE_NAME_DEFAULT :
+                payload['registry_pull'] = {#registry where we pull
+                    'name': BUILD_DOCKER_CI_PULL_REGISTRY,
+                    'username': BUILD_DOCKER_CI_PULL_REGISTRY_USERNAME,
+                    'password': BUILD_DOCKER_CI_PULL_REGISTRY_PASSWORD,
+                }
+            
             return f"'{self.name}:{version}{suffix}' : {method}({payload})"
             # 'php-mce-rcube:7.4-fpm_1.0-prod' : build_docker(payload),
         else :

@@ -36,13 +36,10 @@ local build_docker(payload) =
     OTHER_DOCKER_ARGS: payload.docker_args,
     ALLOWED_PUSH: payload.allowed_push,
     BUILDKITD_FLAGS: "--oci-worker-no-process-sandbox",
-    CI_REGISTRY: payload.registry_push.name,
-    CI_REGISTRY_USER: payload.registry_push.username,
-    CI_REGISTRY_PASSWORD: payload.registry_push.password,
-    CI_PULL_REGISTRY: payload.registry_pull.name,
-    CI_PULL_REGISTRY_USER: payload.registry_pull.username,
-    CI_PULL_REGISTRY_PASSWORD: payload.registry_pull.password,
-  } + if payload.latest == 1 then {TAG_LATEST: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:latest",} else {},
+  } + if payload.latest == 1 then {TAG_LATEST: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:latest",} else {}
+   + if payload.registry_push != {} then {CI_REGISTRY: payload.registry_push.name,CI_REGISTRY_USER: payload.registry_push.username,CI_REGISTRY_PASSWORD: payload.registry_push.password,} else {}
+   + if payload.registry_pull != {} then {CI_PULL_REGISTRY: payload.registry_pull.name,CI_PULL_REGISTRY_USER: payload.registry_pull.username,CI_PULL_REGISTRY_PASSWORD: payload.registry_pull.password,} else {}
+   ,
   image:
   {
       # name: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/cicd-docker/kaniko-executor:v1.9.1-debug",
