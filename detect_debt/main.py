@@ -30,10 +30,9 @@ def main(args) :
         if not df.parent.external:
             latest = max(versions[df.parent.name])
             logger.debug(f"{df.name} having parent {df.parent.name} {df.parent.version}")
-            logger.debug(f"{df.name} having parent {df.parent.name} {df.parameters.parent_version['version_number']}")
-            if df.parent.version < latest :
+            if df.parent.version.split('_')[-1] < latest :
                 logger.debug(f"Found technical debt for {df.name} at {df.path}, using parent {df.parent.name} {df.parent.version} but could be using version {latest}")
-                description += f"{df.path} | {df.parent.name} {df.parameters.parent_version['version_number']} | {latest}\n"
+                description += f"{df.path} | {df.parent.name} {df.parent.version]} | {latest}\n"
 
     # Creating/modifying debt issue
     obtained_users = get_users(args.token, args.project_id)
