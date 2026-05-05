@@ -33,7 +33,7 @@ def main(args) :
     # Creating/modifying debt issue
     obtained_users = get_users(args.token, args.project_id)
 
-    obtained_users_id = get_user_id(DETECT_DEBT_ISSUE_ASSIGNEE_USERNAME_DEFAULT, obtained_users, False)
+    obtained_users_id = get_user_id(DETECT_DEBT_ISSUE_ASSIGNEE_USERNAME_DEFAULT, obtained_users, True)
 
     payload = {
         'title' : DETECT_DEBT_ISSUE_TITLE_DEFAULT,
