@@ -8,21 +8,21 @@ def main(args) :
    
     logger.info(f"[General] Scanning {args.path} to find Dockerfiles")
 
-    dockerfiles = find_dockerfiles_r(args.current_repo, args.path)
+    obtained_dockerfiles = find_dockerfiles_r(args.current_repo, args.path)
     
-    logger.info(f"Found {len(dockerfiles)} Dockerfiles")
+    logger.info(f"Found {len(obtained_dockerfiles)} Dockerfiles")
     
     description = "| Dockerfile | Parent actuel | Dernière version |\n|------------|---------------|-----------------|\n"
 
     # Creating a dict of all dockerfiles with their versions
     versions = {}
-    for x in dockerfiles:
-        if x.name not in versions:
-            versions[x.name] = []
-        versions[x.name].append(x.path.split('/')[-1])
+    for df in obtained_dockerfiles:
+        if df.name not in versions:
+            versions[df.name] = []
+        versions[df.name].append(df.path.split('/')[-1])
 
     # Analysing debt 
-    for df in dockerfiles:
+    for df in obtained_dockerfiles:
         # Check only dockerfiles which depend on internal parent
         if not df.parent.external:
             latest = max(versions[df.parent.name])
