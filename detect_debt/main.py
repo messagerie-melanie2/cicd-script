@@ -32,7 +32,7 @@ def main(args) :
             logger.debug(f"{df.name} having parent {df.parent.name} {df.parent.version}")
             if df.parent.version.split('_')[-1] < latest :
                 logger.debug(f"Found technical debt for {df.name} at {df.path}, using parent {df.parent.name} {df.parent.version} but could be using version {latest}")
-                description += f"{df.path} | {df.parent.name} {df.parent.version]} | {latest}\n"
+                description += f"{df.path} | {df.parent.name} {df.parent.version} | {latest}\n"
 
     # Creating/modifying debt issue
     obtained_users = get_users(args.token, args.project_id)
