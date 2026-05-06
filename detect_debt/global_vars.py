@@ -5,7 +5,7 @@ from lib.global_vars import *
 #=======================================================#
 DETECT_DEBT_LOG_LEVEL_DEFAULT = "INFO"
 DETECT_DEBT_ISSUE_TITLE_DEFAULT = "[Technical debt]"
-DETECT_DEBT_ISSUE_LABEL_DEFAULT = "En développement"
+DETECT_DEBT_ISSUE_LABEL_DEFAULT = "En prod"
 DETECT_DEBT_ISSUE_ASSIGNEE_USERNAME_DEFAULT = ""
 
 DETECT_DEBT_LOG_LEVEL = os.environ.get("DETECT_DEBT_LOG_LEVEL", DETECT_DEBT_LOG_LEVEL_DEFAULT).upper()
