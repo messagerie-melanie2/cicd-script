@@ -1,4 +1,4 @@
-local build_docker(payload) =
+local build_docker(payload, job_needs) =
 {
   stage: payload.stage,
   //
@@ -22,7 +22,7 @@ local build_docker(payload) =
   //
   tags: std.split(std.extVar('RUNNER_TAGS'), ','),
   //
-  needs:payload.job_needs,
+  needs:job_needs,
   //
   variables:
   {

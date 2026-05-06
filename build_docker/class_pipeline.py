@@ -142,11 +142,6 @@ class Dockerfile:
             'is_building': int(self.parent.is_building)
             }
         job_needs = create_job_needs(self.parent,self.multistage_parents,mode)
-        registry_pull = {
-            'name': BUILD_DOCKER_CI_PULL_REGISTRY,
-            'username': BUILD_DOCKER_CI_PULL_REGISTRY_USERNAME,
-            'password': BUILD_DOCKER_CI_PULL_REGISTRY_PASSWORD,
-        }
 
         if not deploy :
             payload = {
@@ -158,7 +153,6 @@ class Dockerfile:
                 'branch': self.branch, # prod
                 'is_changed': int(self.is_changed), # true
                 'is_triggered': int(self.is_triggered), # false
-                'job_needs': job_needs, # debian-mce-generic
                 'docker_args': self.docker_args, # --opt build-arg:
                 'allowed_push': self.allowed_push, # True
                 'latest': int(self.parameters.latest), # true
@@ -179,7 +173,7 @@ class Dockerfile:
                     'password': BUILD_DOCKER_CI_PULL_REGISTRY_PASSWORD,
                 }
             
-            return f"'{self.name}:{version}{suffix}' : {method}({payload})"
+            return f"'{self.name}:{version}{suffix}' : {method}({payload}, {job_needs})"
             # 'php-mce-rcube:7.4-fpm_1.0-prod' : build_docker(payload),
         else :
             payload = {
