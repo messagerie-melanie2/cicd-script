@@ -1,5 +1,6 @@
 from detect_debt.global_vars import *
 from build_docker.find_dockerfiles import find_dockerfiles_r
+from build_docker.create_pipeline import sort_dockerfiles 
 from lib.gitlab_helper import get_issues, create_issue, get_issues, update_issue, get_user_id, get_users
 
 logger = logging.getLogger(__name__)
@@ -12,20 +13,31 @@ def main(args) :
 
     obtained_dockerfiles = find_dockerfiles_r(args.current_repo, args.path)
     
-    logger.info(f"Found {len(obtained_dockerfiles)} Dockerfiles")
+    #dette_interne(obtained_dockerfiles)
+
+    sorted_dockerfiles = sort_dockerfiles(obtained_dockerfiles)
+
+    dette_externe(sorted_dockerfiles)
+
+def dette-externe(dockerfiles):
+    
+
+def dette_interne(dockerfiles):
+
+    logger.info(f"Found {len(dockerfiles)} Dockerfiles")
     
     description = "| Dockerfile | Parent actuel | Dernière version |\n|------------|---------------|-----------------|\n"
 
     # Creating a dict of all dockerfiles with their versions
     versions = {}
-    for df in obtained_dockerfiles:
+    for df in dockerfiles:
         if df.name not in versions:
             versions[df.name] = []
         versions[df.name].append(df.path.split('/')[-1])
     logger.debug(f"Versions found : {versions}")
 
     # Analysing debt 
-    for df in obtained_dockerfiles:
+    for df in dockerfiles:
         # Check only dockerfiles which depend on internal parent
         if not df.parent.external:
             latest = max(versions[df.parent.name])
