@@ -19,8 +19,10 @@ def main(args) :
 
     dette_externe(sorted_dockerfiles)
 
-def dette-externe(dockerfiles):
-    
+def dette_externe(dockerfiles):
+
+    for df in dockerfiles:
+        logger.debug(f"Dockerfile sorted : {df}")
 
 def dette_interne(dockerfiles):
 
