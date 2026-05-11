@@ -58,7 +58,7 @@ def main(args) :
             shutil.copy(args.generate_jsonnet_destination_file, f"{args.generate_jsonnet_pipeline_folder}/pipelines.jsonnet")
             write_jsonnet(new_sortedRes, {'mode':"build",'to_build':to_build_array}, f"{args.generate_jsonnet_pipeline_folder}/pipelines.jsonnet", dockerfiles_branch_tag, args.token, args.project_id, trigger_variable)
 
-        logger.info(f"{job} Writed Jsonnet result to file !")
+        logger.info(f"{job} Written Jsonnet result to file !")
 
 
 #=======================================================#

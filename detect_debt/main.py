@@ -15,13 +15,31 @@ def main(args) :
     
     #dette_interne(obtained_dockerfiles)
 
-    sorted_dockerfiles = sort_dockerfiles(obtained_dockerfiles)
+    dette_externe(obtained_dockerfiles)
+    
+    # je regarde que dockerfiles de la première liste pour avoir que les external
 
-    dette_externe(sorted_dockerfiles)
+    # je fais un get sur docker hub pour comparer avec la latest et les niveaux de sécurité
+
+    # je répértorie dans un tableau tout ceux qu'il faut changer et le nombre de dockerfiles enfants impactés
+    
+    # refacto pour l'issue dette externe
+    
+    # prometheus et grafana 
 
 def dette_externe(dockerfiles):
 
-    for df in dockerfiles:
+    sorted_dockerfiles = sort_dockerfiles(dockerfiles)
+    logger.debug(f"Dockerfile architecture : \
+        path : {sorted_dockerfiles[0][0].path} \
+        name : {sorted_dockerfiles[0][0].name} \
+        version : {sorted_dockerfiles[0][0].version} \
+        parent : {sorted_dockerfiles[0][0].parent} \
+        parent.name : {sorted_dockerfiles[0][0].parent.name} \
+        parent.version : {sorted_dockerfiles[0][0].parent.version} \
+        parent.external : {sorted_dockerfiles[0][0].parent.external}")
+     
+    for df in sorted_dockerfiles:
         logger.debug(f"Dockerfile sorted : {df}")
 
 def dette_interne(dockerfiles):
