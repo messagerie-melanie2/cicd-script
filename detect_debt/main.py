@@ -2,6 +2,7 @@ from detect_debt.global_vars import *
 from build_docker.find_dockerfiles import find_dockerfiles_r
 from build_docker.create_pipeline import sort_dockerfiles 
 from lib.gitlab_helper import get_issues, create_issue, get_issues, update_issue, get_user_id, get_users
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -30,17 +31,21 @@ def main(args) :
 def dette_externe(dockerfiles):
 
     sorted_dockerfiles = sort_dockerfiles(dockerfiles)
-    logger.debug(f"Dockerfile architecture : \
-        path : {sorted_dockerfiles[0][0].path} \
-        name : {sorted_dockerfiles[0][0].name} \
-        version : {sorted_dockerfiles[0][0].version} \
-        parent : {sorted_dockerfiles[0][0].parent} \
-        parent.name : {sorted_dockerfiles[0][0].parent.name} \
-        parent.version : {sorted_dockerfiles[0][0].parent.version} \
+
+    logger.debug(f"Dockerfile architecture : \n \
+        path : {sorted_dockerfiles[0][0].path} \n \
+        name : {sorted_dockerfiles[0][0].name} \n \
+        version : {sorted_dockerfiles[0][0].version} \n \
+        parent : {sorted_dockerfiles[0][0].parent} \n \
+        parent.name : {sorted_dockerfiles[0][0].parent.name} \n \
+        parent.version : {sorted_dockerfiles[0][0].parent.version} \n \
         parent.external : {sorted_dockerfiles[0][0].parent.external}")
      
-    for df in sorted_dockerfiles:
-        logger.debug(f"Dockerfile sorted : {df}")
+    for df in sorted_dockerfiles[0]:
+        # Sanity check if dockerfile is external
+        if df.parent.external:
+            r = requests.get(f"https://hub.docker.com/v2/repositories/{df.parent.name}/tags")
+            logger.debug(f"Dockerfile {df} has response r : {r}")
 
 def dette_interne(dockerfiles):
 
