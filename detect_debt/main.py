@@ -44,7 +44,7 @@ def dette_externe(dockerfiles):
     for df in sorted_dockerfiles[0]:
         # Sanity check if dockerfile is external
         if df.parent.external:
-            r = requests.get(f"https://hub.docker.com/v2/repositories/{df.parent.name}/tags")
+            r = requests.get(f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags")
             logger.debug(f"Dockerfile {df} has response r : {r}")
 
 def dette_interne(dockerfiles):
