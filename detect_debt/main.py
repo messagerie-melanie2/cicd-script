@@ -24,6 +24,8 @@ def main(args) :
     
     # prometheus et grafana 
 
+    # boolean pour activer ou non la creation ou maj d'issue
+
 def external_debt(dockerfiles):
 
     sorted_dockerfiles = sort_dockerfiles(dockerfiles)
@@ -43,13 +45,21 @@ def external_debt(dockerfiles):
       "http"  : http_proxy,
       "https" : https_proxy
     }
+
     logger.debug(proxies)
+
     for df in sorted_dockerfiles[0]:
         # Sanity check if dockerfile is external
         if df.parent.external:
             url = f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags" 
             r = request("get", url, proxies=proxies)
-            logger.debug(f"Dockerfile {df} has response r : {r}")
+            results = r.get("results")
+            latest = (result for result in results if result.get("name") == "latest")
+            latest_digest = latest.get("digest")
+            latest_tags1 = (result.get("name") for result in results if result.get("digest") == latest_digest)
+            latest_tags2 = []
+            latest_tags2.append((result.get("name") for result in results if result.get("digest") == latest_digest))
+            logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags1} or {latest_tags2}")
 
 def internal_debt(dockerfiles):
 
@@ -86,10 +96,14 @@ def internal_debt(dockerfiles):
         'labels' : DETECT_DEBT_ISSUE_LABEL, 
         'assignee_id' : obtained_users_id
     }
+    
+    issue_filter = {'search': DETECT_DEBT_ISSUE_TITLE}
+
+    create_or_update_issue(payload, issue_filter)
+
+def create_or_update_issue(payload, issue_filter):
 
     logger.info(f"Payload created : {payload}")
-
-    issue_filter = {'search': DETECT_DEBT_ISSUE_TITLE}
 
     obtained_issues = get_issues(args.token, args.project_id, issue_filter)
 
