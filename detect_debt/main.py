@@ -51,15 +51,18 @@ def external_debt(dockerfiles):
     for df in sorted_dockerfiles[0]:
         # Sanity check if dockerfile is external
         if df.parent.external:
-            url = f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags" 
+            url = f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags?page=1&page_size=1000" 
             r = request("get", url, proxies=proxies)
             results = r.get("results")
-            latest = next((result for result in results if result.get("name") == "latest"))
-            latest_digest = latest.get("digest")
-            latest_tags1 = (result.get("name") for result in results if result.get("digest") == latest_digest)
-            latest_tags2 = []
-            latest_tags2.append((result.get("name") for result in results if result.get("digest") == latest_digest))
-            logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags1} or {latest_tags2}")
+            latest = next((result for result in results if result.get("name") == "latest"), "no latest tag found")
+            if latest != "no latest tag found" :
+                latest_digest = latest.get("digest")
+                latest_tags1 = next((result.get("name") for result in results if result.get("digest") == latest_digest))
+                latest_tags2 = []
+                latest_tags2.append((result.get("name") for result in results if result.get("digest") == latest_digest))
+                logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags1} or {latest_tags2}")
+            else :
+                logger.debug(f"No latest tag found  for dockerfile {df.parent.name} {df.parent.version}.")
 
 def internal_debt(dockerfiles):
 
