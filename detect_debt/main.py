@@ -54,7 +54,7 @@ def external_debt(dockerfiles):
             url = f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags" 
             r = request("get", url, proxies=proxies)
             results = r.get("results")
-            latest = (result for result in results if result.get("name") == "latest")
+            latest = next((result for result in results if result.get("name") == "latest"))
             latest_digest = latest.get("digest")
             latest_tags1 = (result.get("name") for result in results if result.get("digest") == latest_digest)
             latest_tags2 = []
