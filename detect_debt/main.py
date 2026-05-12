@@ -57,12 +57,10 @@ def external_debt(dockerfiles):
             latest = next((result for result in results if result.get("name") == "latest"), "no latest tag found")
             if latest != "no latest tag found" :
                 latest_digest = latest.get("digest")
-                latest_tags1 = next((result.get("name") for result in results if result.get("digest") == latest_digest))
-                latest_tags2 = []
-                latest_tags2.append((result.get("name") for result in results if result.get("digest") == latest_digest))
-                logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags1} or {latest_tags2}")
+                latest_tags = [result.get("name") for result in results if result.get("digest") == latest_digest]
+                logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags}")
             else :
-                logger.debug(f"No latest tag found  for dockerfile {df.parent.name} {df.parent.version}.")
+                logger.error(f"No latest tag found  for dockerfile {df.parent.name} {df.parent.version}.")
 
 def internal_debt(dockerfiles):
 
