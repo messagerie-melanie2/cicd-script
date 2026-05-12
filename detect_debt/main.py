@@ -43,7 +43,7 @@ def external_debt(dockerfiles):
       "http"  : http_proxy,
       "https" : https_proxy
     }
-     
+    logger.debug(proxies)
     for df in sorted_dockerfiles[0]:
         # Sanity check if dockerfile is external
         if df.parent.external:
