@@ -2,11 +2,9 @@ from detect_debt.global_vars import *
 from build_docker.find_dockerfiles import find_dockerfiles_r
 from build_docker.create_pipeline import sort_dockerfiles 
 from lib.gitlab_helper import get_issues, create_issue, get_issues, update_issue, get_user_id, get_users
-import requests
+from lib.helper import request
 
 logger = logging.getLogger(__name__)
-
-logger.info(logger)
 
 def main(args) : 
    
@@ -14,12 +12,10 @@ def main(args) :
 
     obtained_dockerfiles = find_dockerfiles_r(args.current_repo, args.path)
     
-    #dette_interne(obtained_dockerfiles)
+    #internal_debt(obtained_dockerfiles)
 
-    dette_externe(obtained_dockerfiles)
+    external_debt(obtained_dockerfiles)
     
-    # je regarde que dockerfiles de la première liste pour avoir que les external
-
     # je fais un get sur docker hub pour comparer avec la latest et les niveaux de sécurité
 
     # je répértorie dans un tableau tout ceux qu'il faut changer et le nombre de dockerfiles enfants impactés
@@ -28,7 +24,7 @@ def main(args) :
     
     # prometheus et grafana 
 
-def dette_externe(dockerfiles):
+def external_debt(dockerfiles):
 
     sorted_dockerfiles = sort_dockerfiles(dockerfiles)
 
@@ -40,14 +36,22 @@ def dette_externe(dockerfiles):
         parent.name : {sorted_dockerfiles[0][0].parent.name} \n \
         parent.version : {sorted_dockerfiles[0][0].parent.version} \n \
         parent.external : {sorted_dockerfiles[0][0].parent.external}")
+    
+    http_proxy = os.environ.get("HTTP_PROXY")
+    https_proxy = os.environ.get("HTTPS_PROXY")
+    proxies = {
+      "http"  : http_proxy,
+      "https" : https_proxy
+    }
      
     for df in sorted_dockerfiles[0]:
         # Sanity check if dockerfile is external
         if df.parent.external:
-            r = requests.get(f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags")
+            url = f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags" 
+            r = request("get", url, proxies=proxies)
             logger.debug(f"Dockerfile {df} has response r : {r}")
 
-def dette_interne(dockerfiles):
+def internal_debt(dockerfiles):
 
     logger.info(f"Found {len(dockerfiles)} Dockerfiles")
     
