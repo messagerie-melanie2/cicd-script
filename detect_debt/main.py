@@ -46,12 +46,12 @@ def external_debt(dockerfiles):
       "https" : https_proxy
     }
 
-    logger.debug(proxies)
-
+    description = "| Dockerfile externe | Version actuel | Latest tags |\n|------------|---------------|-----------------|\n"
+      
     for df in sorted_dockerfiles[0]:
         # Sanity check if dockerfile is external
         if df.parent.external:
-            url = f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags?page=1&page_size=1000" 
+            url = f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags?page=1&page_size=100" 
             r = request("get", url, proxies=proxies)
             results = r.get("results")
             latest = next((result for result in results if result.get("name") == "latest"), "no latest tag found")
@@ -59,8 +59,26 @@ def external_debt(dockerfiles):
                 latest_digest = latest.get("digest")
                 latest_tags = [result.get("name") for result in results if result.get("digest") == latest_digest]
                 logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags}")
+                if df.parent.version not in latest_tags :
+                    description += f"{df.parent.name} | {df.parent.version} | {latest_tags}"   
             else :
                 logger.error(f"No latest tag found  for dockerfile {df.parent.name} {df.parent.version}.")
+
+    # Creating/modifying debt issue
+    obtained_users = get_users(args.token, args.project_id)
+
+    obtained_users_id = get_user_id(DETECT_DEBT_ISSUE_ASSIGNEE_USERNAME, obtained_users, False)
+
+    payload = {
+        'title' : 'Dette externe',
+        'description' : description, 
+        'labels' : DETECT_DEBT_ISSUE_LABEL, 
+        'assignee_id' : obtained_users_id
+    }
+    
+    issue_filter = {'search': 'Dette externe'}
+
+    create_or_update_issue(payload, issue_filter)
 
 def internal_debt(dockerfiles):
 
