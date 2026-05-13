@@ -60,7 +60,7 @@ def external_debt(dockerfiles):
                 latest_tags = [result.get("name") for result in results if result.get("digest") == latest_digest]
                 logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags}")
                 if df.parent.version not in latest_tags :
-                    description += f"{df.parent.name} | {df.parent.version} | {latest_tags}"   
+                    description += f"{df.parent.name} | {df.parent.version} | {latest_tags}\n"   
             else :
                 logger.error(f"No latest tag found  for dockerfile {df.parent.name} {df.parent.version}.")
 
