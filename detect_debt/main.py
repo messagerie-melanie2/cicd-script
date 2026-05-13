@@ -74,7 +74,7 @@ def external_debt(dockerfiles):
     payload = {
         'title' : 'Dette externe',
         'description' : description, 
-        'labels' : DETECT_INTERNAL_DEBT_ISSUE_LABEL, 
+        'labels' : DETECT_DEBT_ISSUE_LABEL, 
         'assignee_id' : obtained_users_id
     }
     
