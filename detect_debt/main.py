@@ -16,7 +16,7 @@ def main(args) :
 
     external_debt(obtained_dockerfiles)
     
-    # je fais un get sur docker hub pour comparer avec la latest et les niveaux de sécurité
+    # je fais un get sur docker hub pour comparer les niveaux de sécurité
 
     # je répértorie dans un tableau tout ceux qu'il faut changer et le nombre de dockerfiles enfants impactés
     
@@ -39,6 +39,8 @@ def external_debt(dockerfiles):
         parent.version : {sorted_dockerfiles[0][0].parent.version} \n \
         parent.external : {sorted_dockerfiles[0][0].parent.external}")
     
+    logger.info(f"{sorted_dockerfiles[0].len()} external dockerfiles found.")
+
     http_proxy = os.environ.get("HTTP_PROXY")
     https_proxy = os.environ.get("HTTPS_PROXY")
     proxies = {
@@ -46,7 +48,7 @@ def external_debt(dockerfiles):
       "https" : https_proxy
     }
 
-    description = "| Dockerfile externe | Version actuel | Latest tags |\n|------------|---------------|-----------------|\n"
+    description = "| Dockerfile | Parent actuel | Latest tags |\n|------------|---------------|-----------------|\n"
       
     for df in sorted_dockerfiles[0]:
         # Sanity check if dockerfile is external
@@ -60,7 +62,7 @@ def external_debt(dockerfiles):
                 latest_tags = [result.get("name") for result in results if result.get("digest") == latest_digest and result.get("name") != "latest"]
                 logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags}")
                 if df.parent.version not in latest_tags :
-                    description += f"{df.parent.name} | {df.parent.version} | {','.join(latest_tags)}\n"   
+                    description += f"{df.path} | {df.parent.name} {df.parent.version} | {', '.join(latest_tags)}\n"   
             else :
                 logger.error(f"No latest tag found  for dockerfile {df.parent.name} {df.parent.version}.")
 
