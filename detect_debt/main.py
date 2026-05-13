@@ -39,7 +39,7 @@ def external_debt(dockerfiles):
         parent.version : {sorted_dockerfiles[0][0].parent.version} \n \
         parent.external : {sorted_dockerfiles[0][0].parent.external}")
     
-    logger.info(f"{sorted_dockerfiles[0].len()} external dockerfiles found.")
+    logger.info(f"{type(sorted_dockerfiles[0])} external dockerfiles found.")
 
     http_proxy = os.environ.get("HTTP_PROXY")
     https_proxy = os.environ.get("HTTPS_PROXY")
