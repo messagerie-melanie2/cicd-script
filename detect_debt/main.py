@@ -53,7 +53,7 @@ def external_debt(dockerfiles):
     for df in sorted_dockerfiles[0]:
         # Sanity check if dockerfile is external
         if df.parent.external:
-            url = f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags?page=1&page_size=100" 
+            url = f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags?page=1&page_size=1000" 
             r = request("get", url, proxies=proxies)
             results = r.get("results")
             latest = next((result for result in results if result.get("name") == "latest"), "no latest tag found")
@@ -74,7 +74,7 @@ def external_debt(dockerfiles):
     payload = {
         'title' : 'Dette externe',
         'description' : description, 
-        'labels' : DETECT_DEBT_ISSUE_LABEL, 
+        'labels' : DETECT_INTERNAL_DEBT_ISSUE_LABEL, 
         'assignee_id' : obtained_users_id
     }
     
@@ -114,7 +114,7 @@ def internal_debt(dockerfiles):
     payload = {
         'title' : DETECT_DEBT_ISSUE_TITLE,
         'description' : description, 
-        'labels' : DETECT_DEBT_ISSUE_LABEL, 
+        'labels' : DETECT_INTERNAL_DEBT_ISSUE_LABEL, 
         'assignee_id' : obtained_users_id
     }
     
