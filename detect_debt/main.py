@@ -87,7 +87,7 @@ def external_debt(dockerfiles):
                     logger.debug(f"current_version_in_latest : {current_version_in_latest}.")
 
                 # Filling the description with latest_tags
-                if df.parent.version not in latest_tags or not current_version_in_latest :
+                if df.parent.version not in latest_tags and not current_version_in_latest :
                      description += f"{df.path} | {df.parent.version} | {', '.join(latest_tags)}\n"   
 
             else :
