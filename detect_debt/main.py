@@ -16,15 +16,19 @@ def main(args) :
 
     external_debt(obtained_dockerfiles)
     
-    # je fais un get sur docker hub pour comparer les niveaux de sécurité
-
     # je répértorie dans un tableau tout ceux qu'il faut changer et le nombre de dockerfiles enfants impactés
-    
-    # refacto pour l'issue dette externe
     
     # prometheus et grafana 
 
     # boolean pour activer ou non la creation ou maj d'issue
+
+    # boolean pour activer ou non dirty comparaison
+
+    # CONSTANTES différenciées pour interne / externe à update dans les fichiers conf : anto-docker, mel-docker, configuration/defaultconf.yml
+
+    # L'idée c'est de faire une requête sur la version actuelle, récupérer tous les tags qui correspondent à son sha256 et récupérer la version la plus précise possible (genre 1.29.8-alpine, garder 1.29.8 au lieu de "alpine")
+    # Comparer avec la version la plus précise possible obtenue par les tags du latest
+    # Si on a la même version, ça veut dire que c'est une image alternative qui a un sha256 différent parce qu'une image modifiée mais qui possède la même version de la technologie donc c'est bon.
 
 def external_debt(dockerfiles):
 
@@ -51,36 +55,54 @@ def external_debt(dockerfiles):
     description = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|-----------------|\n"
       
     for df in sorted_dockerfiles[0]:
-        # Sanity check if dockerfile is external
-        if df.parent.external:
+
+        if df.parent.external: # Sanity check, dockerfiles should be external in the first array
+        
+            # Getting tags from dockerhub
             url = f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags?page=1&page_size=1000" 
             r = request("get", url, proxies=proxies)
             results = r.get("results")
-            latest = next((result for result in results if result.get("name") == "latest"), "no latest tag found")
-            if latest != "no latest tag found" :
+
+            # Getting "latest" tag and current tag elements
+            latest = [result for result in results if result.get("name") == "latest")]
+            current = [result for result in results if result.get("name") == df.parent.version] 
+
+            if latest: # Sanity check latest is not empty
+
+                # Getting all the tags corresponding to latest 
                 latest_digest = latest.get("digest")
                 latest_tags = [result.get("name") for result in results if result.get("digest") == latest_digest and result.get("name") != "latest"]
-                logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags}")
+
+                # Getting all the tags corresponfing to current version
+                current_digest = current.get("digest") 
+                current_tags = [result.get("name") for result in results if result.get("digest") == current_digest]
+
+                logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags} and current tags : {current_tags}")
+                
+                # Filling the description with latest_tags
                 if df.parent.version not in latest_tags :
                     description += f"{df.path} | {df.parent.version} | {', '.join(latest_tags)}\n"   
+
             else :
                 logger.error(f"No latest tag found  for dockerfile {df.parent.name} {df.parent.version}.")
+
+    logger.info(f"=== External debt found === \n {description}")
 
     # Creating/modifying debt issue
     obtained_users = get_users(args.token, args.project_id)
 
-    obtained_users_id = get_user_id(DETECT_DEBT_ISSUE_ASSIGNEE_USERNAME, obtained_users, False)
+    obtained_users_id = get_user_id(DETECT_EXTERNAL_DEBT_ISSUE_ASSIGNEE_USERNAME, obtained_users, False)
 
     payload = {
-        'title' : 'Dette externe',
+        'title' : DETECT_EXTERNAL_DEBT_ISSUE_TITLE,
         'description' : description, 
-        'labels' : DETECT_DEBT_ISSUE_LABEL, 
+        'labels' : DETECT_EXTERNAL_DEBT_ISSUE_LABEL, 
         'assignee_id' : obtained_users_id
     }
     
-    issue_filter = {'search': 'Dette externe'}
+    issue_filter = {'search': DETECT_EXTERNAL_DEBT_ISSUE_TITLE}
 
-    create_or_update_issue(payload, issue_filter)
+    if DETECT_EXTERNAL_DEBT_ACTIVATE : create_or_update_issue(payload, issue_filter)
 
 def internal_debt(dockerfiles):
 
@@ -106,21 +128,23 @@ def internal_debt(dockerfiles):
                 logger.debug(f"Found technical debt for {df.name} at {df.path}, using parent {df.parent.name} {df.parent.version} but could be using version {latest}")
                 description += f"{df.path} | {df.parent.name} {df.parent.version} | {latest}\n"
 
+    logger.info(f"=== Internal debt found === \n {description}")
+
     # Creating/modifying debt issue
     obtained_users = get_users(args.token, args.project_id)
 
-    obtained_users_id = get_user_id(DETECT_DEBT_ISSUE_ASSIGNEE_USERNAME, obtained_users, False)
+    obtained_users_id = get_user_id(DETECT_INTERNAL_DEBT_ISSUE_ASSIGNEE_USERNAME, obtained_users, False)
 
     payload = {
-        'title' : DETECT_DEBT_ISSUE_TITLE,
+        'title' : DETECT_INTERNAL_DEBT_ISSUE_TITLE,
         'description' : description, 
         'labels' : DETECT_INTERNAL_DEBT_ISSUE_LABEL, 
         'assignee_id' : obtained_users_id
     }
     
-    issue_filter = {'search': DETECT_DEBT_ISSUE_TITLE}
+    issue_filter = {'search': DETECT_INTERNAL_DEBT_ISSUE_TITLE}
 
-    create_or_update_issue(payload, issue_filter)
+    if DETECT_INTERNAL_DEBT_ACTIVATE : create_or_update_issue(payload, issue_filter)
 
 def create_or_update_issue(payload, issue_filter):
 
