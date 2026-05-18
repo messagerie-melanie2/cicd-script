@@ -68,7 +68,9 @@ def external_debt(dockerfiles):
                 if current : # Check current is not empty and get all the tags corresponfing to current digest else current tag
                     current_digest = current[0].get("digest") 
                     current_tags = [result.get("name") for result in results if result.get("digest") == current_digest]
-                else : current_tags = df.parent.version
+                else : 
+                    current_tags = df.parent.version
+                    logger.error(f"No tags found for dockerfile {df.parent.name} {df.parent.version}.")
 
                 logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags}")
                 logger.debug(f"Dockerfile has current tags : {current_tags}")
