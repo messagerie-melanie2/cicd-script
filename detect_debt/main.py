@@ -16,19 +16,19 @@ def main(args) :
 
     external_debt(obtained_dockerfiles)
     
-    # je répértorie dans un tableau tout ceux qu'il faut changer et le nombre de dockerfiles enfants impactés
+    #TODO je répértorie dans un tableau tout ceux qu'il faut changer et le nombre de dockerfiles enfants impactés
     
-    # prometheus et grafana 
+    #TODO prometheus et grafana 
 
-    # boolean pour activer ou non la creation ou maj d'issue
+    #TODO boolean pour activer ou non la creation ou maj d'issue
 
-    # boolean pour activer ou non dirty comparaison
+    #TODO boolean pour activer ou non dirty comparaison
 
-    # CONSTANTES différenciées pour interne / externe à update dans les fichiers conf : anto-docker, mel-docker, configuration/defaultconf.yml
+    #TODO CONSTANTES différenciées pour interne / externe à update dans les fichiers conf : anto-docker, mel-docker, configuration/defaultconf.yml
 
-    # L'idée c'est de faire une requête sur la version actuelle, récupérer tous les tags qui correspondent à son sha256 et récupérer la version la plus précise possible (genre 1.29.8-alpine, garder 1.29.8 au lieu de "alpine")
-    # Comparer avec la version la plus précise possible obtenue par les tags du latest
-    # Si on a la même version, ça veut dire que c'est une image alternative qui a un sha256 différent parce qu'une image modifiée mais qui possède la même version de la technologie donc c'est bon.
+    #TODO L'idée c'est de faire une requête sur la version actuelle, récupérer tous les tags qui correspondent à son sha256 et récupérer la version la plus précise possible (genre 1.29.8-alpine, garder 1.29.8 au lieu de "alpine")
+    #TODO Comparer avec la version la plus précise possible obtenue par les tags du latest
+    #TODO Si on a la même version, ça veut dire que c'est une image alternative qui a un sha256 différent parce qu'une image modifiée mais qui possède la même version de la technologie donc c'est bon.
 
 def external_debt(dockerfiles):
 
@@ -65,7 +65,7 @@ def external_debt(dockerfiles):
 
             # Getting "latest" tag and current tag elements
             latest = [result for result in results if result.get("name") == "latest"]
-            current = [result for result in results if result.get("name") == df.parent.version] 
+            current = [result for result in results if result.get("name") == df.parent.version] or df.parent.version 
 
             if latest: # Sanity check latest is not empty
                 if current: # Sanity check current is not empty
@@ -73,21 +73,37 @@ def external_debt(dockerfiles):
                     # Getting all the tags corresponding to latest 
                     latest_digest = latest[0].get("digest")
                     latest_tags = [result.get("name") for result in results if result.get("digest") == latest_digest and result.get("name") != "latest"]
-
+    
                     # Getting all the tags corresponfing to current version
                     current_digest = current[0].get("digest") 
                     current_tags = [result.get("name") for result in results if result.get("digest") == current_digest]
-
-                    logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags} and current tags : {current_tags}")
                     
+                    logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags} and current tags : {current_tags}")
+
+                    # Dirty comparison : current_version may not share the same digest as latest,
+                    # but if it starts with the same version number (e.g. "13.4-slim" vs "13.4"),
+                    # it is considered up-to-date 
+                    if DETECT_EXTERNAL_DEBT_ACTIVATE_DIRTY_COMPARAISON :
+                        max_precision = 0
+                        current_version = ""
+                        for tag in current_tags :
+                            if tag.count(".") > max_precision : # Getting most precise version tag
+                                current_version = tag
+                                max_precision = tag.count(".")
+                        logger.debug(f"Current version obtained : {current_version}")
+                        current_version_in_latest = False
+                        for tag in latest_tags :
+                            if tag.startswith(current_version) or tag.endswith(current_version):
+                                current_version_in_latest = true
+
                     # Filling the description with latest_tags
-                    if df.parent.version not in latest_tags :
+                    if df.parent.version not in latest_tags or current_version_in_latest :
                         description += f"{df.path} | {df.parent.version} | {', '.join(latest_tags)}\n"   
 
                 else :
-                    logger.error(f"No current tag found  for dockerfile {df.parent.name} {df.parent.version}.")
+                    logger.error(f"No current tags found for dockerfile {df.parent.name} {df.parent.version}.")
             else :
-                logger.error(f"No latest tag found  for dockerfile {df.parent.name} {df.parent.version}.")
+                logger.error(f"No latest tags found for dockerfile {df.parent.name} {df.parent.version}.")
 
     logger.info(f"=== External debt found === \n {description}")
 
