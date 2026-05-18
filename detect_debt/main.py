@@ -79,20 +79,15 @@ def external_debt(dockerfiles):
                 # but if it starts with the same version number (e.g. "13.4-slim" vs "13.4"),
                 # it is considered up-to-date 
                 if DETECT_EXTERNAL_DEBT_ACTIVATE_DIRTY_COMPARAISON :
-                    max_precision = 0
-                    current_version = ""
-                    for tag in current_tags :
-                        if tag.count(".") > max_precision : # Getting most precise version tag
-                            current_version = tag
-                            max_precision = tag.count(".")
-                    logger.debug(f"Current version obtained : {current_version}.")
-                    current_version_in_latest = False
-                    for tag in latest_tags :
-                        if tag.startswith(current_version) or tag.endswith(current_version):
-                            current_version_in_latest = true
+                    current_version_in_latest = any(
+                          current_tag.startswith(latest_tag + "-") or current_tag == latest_tag
+                          for latest_tag in latest_tags
+                          for current_tag in current_tags
+                    )
+                    logger.debug(f"current_version_in_latest : {current_version_in_latest}.")
 
                 # Filling the description with latest_tags
-                if df.parent.version not in latest_tags or current_version_in_latest :
+                if df.parent.version not in latest_tags or not current_version_in_latest :
                      description += f"{df.path} | {df.parent.version} | {', '.join(latest_tags)}\n"   
 
             else :
