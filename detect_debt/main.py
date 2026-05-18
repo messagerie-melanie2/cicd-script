@@ -20,15 +20,7 @@ def main(args) :
     
     #TODO prometheus et grafana 
 
-    #TODO boolean pour activer ou non la creation ou maj d'issue
-
-    #TODO boolean pour activer ou non dirty comparaison
-
     #TODO CONSTANTES différenciées pour interne / externe à update dans les fichiers conf : anto-docker, mel-docker, configuration/defaultconf.yml
-
-    #TODO L'idée c'est de faire une requête sur la version actuelle, récupérer tous les tags qui correspondent à son sha256 et récupérer la version la plus précise possible (genre 1.29.8-alpine, garder 1.29.8 au lieu de "alpine")
-    #TODO Comparer avec la version la plus précise possible obtenue par les tags du latest
-    #TODO Si on a la même version, ça veut dire que c'est une image alternative qui a un sha256 différent parce qu'une image modifiée mais qui possède la même version de la technologie donc c'est bon.
 
 def external_debt(dockerfiles):
 
@@ -65,20 +57,22 @@ def external_debt(dockerfiles):
 
             # Getting "latest" tag and current tag elements
             latest = [result for result in results if result.get("name") == "latest"]
-            current = [result for result in results if result.get("name") == df.parent.version] or df.parent.version 
+            current = [result for result in results if result.get("name") == df.parent.version] 
 
             if latest: # Sanity check latest is not empty
-                if current: # Sanity check current is not empty
 
                     # Getting all the tags corresponding to latest 
                     latest_digest = latest[0].get("digest")
                     latest_tags = [result.get("name") for result in results if result.get("digest") == latest_digest and result.get("name") != "latest"]
-    
-                    # Getting all the tags corresponfing to current version
-                    current_digest = current[0].get("digest") 
-                    current_tags = [result.get("name") for result in results if result.get("digest") == current_digest]
+
+                    if current : # Check current is not empty and get all the tags corresponfing to current digest else current tag
+                        current_digest = current[0].get("digest") 
+                        current_tags = [result.get("name") for result in results if result.get("digest") == current_digest]
                     
-                    logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags} and current tags : {current_tags}")
+                    else : current_tags = df.parent.version
+
+                    logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags}")
+                    logger.debug(f"Dockerfile has current tags : {current_tags}")
 
                     # Dirty comparison : current_version may not share the same digest as latest,
                     # but if it starts with the same version number (e.g. "13.4-slim" vs "13.4"),
@@ -121,7 +115,7 @@ def external_debt(dockerfiles):
     
     issue_filter = {'search': DETECT_EXTERNAL_DEBT_ISSUE_TITLE}
 
-    if DETECT_EXTERNAL_DEBT_ACTIVATE : create_or_update_issue(payload, issue_filter)
+    if DETECT_EXTERNAL_DEBT_ACTIVATE_ISSUE : create_or_update_issue(payload, issue_filter)
 
 def internal_debt(dockerfiles):
 
@@ -163,7 +157,7 @@ def internal_debt(dockerfiles):
     
     issue_filter = {'search': DETECT_INTERNAL_DEBT_ISSUE_TITLE}
 
-    if DETECT_INTERNAL_DEBT_ACTIVATE : create_or_update_issue(payload, issue_filter)
+    if DETECT_INTERNAL_DEBT_ACTIVATE_ISSUE : create_or_update_issue(payload, issue_filter)
 
 def create_or_update_issue(payload, issue_filter):
 
