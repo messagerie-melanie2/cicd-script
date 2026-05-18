@@ -64,17 +64,17 @@ def external_debt(dockerfiles):
             results = r.get("results")
 
             # Getting "latest" tag and current tag elements
-            latest = [result for result in results if result.get("name") == "latest")]
+            latest = [result for result in results if result.get("name") == "latest"]
             current = [result for result in results if result.get("name") == df.parent.version] 
 
             if latest: # Sanity check latest is not empty
 
                 # Getting all the tags corresponding to latest 
-                latest_digest = latest.get("digest")
+                latest_digest = latest[0].get("digest")
                 latest_tags = [result.get("name") for result in results if result.get("digest") == latest_digest and result.get("name") != "latest"]
 
                 # Getting all the tags corresponfing to current version
-                current_digest = current.get("digest") 
+                current_digest = current[0].get("digest") 
                 current_tags = [result.get("name") for result in results if result.get("digest") == current_digest]
 
                 logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags} and current tags : {current_tags}")

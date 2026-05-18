@@ -2,7 +2,7 @@ from lib.global_vars import *
 
 logger = logging.getLogger(__name__)
 
-def request(mode, url = '', headers = None, auth = None, payload_data = None, payload_json = None, files = None, params = None, proxies = None):
+def request(mode, url = '', headers = None, auth = None, payload_data = None, payload_json = None, files = None, params = None, proxies = None) -> dict:
     """
     Sends an HTTP request based on the specified mode.
 
