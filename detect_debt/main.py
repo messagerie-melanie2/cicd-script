@@ -69,7 +69,7 @@ def external_debt(dockerfiles):
                     current_digest = current[0].get("digest") 
                     current_tags = [result.get("name") for result in results if result.get("digest") == current_digest]
                 else : 
-                    current_tags = df.parent.version
+                    current_tags = [df.parent.version]
                     logger.error(f"No tags found for dockerfile {df.parent.name} {df.parent.version}.")
 
                 logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags}")
@@ -85,7 +85,7 @@ def external_debt(dockerfiles):
                         if tag.count(".") > max_precision : # Getting most precise version tag
                             current_version = tag
                             max_precision = tag.count(".")
-                    logger.debug(f"Current version obtained : {current_version}")
+                    logger.debug(f"Current version obtained : {current_version}.")
                     current_version_in_latest = False
                     for tag in latest_tags :
                         if tag.startswith(current_version) or tag.endswith(current_version):
