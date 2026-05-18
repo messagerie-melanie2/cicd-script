@@ -68,21 +68,24 @@ def external_debt(dockerfiles):
             current = [result for result in results if result.get("name") == df.parent.version] 
 
             if latest: # Sanity check latest is not empty
+                if current: # Sanity check current is not empty
 
-                # Getting all the tags corresponding to latest 
-                latest_digest = latest[0].get("digest")
-                latest_tags = [result.get("name") for result in results if result.get("digest") == latest_digest and result.get("name") != "latest"]
+                    # Getting all the tags corresponding to latest 
+                    latest_digest = latest[0].get("digest")
+                    latest_tags = [result.get("name") for result in results if result.get("digest") == latest_digest and result.get("name") != "latest"]
 
-                # Getting all the tags corresponfing to current version
-                current_digest = current[0].get("digest") 
-                current_tags = [result.get("name") for result in results if result.get("digest") == current_digest]
+                    # Getting all the tags corresponfing to current version
+                    current_digest = current[0].get("digest") 
+                    current_tags = [result.get("name") for result in results if result.get("digest") == current_digest]
 
-                logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags} and current tags : {current_tags}")
-                
-                # Filling the description with latest_tags
-                if df.parent.version not in latest_tags :
-                    description += f"{df.path} | {df.parent.version} | {', '.join(latest_tags)}\n"   
+                    logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags} and current tags : {current_tags}")
+                    
+                    # Filling the description with latest_tags
+                    if df.parent.version not in latest_tags :
+                        description += f"{df.path} | {df.parent.version} | {', '.join(latest_tags)}\n"   
 
+                else :
+                    logger.error(f"No current tag found  for dockerfile {df.parent.name} {df.parent.version}.")
             else :
                 logger.error(f"No latest tag found  for dockerfile {df.parent.name} {df.parent.version}.")
 
