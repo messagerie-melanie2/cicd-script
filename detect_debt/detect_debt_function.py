@@ -38,8 +38,8 @@ def external_debt(token, project_id, dockerfiles):
       "https" : https_proxy
     }
 
-    description = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|-----------------|\n"
-    description_dirty =  "| Dockerfile | Version actuel | Tags correspondants | Latest tags |\n|------------|---------------|-----------------|\n"
+    description = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
+    description_dirty =  "| Dockerfile | Version actuel | Tags correspondants | Latest tags |\n|------------|---------------|---------------|---------------|\n"
 
     for df in sorted_dockerfiles[0]:
 
