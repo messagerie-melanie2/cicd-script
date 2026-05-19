@@ -6,21 +6,16 @@ from lib.helper import request
 
 logger = logging.getLogger(__name__)
 
-def main(args) : 
-   
-    logger.info(f"[General] Scanning {args.path} to find Dockerfiles")
+def create_or_update_issue(payload, issue_filter):
 
-    obtained_dockerfiles = find_dockerfiles_r(args.current_repo, args.path)
-    
-    #internal_debt(obtained_dockerfiles)
+    logger.info(f"Payload created : {payload}")
 
-    external_debt(obtained_dockerfiles)
-    
-    #TODO je répértorie dans un tableau tout ceux qu'il faut changer et le nombre de dockerfiles enfants impactés
-    
-    #TODO prometheus et grafana 
+    obtained_issues = get_issues(args.token, args.project_id, issue_filter)
 
-    #TODO CONSTANTES différenciées pour interne / externe à update dans les fichiers conf : anto-docker, mel-docker, configuration/defaultconf.yml
+    if not obtained_issues:
+        create_issue(args.token, args.project_id, payload)
+    else:
+        update_issue(args.token, args.project_id, obtained_issues[0]["iid"], payload)
 
 def external_debt(dockerfiles):
 
@@ -153,16 +148,21 @@ def internal_debt(dockerfiles):
 
     if DETECT_INTERNAL_DEBT_ACTIVATE_ISSUE : create_or_update_issue(payload, issue_filter)
 
-def create_or_update_issue(payload, issue_filter):
+def main(args) : 
+   
+    logger.info(f"[General] Scanning {args.path} to find Dockerfiles")
 
-    logger.info(f"Payload created : {payload}")
+    obtained_dockerfiles = find_dockerfiles_r(args.current_repo, args.path)
+    
+    #internal_debt(obtained_dockerfiles)
 
-    obtained_issues = get_issues(args.token, args.project_id, issue_filter)
+    external_debt(obtained_dockerfiles)
+    
+    #TODO je répértorie dans un tableau tout ceux qu'il faut changer et le nombre de dockerfiles enfants impactés
+    
+    #TODO prometheus et grafana 
 
-    if not obtained_issues:
-        create_issue(args.token, args.project_id, payload)
-    else:
-        update_issue(args.token, args.project_id, obtained_issues[0]["iid"], payload)
+    #TODO CONSTANTES différenciées pour interne / externe à update dans les fichiers conf : anto-docker, mel-docker, configuration/defaultconf.yml
 
 #=======================================================#
 #====================== Arguments ======================#
