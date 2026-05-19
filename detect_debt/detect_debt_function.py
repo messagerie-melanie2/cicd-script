@@ -87,7 +87,7 @@ def external_debt(token, project_id, dockerfiles):
                 
                 # Filling the description with dirty comparison for human check
                 if current_version_in_latest :
-                    description_dirty += f"{df.path} | {df.parent.version} | {current_tags} | {', '.join(latest_tags)}\n"   
+                    description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)}\n"   
             else :
                 logger.error(f"No latest tags found for dockerfile {df.parent.name} {df.parent.version}.")
     
