@@ -39,7 +39,8 @@ def external_debt(token, project_id, dockerfiles):
     }
 
     description = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|-----------------|\n"
-      
+    description_dirty =  "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|-----------------|\n"
+
     for df in sorted_dockerfiles[0]:
 
         if df.parent.external: # Sanity check, dockerfiles should be external in the first array
@@ -83,9 +84,15 @@ def external_debt(token, project_id, dockerfiles):
                 # Filling the description with latest_tags
                 if df.parent.version not in latest_tags and not current_version_in_latest :
                      description += f"{df.path} | {df.parent.version} | {', '.join(latest_tags)}\n"   
-
+                
+                # Filling the description with dirty comparison for human check
+                if current_version_in_latest :
+                    description_dirty += f"{df.path} | {df.parent.version} | {', '.join(latest_tags)}\n"   
             else :
                 logger.error(f"No latest tags found for dockerfile {df.parent.name} {df.parent.version}.")
+    
+    description += "## Images qui ne sont pas en latest mais équivalent \n"
+    description += description_dirty
 
     logger.info(f"=== External debt found === \n {description}")
 
@@ -99,10 +106,7 @@ def external_debt(token, project_id, dockerfiles):
         'description' : description, 
         'labels' : DETECT_EXTERNAL_DEBT_ISSUE_LABEL, 
         'assignee_id' : obtained_users_id
-    }
-    
-    issue_filter = {'search': DETECT_EXTERNAL_DEBT_ISSUE_TITLE}
-
+    } issue_filter = {'search': DETECT_EXTERNAL_DEBT_ISSUE_TITLE}
     if DETECT_EXTERNAL_DEBT_ACTIVATE_ISSUE : create_or_update_issue(token, project_id, payload, issue_filter)
 
 def internal_debt(token, project_id, dockerfiles):
