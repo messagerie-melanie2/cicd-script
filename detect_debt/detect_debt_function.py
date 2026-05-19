@@ -91,7 +91,7 @@ def external_debt(token, project_id, dockerfiles):
             else :
                 logger.error(f"No latest tags found for dockerfile {df.parent.name} {df.parent.version}.")
     
-    description += "## Images qui ne sont pas en latest mais équivalent \n"
+    description += "## Distrib hors standard\n"
     description += description_dirty
 
     logger.info(f"=== External debt found === \n {description}")
