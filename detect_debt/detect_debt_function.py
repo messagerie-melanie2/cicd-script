@@ -106,7 +106,10 @@ def external_debt(token, project_id, dockerfiles):
         'description' : description, 
         'labels' : DETECT_EXTERNAL_DEBT_ISSUE_LABEL, 
         'assignee_id' : obtained_users_id
-    } issue_filter = {'search': DETECT_EXTERNAL_DEBT_ISSUE_TITLE}
+    } 
+
+    issue_filter = {'search': DETECT_EXTERNAL_DEBT_ISSUE_TITLE}
+    
     if DETECT_EXTERNAL_DEBT_ACTIVATE_ISSUE : create_or_update_issue(token, project_id, payload, issue_filter)
 
 def internal_debt(token, project_id, dockerfiles):
