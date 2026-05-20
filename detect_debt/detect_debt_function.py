@@ -80,6 +80,8 @@ def external_debt(token, project_id, dockerfiles):
                           for current_tag in current_tags
                     )
                     logger.debug(f"current_version_in_latest : {current_version_in_latest}.")
+                else :
+                    current_version_in_latest = False
 
                 # Filling the description with latest_tags
                 if df.parent.version not in latest_tags and not current_version_in_latest :
