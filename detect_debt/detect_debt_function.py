@@ -88,6 +88,7 @@ def external_debt(token, project_id, dockerfiles) -> tuple[dict, dict]:
                 r = request("get", url, proxies=proxies)
                 results = r.get("results")
                 current = [result for result in results if result.get("name") == df.parent.version] 
+                page_size += 1000
             latest = [result for result in results if result.get("name") == "latest"]
 
             if latest: # Sanity check latest is not empty
