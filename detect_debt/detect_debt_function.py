@@ -6,6 +6,20 @@ from lib.helper import request
 logger = logging.getLogger(__name__)
 
 def create_or_update_issue(token, project_id, payload, issue_filter):
+    """
+    Creates or updates a GitLab issue based on the provided payload.
+
+    If an issue matching the filter already exists, it is updated. Otherwise, a new issue is created.
+
+    Args:
+        token (str): Private token used for GitLab authentication.
+        project_id (int): ID of the GitLab project.
+        payload (dict): Issue fields (title, description, labels, assignee_id).
+        issue_filter (dict): Filter used to search for an existing issue.
+
+    Returns:
+        None
+    """
 
     logger.info(f"Payload created : {payload}")
 
@@ -45,32 +59,55 @@ def dirty_comparaison(current_tags, latest_tags) -> bool:
 
     return current_version_in_latest
 
-def external_debt(token, project_id, dockerfiles) -> tuple[dict, dict]:
+def get_current_latest_info_from_dockerhub(current_name, current_version, latest = "latest") -> tuple[list, list]:
     """
-    Detects external technical debt by comparing Dockerfiles' parent image versions against DockerHub's latest tags.
+    Fetches tag information for a given image from DockerHub.
 
-    For each Dockerfile with an external parent image, fetches available tags from DockerHub
-    and checks whether the current version matches the latest digest (exact or dirty comparison).
+    Paginates through DockerHub results until the current version tag is found or all pages are exhausted.
 
     Args:
-        token (str): Private token used for GitLab authentication.
-        project_id (int): ID of the GitLab project where the issue will be created or updated.
-        dockerfiles (list): List of Dockerfile objects found in the scanned repository.
+        current_name (str): Name of the Docker image (e.g. "python", "nginx").
+        current_version (str): Tag of the currently used image version (e.g. "3.11-slim").
+        latest (str): Tag considered as the latest reference. Defaults to "latest".
 
     Returns:
-        dict, dict: The issue payload and the issue filter.
+        tuple[list, list]: A tuple of (current_tag_results, latest_tag_results), each a list of tag dicts from DockerHub.
     """
 
-    sorted_dockerfiles = sort_dockerfiles(dockerfiles)
-
-    logger.info(f"{len(sorted_dockerfiles[0])} external dockerfiles found.")
-
-    http_proxy = os.environ.get("HTTP_PROXY")
-    https_proxy = os.environ.get("HTTPS_PROXY")
     proxies = {
-      "http"  : http_proxy,
-      "https" : https_proxy
+      "http"  : os.environ.get("HTTP_PROXY"),
+      "https" : os.environ.get("HTTPS_PROXY")
     }
+    
+    current = []
+    page_number = 0
+    results = []
+
+    while current == [] and len(results) == 1000*page_number:
+        # Getting tags from dockerhub
+        url = f"https://hub.docker.com/v2/repositories/library/{current_name}/tags?page={page_number+1}&page_size=1000" 
+        r = request("get", url, proxies=proxies)
+        results.append(r.get("results"))
+        current = [result for result in results if result.get("name") == current_version] 
+        page_number += 1
+
+    latest = [result for result in results if result.get("name") == latest]
+
+    return current, latest
+
+def get_external_debt_description(sorted_dockerfiles) -> str:
+    """
+    Builds the markdown description for the external debt GitLab issue.
+
+    For each external Dockerfile, compares its parent version against DockerHub's latest tags
+    and populates two tables: outdated images and images requiring manual review (dirty comparison).
+
+    Args:
+        sorted_dockerfiles (list): Output of sort_dockerfiles — sorted_dockerfiles[0] contains external Dockerfiles.
+
+    Returns:
+        str: Markdown-formatted description listing outdated and ambiguous external images.
+    """
 
     description = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
     description_dirty =  "| Dockerfile | Version actuel | Tags correspondants | Latest tags |\n|------------|---------------|---------------|---------------|\n"
@@ -79,17 +116,8 @@ def external_debt(token, project_id, dockerfiles) -> tuple[dict, dict]:
 
         if df.parent.external: # Sanity check, dockerfiles should be external in the first array
             
-            # Getting "latest" tag and current tag elements
-            current = []
-            page_size = 1000
-            while current == [] and page_size < 10000 :
-                # Getting tags from dockerhub
-                url = f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags?page=1&page_size={page_size}" 
-                r = request("get", url, proxies=proxies)
-                results = r.get("results")
-                current = [result for result in results if result.get("name") == df.parent.version] 
-                page_size += 1000
-            latest = [result for result in results if result.get("name") == "latest"]
+            # Getting "latest" and current tag elements
+            current, latest = get_current_latest_info_from_dockerhub(df.parent.name, df.parent.version)
 
             if latest: # Sanity check latest is not empty
 
@@ -123,6 +151,27 @@ def external_debt(token, project_id, dockerfiles) -> tuple[dict, dict]:
     description += "## Distrib hors standard\n"
     description += description_dirty
 
+    return description
+
+def external_debt(token, project_id, dockerfiles) -> tuple[dict, dict]:
+    """
+    Orchestrates external debt detection and returns the GitLab issue payload and filter.
+
+    Args:
+        token (str): Private token used for GitLab authentication.
+        project_id (int): ID of the GitLab project where the issue will be created or updated.
+        dockerfiles (list): List of Dockerfile objects found in the scanned repository.
+
+    Returns:
+        tuple[dict, dict]: The issue payload and the issue filter.
+    """
+
+    sorted_dockerfiles = sort_dockerfiles(dockerfiles)
+
+    logger.info(f"{len(sorted_dockerfiles[0])} external dockerfiles found.")
+
+    description = get_external_debt_description(sorted_dockerfiles)
+
     logger.info(f"=== External debt found === \n {description}")
 
     # Creating issue payload
@@ -141,25 +190,20 @@ def external_debt(token, project_id, dockerfiles) -> tuple[dict, dict]:
     
     return payload, issue_filter
 
-def internal_debt(token, project_id, dockerfiles) -> tuple[dict, dict]:
+def get_internal_debt_description(dockerfiles) -> str:
     """
-    Detects internal technical debt by comparing Dockerfiles' parent image versions against the latest available version in the registry.
+    Builds the markdown description for the internal debt GitLab issue.
 
-    For each Dockerfile with an internal parent image, checks whether the current version is behind
-    the latest version found in the scanned repository.
-    Creates or updates a GitLab issue listing outdated images.
+    For each Dockerfile with an internal parent, compares its parent version against the latest
+    version found in the scanned repository and lists outdated images.
 
     Args:
-        token (str): Private token used for GitLab authentication.
-        project_id (int): ID of the GitLab project where the issue will be created or updated.
         dockerfiles (list): List of Dockerfile objects found in the scanned repository.
 
     Returns:
-        dict, dict: The issue payload and the issue filter.
+        str: Markdown-formatted description listing outdated internal images.
     """
 
-    logger.info(f"Found {len(dockerfiles)} Dockerfiles")
-    
     description = "| Dockerfile | Parent actuel | Dernière version |\n|------------|---------------|-----------------|\n"
 
     # Creating a dict of all dockerfiles with their versions
@@ -179,6 +223,25 @@ def internal_debt(token, project_id, dockerfiles) -> tuple[dict, dict]:
             if df.parent.version.split('_')[-1] < latest :
                 logger.debug(f"Found technical debt for {df.name} at {df.path}, using parent {df.parent.name} {df.parent.version} but could be using version {latest}")
                 description += f"{df.path} | {df.parent.name} {df.parent.version} | {latest}\n"
+
+    return description
+
+def internal_debt(token, project_id, dockerfiles) -> tuple[dict, dict]:
+    """
+    Orchestrates internal debt detection and returns the GitLab issue payload and filter.
+
+    Args:
+        token (str): Private token used for GitLab authentication.
+        project_id (int): ID of the GitLab project where the issue will be created or updated.
+        dockerfiles (list): List of Dockerfile objects found in the scanned repository.
+
+    Returns:
+        tuple[dict, dict]: The issue payload and the issue filter.
+    """
+
+    logger.info(f"Found {len(dockerfiles)} Dockerfiles")
+    
+    description = get_internal_debt_description(dockerfiles) 
 
     logger.info(f"=== Internal debt found === \n {description}")
 
