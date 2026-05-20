@@ -59,7 +59,7 @@ def dirty_comparaison(current_tags, latest_tags) -> bool:
 
     return current_version_in_latest
 
-def get_current_latest_info_from_dockerhub(current_name, current_version, latest = "latest") -> tuple[list, list]:
+def get_info_from_dockerhub(current_name, current_version, latest = "latest") -> tuple[list, list, list]:
     """
     Fetches tag information for a given image from DockerHub.
 
@@ -71,7 +71,7 @@ def get_current_latest_info_from_dockerhub(current_name, current_version, latest
         latest (str): Tag considered as the latest reference. Defaults to "latest".
 
     Returns:
-        tuple[list, list]: A tuple of (current_tag_results, latest_tag_results), each a list of tag dicts from DockerHub.
+        tuple[list, list, list]: A tuple of (current_tag_results, latest_tag_results, all_results), each a list of tag dicts from DockerHub.
     """
 
     proxies = {
@@ -93,7 +93,7 @@ def get_current_latest_info_from_dockerhub(current_name, current_version, latest
 
     latest = [result for result in results if result.get("name") == latest]
 
-    return current, latest
+    return current, latest, results
 
 def get_external_debt_description(sorted_dockerfiles) -> str:
     """
@@ -116,8 +116,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
 
         if df.parent.external: # Sanity check, dockerfiles should be external in the first array
             
-            # Getting "latest" and current tag elements
-            current, latest = get_current_latest_info_from_dockerhub(df.parent.name, df.parent.version)
+            current, latest, results = get_info_from_dockerhub(df.parent.name, df.parent.version)
 
             if latest: # Sanity check latest is not empty
 
