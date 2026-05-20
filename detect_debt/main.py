@@ -10,10 +10,16 @@ def main(args) :
 
     obtained_dockerfiles = find_dockerfiles_r(args.current_repo, args.path)
     
-    internal_debt(args.token, args.project_id, obtained_dockerfiles)
+    payload_internal_debt, issue_filter_internal_debt = internal_debt(args.token, args.project_id, obtained_dockerfiles)
 
-    external_debt(args.token, args.project_id, obtained_dockerfiles)
-    
+    if DETECT_INTERNAL_DEBT_ACTIVATE_ISSUE : 
+        create_or_update_issue(args.token, args.project_id, payload_internal_debt, issue_filter_internal_debt)
+
+    payload_external_debt, issue_filter_external_debt = external_debt(args.token, args.project_id, obtained_dockerfiles)
+   
+    if DETECT_EXTERNAL_DEBT_ACTIVATE_ISSUE : 
+        create_or_update_issue(args.token, args.project_id, payload_external_debt, issue_filter_external_debt)
+
     #TODO je répértorie dans un tableau tout ceux qu'il faut changer et le nombre de dockerfiles enfants impactés
     
     #TODO prometheus et grafana 

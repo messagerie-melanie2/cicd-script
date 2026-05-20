@@ -1,7 +1,7 @@
+from detect_debt.global_vars import *
 from build_docker.create_pipeline import sort_dockerfiles 
 from lib.gitlab_helper import get_issues, create_issue, get_issues, update_issue, get_user_id, get_users
 from lib.helper import request
-from detect_debt.global_vars import *
 
 logger = logging.getLogger(__name__)
 
@@ -16,19 +16,53 @@ def create_or_update_issue(token, project_id, payload, issue_filter):
     else:
         update_issue(token, project_id, obtained_issues[0]["iid"], payload)
 
-def external_debt(token, project_id, dockerfiles):
+def dirty_comparaison(current_tags, latest_tags) -> bool:
+    """
+    Checks whether the current image version is considered up-to-date via a loose tag comparison.
+
+    A current version may not share the same digest as latest, but if one of its tags starts with
+    a latest tag (e.g. "13.4-slim" vs "13.4"), it is considered up-to-date.
+    Can be disabled via DETECT_EXTERNAL_DEBT_ACTIVATE_DIRTY_COMPARAISON.
+
+    Args:
+        current_tags (list[str]): Tags associated with the current image digest.
+        latest_tags (list[str]): Tags associated with the latest image digest.
+
+    Returns:
+        bool: True if the current version is considered up-to-date, False otherwise.
+    """
+
+    if DETECT_EXTERNAL_DEBT_ACTIVATE_DIRTY_COMPARAISON :
+        current_version_in_latest = any(
+              current_tag.startswith(latest_tag + "-") or current_tag == latest_tag
+              for latest_tag in latest_tags
+              for current_tag in current_tags
+        )
+        logger.debug(f"current_version_in_latest : {current_version_in_latest}.")
+
+    else :
+        current_version_in_latest = False
+
+    return current_version_in_latest
+
+def external_debt(token, project_id, dockerfiles) -> dict, dict:
+    """
+    Detects external technical debt by comparing Dockerfiles' parent image versions against DockerHub's latest tags.
+
+    For each Dockerfile with an external parent image, fetches available tags from DockerHub
+    and checks whether the current version matches the latest digest (exact or dirty comparison).
+
+    Args:
+        token (str): Private token used for GitLab authentication.
+        project_id (int): ID of the GitLab project where the issue will be created or updated.
+        dockerfiles (list): List of Dockerfile objects found in the scanned repository.
+
+    Returns:
+        dict, dict: The issue payload and the issue filter.
+    """
 
     sorted_dockerfiles = sort_dockerfiles(dockerfiles)
 
-    logger.debug(f"Dockerfile architecture : \n \
-        path : {sorted_dockerfiles[0][0].path} \n \
-        name : {sorted_dockerfiles[0][0].name} \n \
-        version : {sorted_dockerfiles[0][0].version} \n \
-        parent : {sorted_dockerfiles[0][0].parent} \n \
-        parent.name : {sorted_dockerfiles[0][0].parent.name} \n \
-        parent.version : {sorted_dockerfiles[0][0].parent.version} \n \
-        parent.external : {sorted_dockerfiles[0][0].parent.external}")
-    
     logger.info(f"{len(sorted_dockerfiles[0])} external dockerfiles found.")
 
     http_proxy = os.environ.get("HTTP_PROXY")
@@ -44,15 +78,17 @@ def external_debt(token, project_id, dockerfiles):
     for df in sorted_dockerfiles[0]:
 
         if df.parent.external: # Sanity check, dockerfiles should be external in the first array
-        
-            # Getting tags from dockerhub
-            url = f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags?page=1&page_size=1000" 
-            r = request("get", url, proxies=proxies)
-            results = r.get("results")
-
+            
             # Getting "latest" tag and current tag elements
+            current = []
+            page_size = 1000
+            while current == [] or page_size < 10000 :
+                # Getting tags from dockerhub
+                url = f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags?page=1&page_size={page_size}" 
+                r = request("get", url, proxies=proxies)
+                results = r.get("results")
+                current = [result for result in results if result.get("name") == df.parent.version] 
             latest = [result for result in results if result.get("name") == "latest"]
-            current = [result for result in results if result.get("name") == df.parent.version] 
 
             if latest: # Sanity check latest is not empty
 
@@ -60,7 +96,7 @@ def external_debt(token, project_id, dockerfiles):
                 latest_digest = latest[0].get("digest")
                 latest_tags = [result.get("name") for result in results if result.get("digest") == latest_digest and result.get("name") != "latest"]
 
-                if current : # Check current is not empty and get all the tags corresponfing to current digest else current tag
+                if current : # Check current is not empty and get all the tags corresponding to current digest else current tag
                     current_digest = current[0].get("digest") 
                     current_tags = [result.get("name") for result in results if result.get("digest") == current_digest]
                 else : 
@@ -69,24 +105,14 @@ def external_debt(token, project_id, dockerfiles):
 
                 logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags}")
                 logger.debug(f"Dockerfile has current tags : {current_tags}")
-
-                # Dirty comparison : current_version may not share the same digest as latest,
-                # but if it starts with the same version number (e.g. "13.4-slim" vs "13.4"),
-                # it is considered up-to-date 
-                if DETECT_EXTERNAL_DEBT_ACTIVATE_DIRTY_COMPARAISON :
-                    current_version_in_latest = any(
-                          current_tag.startswith(latest_tag + "-") or current_tag == latest_tag
-                          for latest_tag in latest_tags
-                          for current_tag in current_tags
-                    )
-                    logger.debug(f"current_version_in_latest : {current_version_in_latest}.")
-                else :
-                    current_version_in_latest = False
+                
+                # Is the current version up to date or non-conventionally named ?
+                current_version_in_latest = dirty_comparaison(current_tags, latest_tags)
 
                 # Filling the description with latest_tags
                 if df.parent.version not in latest_tags and not current_version_in_latest :
                      description += f"{df.path} | {df.parent.version} | {', '.join(latest_tags)}\n"   
-                
+
                 # Filling the description with dirty comparison for human check
                 if current_version_in_latest :
                     description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)}\n"   
@@ -98,7 +124,7 @@ def external_debt(token, project_id, dockerfiles):
 
     logger.info(f"=== External debt found === \n {description}")
 
-    # Creating/modifying debt issue
+    # Creating issue payload
     obtained_users = get_users(token, project_id)
 
     obtained_users_id = get_user_id(DETECT_EXTERNAL_DEBT_ISSUE_ASSIGNEE_USERNAME, obtained_users, False)
@@ -112,9 +138,24 @@ def external_debt(token, project_id, dockerfiles):
 
     issue_filter = {'search': DETECT_EXTERNAL_DEBT_ISSUE_TITLE}
     
-    if DETECT_EXTERNAL_DEBT_ACTIVATE_ISSUE : create_or_update_issue(token, project_id, payload, issue_filter)
+    return payload, issue_filter
 
-def internal_debt(token, project_id, dockerfiles):
+def internal_debt(token, project_id, dockerfiles) -> dict, dict:
+    """
+    Detects internal technical debt by comparing Dockerfiles' parent image versions against the latest available version in the registry.
+
+    For each Dockerfile with an internal parent image, checks whether the current version is behind
+    the latest version found in the scanned repository.
+    Creates or updates a GitLab issue listing outdated images.
+
+    Args:
+        token (str): Private token used for GitLab authentication.
+        project_id (int): ID of the GitLab project where the issue will be created or updated.
+        dockerfiles (list): List of Dockerfile objects found in the scanned repository.
+
+    Returns:
+        dict, dict: The issue payload and the issue filter.
+    """
 
     logger.info(f"Found {len(dockerfiles)} Dockerfiles")
     
@@ -154,4 +195,4 @@ def internal_debt(token, project_id, dockerfiles):
     
     issue_filter = {'search': DETECT_INTERNAL_DEBT_ISSUE_TITLE}
 
-    if DETECT_INTERNAL_DEBT_ACTIVATE_ISSUE : create_or_update_issue(token, project_id, payload, issue_filter)
+    return payload, issue_filter
