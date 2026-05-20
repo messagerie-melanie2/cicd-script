@@ -45,7 +45,7 @@ def dirty_comparaison(current_tags, latest_tags) -> bool:
 
     return current_version_in_latest
 
-def external_debt(token, project_id, dockerfiles) -> dict, dict:
+def external_debt(token, project_id, dockerfiles) -> tuple[dict, dict]:
     """
     Detects external technical debt by comparing Dockerfiles' parent image versions against DockerHub's latest tags.
 
@@ -140,7 +140,7 @@ def external_debt(token, project_id, dockerfiles) -> dict, dict:
     
     return payload, issue_filter
 
-def internal_debt(token, project_id, dockerfiles) -> dict, dict:
+def internal_debt(token, project_id, dockerfiles) -> tuple[dict, dict]:
     """
     Detects internal technical debt by comparing Dockerfiles' parent image versions against the latest available version in the registry.
 
