@@ -82,7 +82,7 @@ def external_debt(token, project_id, dockerfiles) -> tuple[dict, dict]:
             # Getting "latest" tag and current tag elements
             current = []
             page_size = 1000
-            while current == [] or page_size < 10000 :
+            while current == [] and page_size < 10000 :
                 # Getting tags from dockerhub
                 url = f"https://hub.docker.com/v2/repositories/library/{df.parent.name}/tags?page=1&page_size={page_size}" 
                 r = request("get", url, proxies=proxies)
