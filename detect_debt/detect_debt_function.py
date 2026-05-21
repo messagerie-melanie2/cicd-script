@@ -85,10 +85,15 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
     latest = []
    
     if "/" in current_name:
-        namespace = current_name.split("/")[0]  
-        current_name =  current_name.split("/")[-1]
-    else :
-        namespace = "library"
+      parts = current_name.split("/")
+      if "." in parts[0]:  # registry prefix that we ignore (docker.io)
+          current_name = parts[-1]
+          namespace = "library"
+      else:
+          namespace = parts[0]
+          current_name = parts[-1]
+    else:
+      namespace = "library"
 
     while current == [] and len(results) == 1000*page_number:
         # Getting tags from dockerhub
@@ -98,12 +103,12 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
             logger.error(f"404 Failed to get info from dockerhub for {current_name} {current_version}")
         else :
             try :
-                results.extend(r.get("results"))
+                 results.extend(r.get("results"))
+                 logger.debug(f"results: {results}")
             except Exception as err:
                 logger.error(f"Got info from dockerhub but {err} with r : {r}")
         current = [result for result in results if result.get("name") == current_version] 
         page_number += 1
-
         logger.debug(f"current {current}")
 
     if r != {} : latest = [result for result in results if result.get("name") == latest]
