@@ -102,15 +102,17 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
             logger.error(f"404 Failed to get info from dockerhub for {current_name} {current_version}")
         else :
             try :
-                 results += r.get("results")
-                 # logger.debug(f"results: {results}")
+                results += r.get("results")
+                logger.debug(f"len(results) : {len(results)}")
             except Exception as err:
                 logger.error(f"Got info from dockerhub but {err} with r : {r}")
         current = [result for result in results if result.get("name") == current_version] 
         page_number += 1
         logger.debug(f"current {current}")
 
-    if r != {} : latest = [result for result in results if result.get("name") == latest]
+
+    if results != [] :
+        latest = [result for result in results if result.get("name") == latest]
 
     return current, latest, results
 
