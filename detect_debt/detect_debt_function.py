@@ -137,7 +137,10 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
         if df.parent.external: # Sanity check, dockerfiles should be external in the first array
             
             current, latest, results = get_info_from_dockerhub(df.parent.name, df.parent.version)
-
+            
+            logger.debug(f"results length: {len(results)}")
+            logger.debug(f"latest: {latest}")
+            
             if latest: # Sanity check latest is not empty
 
                 # Getting all the tags corresponding to latest 
