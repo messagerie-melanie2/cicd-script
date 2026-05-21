@@ -94,7 +94,7 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
     else:
         namespace = "library"
 
-    while current == [] and len(results) == 1000*page_number:
+    while current == [] and len(results) == 100*page_number:
         # Getting tags from dockerhub
         url = f"https://hub.docker.com/v2/namespaces/{namespace}/repositories/{current_name}/tags?page={page_number+1}&page_size=1000" 
         r = request("get", url, proxies=proxies)
@@ -109,7 +109,6 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
         current = [result for result in results if result.get("name") == current_version] 
         page_number += 1
         logger.debug(f"current {current}")
-
 
     if results != [] :
         latest = [result for result in results if result.get("name") == latest]
