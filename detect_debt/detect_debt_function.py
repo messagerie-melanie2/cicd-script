@@ -87,7 +87,7 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
         # Getting tags from dockerhub
         url = f"https://hub.docker.com/v2/repositories/library/{current_name}/tags?page={page_number+1}&page_size=1000" 
         r = request("get", url, proxies=proxies)
-        results.append(r.get("results"))
+        results.extend(r.get("results"))
         current = [result for result in results if result.get("name") == current_version] 
         page_number += 1
 
