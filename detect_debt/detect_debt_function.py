@@ -46,16 +46,12 @@ def dirty_comparaison(current_tags, latest_tags) -> bool:
         bool: True if the current version is considered up-to-date, False otherwise.
     """
 
-    if DETECT_EXTERNAL_DEBT_ACTIVATE_DIRTY_COMPARAISON :
-        current_version_in_latest = any(
-              current_tag.startswith(latest_tag + "-") or current_tag == latest_tag
-              for latest_tag in latest_tags
-              for current_tag in current_tags
-        )
-        logger.debug(f"current_version_in_latest : {current_version_in_latest}.")
-
-    else :
-        current_version_in_latest = False
+    current_version_in_latest = any(
+          current_tag.startswith(latest_tag + "-") or current_tag == latest_tag
+          for latest_tag in latest_tags
+          for current_tag in current_tags
+    )
+    logger.debug(f"current_version_in_latest : {current_version_in_latest}.")
 
     return current_version_in_latest
 
@@ -103,12 +99,10 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
         else :
             try :
                 results += r.get("results")
-                logger.debug(f"len(results) : {len(results)}")
             except Exception as err:
                 logger.error(f"Got info from dockerhub but {err} with r : {r}")
         current = [result for result in results if result.get("name") == current_version] 
         page_number += 1
-        logger.debug(f"current {current}")
 
     if results != [] :
         obtained_latest = [result for result in results if result.get("name") == latest]
@@ -139,10 +133,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
             
             current, latest, results = get_info_from_dockerhub(df.parent.name, df.parent.version)
             
-            logger.debug(f"final results length: {len(results)}")
-            logger.debug(f"latest: {latest}")
-            
-            if latest: # Sanity check latest is not empty
+            if latest : # Sanity check latest is not empty
 
                 # Getting all the tags corresponding to latest 
                 latest_digest = latest[0].get("digest")
@@ -159,7 +150,10 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                 logger.debug(f"Dockerfile has current tags : {current_tags}")
                 
                 # Is the current version up to date or non-conventionally named ?
-                current_version_in_latest = dirty_comparaison(current_tags, latest_tags)
+                if DETECT_EXTERNAL_DEBT_ACTIVATE_DIRTY_COMPARAISON :
+                    current_version_in_latest = dirty_comparaison(current_tags, latest_tags)
+                else :
+                    current_version_in_latest = False
 
                 # Filling the description with latest_tags
                 if df.parent.version not in latest_tags and not current_version_in_latest :
@@ -169,6 +163,8 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                 if current_version_in_latest :
                     description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)}\n"   
             else :
+                logger.debug(f"No latest tag found for  dockerfile {df.parent.name} {df.parent.version}.")
+                # Filling the description with unavailbe image on dockerhub
                 description_404 += f"{df.path} | {df.parent.name} {df.parent.version}\n"
     
     description += "## Distrib hors standard\n"
