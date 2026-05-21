@@ -84,7 +84,7 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
     results = []
     latest = []
     
-    if current_name.contains("/") :
+    if "/" in current_name:
         namespace = current_name.split("/")[0]  
         current_name =  current_name.split("/")[-1]
     else :
