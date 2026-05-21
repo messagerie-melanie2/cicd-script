@@ -83,16 +83,25 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
     page_number = 0
     results = []
     latest = []
+    
+    if current_name.contains("/") :
+        namespace = current_name.split("/")[0]  
+        current_name =  current_name.split("/")[-1]
+    else :
+        namespace = "library"
 
     while current == [] and len(results) == 1000*page_number:
         # Getting tags from dockerhub
-        url = f"https://hub.docker.com/v2/repositories/library/{current_name}/tags?page={page_number+1}&page_size=1000" 
+        url = f"https://hub.docker.com/v2/namespaces/{namespace}/repositories/{current_name}/tags?page={page_number+1}&page_size=1000" 
         r = request("get", url, proxies=proxies)
         if r == {} :
-            logger.error(f"Failed to get info from dockerhub for {current_name} {current_version}")
+            logger.error(f"404 Failed to get info from dockerhub for {current_name} {current_version}")
         else :
-            results.extend(r.get("results"))
-            current = [result for result in results if result.get("name") == current_version] 
+            try :
+                results.extend(r.get("results"))
+                current = [result for result in results if result.get("name") == current_version] 
+            except as err:
+                logger.error(f"")
         page_number += 1
 
     if r != {} : latest = [result for result in results if result.get("name") == latest]
@@ -150,8 +159,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                 if current_version_in_latest :
                     description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)}\n"   
             else :
-                logger.error(f"No latest tags found for dockerfile {df.parent.name} {df.parent.version}.")
-                description_404 += f"{df.path} | {df.parent.version}"
+                description_404 += f"{df.path} | {df.parent.version}\n"
     
     description += "## Distrib hors standard\n"
     description += description_dirty
