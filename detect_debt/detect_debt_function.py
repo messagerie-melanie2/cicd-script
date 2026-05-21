@@ -86,12 +86,11 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
    
     if "/" in current_name:
         parts = current_name.split("/")
-            if "." in parts[0]:  # registry prefix that we ignore (docker.io)
-                current_name = parts[-1]
-                namespace = "library"
+        if "." in parts[0]:  # registry prefix that we ignore (docker.io)
+            namespace = "library"
         else:
             namespace = parts[0]
-            current_name = parts[-1]
+        current_name = parts[-1]
     else:
         namespace = "library"
 

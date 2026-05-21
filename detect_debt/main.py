@@ -21,6 +21,8 @@ def main(args) :
         create_or_update_issue(args.token, args.project_id, payload_external_debt, issue_filter_external_debt)
 
     #TODO je répértorie dans un tableau et le nombre de dockerfiles enfants impactés
+
+    #TODO deux jobs deux schedules
     
     #TODO prometheus et grafana 
 
