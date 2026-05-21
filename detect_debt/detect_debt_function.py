@@ -81,7 +81,7 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
     
     current = []
     page_number = 0
-    results = []
+    results = {}
 
     while current == [] and len(results) == 1000*page_number:
         # Getting tags from dockerhub
