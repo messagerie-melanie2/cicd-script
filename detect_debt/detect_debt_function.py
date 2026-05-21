@@ -75,10 +75,10 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
       "https" : os.environ.get("HTTPS_PROXY")
     }
     
-    current = []
+    current_tag_info = []
     page_number = 0
     results = []
-    obtained_latest = []
+    latest_tag_info = []
    
     if "/" in current_name:
         parts = current_name.split("/")
@@ -91,7 +91,7 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
         namespace = "library"
     
     # Keep searching for current and latest tag until possibilites exhaustion
-    while (current == [] or obtained_latest == []) and len(results) == 100*page_number:
+    while (current_tag_info == [] or latest_tag_info == []) and len(results) == 100*page_number:
 
         # Getting tags from dockerhub
         url = f"https://hub.docker.com/v2/namespaces/{namespace}/repositories/{current_name}/tags?page={page_number+1}&page_size=100" 
@@ -103,13 +103,13 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
                 results += r.get("results")
             except Exception as err:
                 logger.error(f"Got info from dockerhub but {err} with r : {r}")
-        current = [result for result in results if result.get("name") == current_version] 
+        current_tag_info = [result for result in results if result.get("name") == current_version] 
         page_number += 1
 
     if results != [] :
-        obtained_latest = [result for result in results if result.get("name") == latest]
+        latest_tag_info = [result for result in results if result.get("name") == latest]
 
-    return current, obtained_latest, results
+    return current_tag_info, latest_tag_info, results
 
 def get_external_debt_description(sorted_dockerfiles) -> str:
     """
@@ -133,17 +133,18 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
 
         if df.parent.external: # Sanity check, dockerfiles should be external in the first array
             
-            current, latest, results = get_info_from_dockerhub(df.parent.name, df.parent.version)
+            current_tag_info, latest_tag_info, all_tags_info = get_info_from_dockerhub(df.parent.name, df.parent.version)
             
-            if latest : # Sanity check latest is not empty
+            if latest_tag_info : # Sanity check latest is not empty
 
                 # Getting all the tags corresponding to latest 
-                latest_digest = latest[0].get("digest")
-                latest_tags = [result.get("name") for result in results if result.get("digest") == latest_digest and result.get("name") != "latest"]
+                latest_digest = latest_tag_info[0].get("digest")
+                latest_tags = [result.get("name") for result in all_tags_info if result.get("digest") == latest_digest and result.get("name") != "latest"]
 
-                if current : # Check current is not empty and get all the tags corresponding to current digest else current tag
-                    current_digest = current[0].get("digest") 
-                    current_tags = [result.get("name") for result in results if result.get("digest") == current_digest]
+                if current_tag_info : # Check current is not empty and get all the tags corresponding to current digest else current tag
+                    current_digest = current_tag_info[0].get("digest")
+                    logger.debug(f"Current digest for dockerfile {df.parent.name} {df.parent.version} is {current_digest}")                  
+                    current_tags = [result.get("name") for result in all_tags_info if result.get("digest") == current_digest]
                 else : 
                     current_tags = [df.parent.version]
                     logger.error(f"No tags found for dockerfile {df.parent.name} {df.parent.version}.")
@@ -165,11 +166,11 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                 if current_version_in_latest :
                     description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)}\n"   
             else :
-                logger.debug(f"No latest tag found for  dockerfile {df.parent.name} {df.parent.version}.")
+                logger.debug(f"No latest tag found for dockerfile {df.parent.name} {df.parent.version}.")
                 # Filling the description with unavailbe image on dockerhub
                 description_404 += f"{df.path} | {df.parent.name} {df.parent.version}\n"
     
-    description += "## Distrib hors standard\n"
+    description += "## Distrib qui passe la dirty mais faut checker\n"
     description += description_dirty
     description += "## 404 Dockerhub API\n"
     description += description_404
