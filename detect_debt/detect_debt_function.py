@@ -115,6 +115,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
 
     description = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
     description_dirty =  "| Dockerfile | Version actuel | Tags correspondants | Latest tags |\n|------------|---------------|---------------|---------------|\n"
+    description_404 = "| Dockerfile | Version actuel |\n|------------|---------------|\n"
 
     for df in sorted_dockerfiles[0]:
 
@@ -150,9 +151,12 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                     description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)}\n"   
             else :
                 logger.error(f"No latest tags found for dockerfile {df.parent.name} {df.parent.version}.")
+                description_404 += f"{df.path} | {df.parent.version}"
     
     description += "## Distrib hors standard\n"
     description += description_dirty
+    description += "## 404 Dockerhub API\n"
+    description += description_404
 
     return description
 
