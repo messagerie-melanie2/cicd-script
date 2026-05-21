@@ -44,7 +44,7 @@ def request(mode, url = '', headers = None, auth = None, payload_data = None, pa
                 logger.warning(f"request mode {mode} not supported")
         r.raise_for_status()
     except requests.exceptions.HTTPError as err:
-        logger.error(f"Request failed : {r.json()}")
+        logger.error(f"Request failed : {r}")
         logger.debug(f"Http Error: {err}")
     else :
         if r.status_code in ACCEPTED_STATUS_CODE:
