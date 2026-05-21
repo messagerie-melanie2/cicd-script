@@ -82,7 +82,7 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
     current = []
     page_number = 0
     results = []
-    latest = []
+    obtained_latest = []
    
     if "/" in current_name:
         parts = current_name.split("/")
@@ -96,7 +96,7 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
 
     while current == [] and len(results) == 100*page_number:
         # Getting tags from dockerhub
-        url = f"https://hub.docker.com/v2/namespaces/{namespace}/repositories/{current_name}/tags?page={page_number+1}&page_size=1000" 
+        url = f"https://hub.docker.com/v2/namespaces/{namespace}/repositories/{current_name}/tags?page={page_number+1}&page_size=100" 
         r = request("get", url, proxies=proxies)
         if r == {} :
             logger.error(f"404 Failed to get info from dockerhub for {current_name} {current_version}")
@@ -111,9 +111,9 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
         logger.debug(f"current {current}")
 
     if results != [] :
-        latest = [result for result in results if result.get("name") == latest]
+        obtained_latest = [result for result in results if result.get("name") == latest]
 
-    return current, latest, results
+    return current, obtained_latest, results
 
 def get_external_debt_description(sorted_dockerfiles) -> str:
     """
@@ -139,7 +139,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
             
             current, latest, results = get_info_from_dockerhub(df.parent.name, df.parent.version)
             
-            logger.debug(f"results length: {len(results)}")
+            logger.debug(f"final results length: {len(results)}")
             logger.debug(f"latest: {latest}")
             
             if latest: # Sanity check latest is not empty
