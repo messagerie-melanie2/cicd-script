@@ -2,7 +2,7 @@ from lib.global_vars import *
 
 logger = logging.getLogger(__name__)
 
-def request(mode, url = '', headers = None, auth = None, payload_data = None, payload_json = None, files = None, params = None):
+def request(mode, url = '', headers = None, auth = None, payload_data = None, payload_json = None, files = None, params = None, proxies = None) -> dict:
     """
     Sends an HTTP request based on the specified mode.
 
@@ -31,15 +31,15 @@ def request(mode, url = '', headers = None, auth = None, payload_data = None, pa
         r = requests.Response()
         match mode:
             case "get":
-                r = requests.get(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params)
+                r = requests.get(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params, proxies=proxies)
             case "post":
-                r = requests.post(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params)
+                r = requests.post(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params, proxies=proxies)
             case "put":
-                r = requests.put(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params)
+                r = requests.put(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params, proxies=proxies)
             case "patch":
-                r = requests.patch(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params)
+                r = requests.patch(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params, proxies=proxies)
             case "delete":
-                r = requests.delete(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params)
+                r = requests.delete(url=url, headers=headers, auth=auth, data=payload_data, json = payload_json, files=files, params=params, proxies=proxies)
             case _:
                 logger.warning(f"request mode {mode} not supported")
         r.raise_for_status()

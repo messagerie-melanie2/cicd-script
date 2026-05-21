@@ -89,7 +89,7 @@ def find_dockerfiles_r(current_repo, path = ".", build_branch=NO_BRANCH, changes
     - debug (boolean) : Enabling/disabling debug display
 
     Returns:
-    - TODO
+    - list[Dockerfile] : List of the dockerfiles 
     '''
     dockerfiles = []
     
