@@ -86,11 +86,11 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
    
     if "/" in current_name:
         parts = current_name.split("/")
+        current_name = parts[-1]
         if "." in parts[0]:  # registry prefix that we ignore (docker.io)
             namespace = "library"
         else:
             namespace = parts[0]
-        current_name = parts[-1]
     else:
         namespace = "library"
 
@@ -165,7 +165,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                 if current_version_in_latest :
                     description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)}\n"   
             else :
-                description_404 += f"{df.path} | {df.parent.version}\n"
+                description_404 += f"{df.path} | {df.parent.name} {df.parent.version}\n"
     
     description += "## Distrib hors standard\n"
     description += description_dirty
