@@ -100,8 +100,8 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
             try :
                 results.extend(r.get("results"))
                 current = [result for result in results if result.get("name") == current_version] 
-            except as err:
-                logger.error(f"")
+            except Exception as err:
+                logger.error(f"Got info from dockerhub but {err} with r : {r}")
         page_number += 1
 
     if r != {} : latest = [result for result in results if result.get("name") == latest]
