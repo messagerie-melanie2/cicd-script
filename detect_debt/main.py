@@ -23,6 +23,10 @@ def main(args) :
             create_or_update_issue(args.token, args.project_id, payload_external_debt, issue_filter_external_debt)
 
     #TODO je répértorie dans une colonne supplémentaire le path des enfants impactés
+    
+    #TODO refacto par service
+
+    #TODO 4ème tableau pour check les dockerfiles "à jour" et s'assurer que personne est oublié
 
     #TODO prometheus et grafana 
 

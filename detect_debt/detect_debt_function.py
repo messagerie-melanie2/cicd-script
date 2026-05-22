@@ -161,29 +161,30 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                     current_tags = [df.parent.version]
                     logger.error(f"No tags found for dockerfile {df.parent.name} {df.parent.version}.")
 
-                logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags}")
-                logger.debug(f"Dockerfile has current tags : {current_tags}")
+                logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags} and current tags : {current_tags}")
                 
-                # Is the current version up to date or non-conventionally named ?
-                if DETECT_EXTERNAL_DEBT_ACTIVATE_DIRTY_COMPARAISON and current_digest != latest_digest :
-                    passes_dirty_comparaison = dirty_comparaison(current_tags, latest_tags)
-                else :
-                    passes_dirty_comparaison = False
+                # Continue only if dockerfile is not the latest
+                if current_digest != latest_digest :
 
-                # Filling the main description
-                if current_digest != latest_digest and not passes_dirty_comparaison :
-                    display_latest = ', '.join(latest_tags) if latest_tags else "latest"
-                    description += f"{df.path} | {df.parent.version} | {display_latest}\n"
+                    # Is the current version up to date or non-conventionally named ?
+                    if DETECT_EXTERNAL_DEBT_ACTIVATE_DIRTY_COMPARAISON : 
+                        passes_dirty_comparaison = dirty_comparaison(current_tags, latest_tags)
+                    else :
+                        passes_dirty_comparaison = False
 
-                # Filling the description with dirty comparison for human check
-                if passes_dirty_comparaison :
-                    description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)}\n"   
+                    # Filling the first table for classic technical debt
+                    if not passes_dirty_comparaison :
+                        display_latest = ', '.join(latest_tags) if latest_tags else "latest"
+                        description += f"{df.path} | {df.parent.version} | {display_latest}\n"
+                    # Filling the dirty comparaison table for human check
+                    else passes_dirty_comparaison :
+                        description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)}\n"   
             else :
                 logger.debug(f"No latest tag found for dockerfile {df.parent.name} {df.parent.version}.")
-                # Filling the description with unavailbe image on dockerhub
+                # Filling the "failed" table
                 description_failed += f"{df.path} | {df.parent.name} {df.parent.version}\n"
     
-    description += "## Equivalent latest, à vérifier\n"
+    description += "## Equivalent latest\n"
     description += description_dirty
     description += "## Dockerhub API fail\n"
     description += description_failed
