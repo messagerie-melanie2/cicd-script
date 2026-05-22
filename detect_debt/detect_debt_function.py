@@ -149,7 +149,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                 latest_tags = [result.get("name") for result in all_tags_info if result.get("digest") == latest_digest and result.get("name") != "latest"]
 
                 if current_tag_info : # Check current is not empty and get all the tags corresponding to current digest else current tag
-                    current_digest = current_tag_info[0].get("digest") # current_tag_info has necessarily only one element
+                    current_digest = current_tag_info[0].get("digest") # current_tag_info has necessarily only on
                     if current_digest is None :
                         logger.error(f"Current dockerfile {df.parent.name} {df.parent.version} has no digest.")
                         current_tags = [df.parent.version]
@@ -165,7 +165,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                 logger.debug(f"Dockerfile has current tags : {current_tags}")
                 
                 # Is the current version up to date or non-conventionally named ?
-                if DETECT_EXTERNAL_DEBT_ACTIVATE_DIRTY_COMPARAISON :
+                if DETECT_EXTERNAL_DEBT_ACTIVATE_DIRTY_COMPARAISON and current_digest != latest_digest :
                     passes_dirty_comparaison = dirty_comparaison(current_tags, latest_tags)
                 else :
                     passes_dirty_comparaison = False
@@ -183,7 +183,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                 # Filling the description with unavailbe image on dockerhub
                 description_failed += f"{df.path} | {df.parent.name} {df.parent.version}\n"
     
-    description += "## Distrib qui passe la dirty mais faut checker\n"
+    description += "## Equivalent latest, à vérifier\n"
     description += description_dirty
     description += "## Dockerhub API fail\n"
     description += description_failed
