@@ -55,7 +55,7 @@ def dirty_comparaison(current_tags, latest_tags) -> bool:
 
     return current_version_in_latest
 
-def get_info_from_dockerhub(current_name, current_version, latest = "latest") -> tuple[list, list, list]:
+def get_info_from_dockerhub(current_service_name, current_tag_name, latest = "latest") -> tuple[list, list, list]:
     """
     Fetches tag information for a given image from DockerHub.
 
@@ -67,7 +67,7 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
         latest (str): Tag considered as the latest reference. Defaults to "latest".
 
     Returns:
-        tuple[list, list, list]: A tuple of (current_tag_results, latest_tag_results, all_results), each a list of tag dicts from DockerHub.
+        tuple[list, list, list]: A tuple of (current_tag_info, latest_tag_info, all_results), each a list of tag dicts from DockerHub.
     """
 
     proxies = {
@@ -77,12 +77,12 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
     
     current_tag_info = []
     page_number = 0
-    results = []
+    all_tags_info = []
     latest_tag_info = []
    
-    if "/" in current_name:
-        parts = current_name.split("/")
-        current_name = parts[-1]
+    if "/" in current_service_name:
+        parts = current_service_name.split("/")
+        current_service_name = parts[-1]
         if "." in parts[0]:
             namespace = parts[1] if len(parts) > 2 else "library" # Anticipating cases like docker.io/bitnami/mariadb-galera 
         else:
@@ -91,32 +91,32 @@ def get_info_from_dockerhub(current_name, current_version, latest = "latest") ->
         namespace = "library"
     
     # Paginate until we have current, latest, and at least one named version alias for latest
-    while len(results) == 100 * page_number:
+    while len(all_tags_info) == 100 * page_number:
 
-        url = f"https://hub.docker.com/v2/namespaces/{namespace}/repositories/{current_name}/tags?page={page_number+1}&page_size=100"
+        url = f"https://hub.docker.com/v2/namespaces/{namespace}/repositories/{current_service_name}/tags?page={page_number+1}&page_size=100"
         r = request("get", url, proxies=proxies)
         if r == {}:
-            logger.error(f"Failed to get info from dockerhub for {current_name} {current_version}")
+            logger.error(f"Failed to get info from dockerhub for {current_service_name} {current_tag_name}")
             break
         try:
-            results += r.get("results")
+            all_tags_info += r.get("results")
         except Exception as err:
             logger.error(f"Got info from dockerhub but {err} with r : {r}")
             break
 
-        current_tag_info = [result for result in results if result.get("name") == current_version]
-        latest_tag_info = [result for result in results if result.get("name") == latest]
+        current_tag_info = [tag for tag in all_tags_info if tag.get("name") == current_tag_name]
+        latest_tag_info = [tag for tag in all_tags_info if tag.get("name") == latest]
         page_number += 1
 
         # Early exit:
-        # condition 1: current and latest foundand
+        # condition 1: current and latest found
         # condition 2: latest has at least one named version alias (or it's been already 5 requests) 
         if current_tag_info and latest_tag_info:
-            latest_digest_check = latest_tag_info[0].get("digest")
-            if any(result.get("digest") == latest_digest_check and result.get("name") != latest for result in results) or page_number >= 5:
+            latest_digest = latest_tag_info[0].get("digest")
+            if any(result.get("digest") == latest_digest and result.get("name") != latest for result in all_tags_info) or page_number >= 5:
                 break
 
-    return current_tag_info, latest_tag_info, results
+    return current_tag_info, latest_tag_info, all_tags_info
 
 def get_external_debt_description(sorted_dockerfiles) -> str:
     """
@@ -134,24 +134,28 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
 
     description = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
     description_dirty =  "| Dockerfile | Version actuel | Tags correspondants | Latest tags |\n|------------|---------------|---------------|---------------|\n"
-    description_404 = "| Dockerfile | Version actuel |\n|------------|---------------|\n"
+    description_failed = "| Dockerfile | Version actuel |\n|------------|---------------|\n"
 
-    for df in sorted_dockerfiles[0]:
+    for df in sorted_dockerfiles[0] :
 
-        if df.parent.external: # Sanity check, dockerfiles should be external in the first array
+        if df.parent.external : # Sanity check, dockerfiles should be external in the first array
             
             current_tag_info, latest_tag_info, all_tags_info = get_info_from_dockerhub(df.parent.name, df.parent.version)
             
-            if latest_tag_info : # Sanity check latest is not empty
+            if latest_tag_info: # Sanity check latest is not empty
 
                 # Getting all the tags corresponding to latest 
-                latest_digest = latest_tag_info[0].get("digest")
+                latest_digest = latest_tag_info[0].get("digest") # latest_tag_info has necessarily only one element
                 latest_tags = [result.get("name") for result in all_tags_info if result.get("digest") == latest_digest and result.get("name") != "latest"]
 
                 if current_tag_info : # Check current is not empty and get all the tags corresponding to current digest else current tag
-                    current_digest = current_tag_info[0].get("digest")
-                    logger.debug(f"Current digest for dockerfile {df.parent.name} {df.parent.version} is {current_digest}")
-                    current_tags = [result.get("name") for result in all_tags_info if result.get("digest") == current_digest]
+                    current_digest = current_tag_info[0].get("digest") # current_tag_info has necessarily only one element
+                    if current_digest is None :
+                        logger.error(f"Current dockerfile {df.parent.name} {df.parent.version} has no digest.")
+                        current_tags = [df.parent.version]
+                    else :
+                        logger.debug(f"Current digest for dockerfile {df.parent.name} {df.parent.version} is {current_digest}")
+                        current_tags = [result.get("name") for result in all_tags_info if result.get("digest") == current_digest]
                 else :
                     current_digest = None
                     current_tags = [df.parent.version]
@@ -177,12 +181,12 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
             else :
                 logger.debug(f"No latest tag found for dockerfile {df.parent.name} {df.parent.version}.")
                 # Filling the description with unavailbe image on dockerhub
-                description_404 += f"{df.path} | {df.parent.name} {df.parent.version}\n"
+                description_failed += f"{df.path} | {df.parent.name} {df.parent.version}\n"
     
     description += "## Distrib qui passe la dirty mais faut checker\n"
     description += description_dirty
     description += "## Dockerhub API fail\n"
-    description += description_404
+    description += description_failed
 
     return description
 
