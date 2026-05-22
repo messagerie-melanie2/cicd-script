@@ -177,7 +177,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                         display_latest = ', '.join(latest_tags) if latest_tags else "latest"
                         description += f"{df.path} | {df.parent.version} | {display_latest}\n"
                     # Filling the dirty comparaison table for human check
-                    else passes_dirty_comparaison :
+                    elif passes_dirty_comparaison :
                         description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)}\n"   
             else :
                 logger.debug(f"No latest tag found for dockerfile {df.parent.name} {df.parent.version}.")
