@@ -135,8 +135,9 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
     description = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
     description_dirty =  "| Dockerfile | Version actuel | Tags correspondants | Latest tags |\n|------------|---------------|---------------|---------------|\n"
     description_failed = "| Dockerfile | Version actuel |\n|------------|---------------|\n"
+    description_up_to_date = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
 
-    for df in sorted_dockerfiles[0] :
+    for df in sorted_dockerfiles[0] : 
 
         if df.parent.external : # Sanity check, dockerfiles should be external in the first array
             
@@ -163,7 +164,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
 
                 logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags} and current tags : {current_tags}")
                 
-                # Continue only if dockerfile is not the latest
+                # If dockerfile has technical debt
                 if current_digest != latest_digest :
 
                     # Is the current version up to date or non-conventionally named ?
@@ -179,6 +180,11 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                     # Filling the dirty comparaison table for human check
                     elif passes_dirty_comparaison :
                         description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)}\n"   
+
+                # Else dockerfile is up to date
+                else :
+                    description_up_to_date += f"{df.path} | {df.parent.version} | {display_latest}\n"
+
             else :
                 logger.debug(f"No latest tag found for dockerfile {df.parent.name} {df.parent.version}.")
                 # Filling the "failed" table
@@ -188,6 +194,8 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
     description += description_dirty
     description += "## Dockerhub API fail\n"
     description += description_failed
+    description += "## Up to date\n"
+    description += description_up_to_date
 
     return description
 
