@@ -211,10 +211,13 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
     if DETECT_EXTERNAL_DEBT_ACTIVATE_UP_TO_DATE_TABLE : 
         description += f"## Up to date ({description_up_to_date.count('\n')-2})\n"
         description += description_up_to_date
-   
+        newline_count = 12 # Number of lines corresponding to anything but dockerfiles
+    else :
+        newline_count = 8
+
     # Sanity check : assuring we treated every dockerfile
-    if description.count('\n')-8 != len(sorted_dockerfiles[0]) :
-        logger.error(f"Error : initially got {len(sorted_dockerfiles[0])} dockerfiles but listed {description.count('\n')-8} in the issue.")
+    if description.count('\n')-newline_count != len(sorted_dockerfiles[0]) :
+        logger.error(f"Error : Initially got {len(sorted_dockerfiles[0])} dockerfiles from sorted_dockerfiles() but listed {description.count('\n')-newline_count} in the issue.")
 
     return description
 
