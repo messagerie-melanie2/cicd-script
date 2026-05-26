@@ -137,6 +137,15 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
     description_failed = "| Dockerfile | Version actuel |\n|------------|---------------|\n"
     description_up_to_date = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
 
+    # structuruté de donnée adaptée :   
+    for df in sorted_dockerfiles[0] : 
+
+        if df.parent.external : # Sanity check, dockerfiles should be external in the first array
+
+            if df.parent.name && df.parent.version is not in map :
+                current_tag_info, latest_tag_info, all_tags_info = get_info_from_dockerhub(df.parent.name, df.parent.version)
+                map.add(current_tag_info, latest_tag_info, all_tags_info)
+
     for df in sorted_dockerfiles[0] : 
 
         if df.parent.external : # Sanity check, dockerfiles should be external in the first array
@@ -190,9 +199,9 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                 logger.debug(f"No latest tag found for dockerfile {df.parent.name} {df.parent.version}.")
                 # Filling the "failed" table
                 description_failed += f"{df.path} | {df.parent.name} {df.parent.version}\n"
+        else :
+            logger.error(f"Dockerfile {df.parent.name} {df.parent.version} is not external but given as one.")
 
-    newline = '\n'
-    logger.debug(f"API count {description_failed.count('\n')} et count -1 : {description_failed.count('\n')-1}")
     description = f"## Dette externe ({description_outdated.count('\n')-2})\n"
     description += description_outdated
     description += f"## Equivalent latest ({description_dirty.count('\n')-2})\n"
@@ -205,7 +214,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
    
     # Sanity check : assuring we treated every dockerfile
     if description.count('\n')-8 != len(sorted_dockerfiles[0]) :
-        logger.error(f"Error : initially got {len(sorted_dockerfiles[0])} dockerfiles but listed {description.count('\n')-4} in the issue.")
+        logger.error(f"Error : initially got {len(sorted_dockerfiles[0])} dockerfiles but listed {description.count('\n')-8} in the issue.")
 
     return description
 
