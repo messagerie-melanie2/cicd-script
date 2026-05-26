@@ -138,13 +138,13 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
     description_up_to_date = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
 
     # structuruté de donnée adaptée :   
-    for df in sorted_dockerfiles[0] : 
-
-        if df.parent.external : # Sanity check, dockerfiles should be external in the first array
-
-            if df.parent.name && df.parent.version is not in map :
-                current_tag_info, latest_tag_info, all_tags_info = get_info_from_dockerhub(df.parent.name, df.parent.version)
-                map.add(current_tag_info, latest_tag_info, all_tags_info)
+    # for df in sorted_dockerfiles[0] : 
+    #
+    #     if df.parent.external : # Sanity check, dockerfiles should be external in the first array
+    #
+    #         if df.parent.name && df.parent.version is not in map :
+    #             current_tag_info, latest_tag_info, all_tags_info = get_info_from_dockerhub(df.parent.name, df.parent.version)
+    #             map.add(current_tag_info, latest_tag_info, all_tags_info)
 
     for df in sorted_dockerfiles[0] : 
 
