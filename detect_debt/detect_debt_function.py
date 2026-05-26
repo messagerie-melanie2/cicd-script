@@ -137,26 +137,34 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
     description_failed = "| Dockerfile | Version actuel |\n|------------|---------------|\n"
     description_up_to_date = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
 
-    # structuruté de donnée adaptée :   
-    # for df in sorted_dockerfiles[0] : 
-    #
-    #     if df.parent.external : # Sanity check, dockerfiles should be external in the first array
-    #
-    #         if df.parent.name && df.parent.version is not in map :
-    #             current_tag_info, latest_tag_info, all_tags_info = get_info_from_dockerhub(df.parent.name, df.parent.version)
-    #             map.add(current_tag_info, latest_tag_info, all_tags_info)
+
+    # Optimising requests to dockerhub : constructing a dict with info on all our external dockerfiles
+    all_df_info = {}
+
+    for df in sorted_dockerfiles[0] : 
+
+        if df.parent.external : # Sanity check, dockerfiles should be external in the first array
+           
+            # Service not present at all in our dict
+            if df.parent.name not in all_df_info :
+                    _, _, all_df_info[df.parent.name] = get_info_from_dockerhub(df.parent.name, df.parent.version) 
+
+            # Service partially present in our dict but missing info on the specific version
+            elif not any(tag.get("name") == df.parent.version for tag in all_df_info[df.parent.name]) :
+                    _, _, all_df_info[df.parent.name] = get_info_from_dockerhub(df.parent.name, df.parent.version)
 
     for df in sorted_dockerfiles[0] : 
 
         if df.parent.external : # Sanity check, dockerfiles should be external in the first array
             
-            current_tag_info, latest_tag_info, all_tags_info = get_info_from_dockerhub(df.parent.name, df.parent.version)
-            
+            current_tag_info = [tag for tag in all_df_info[df.parent.name] if tag.get("name") == df.parent.version]
+            latest_tag_info = [tag for tag in all_df_info[df.parent.name] if tag.get("name") == "latest"]
+
             if latest_tag_info: # Sanity check latest is not empty
 
                 # Getting all the tags corresponding to latest 
                 latest_digest = latest_tag_info[0].get("digest") # latest_tag_info has necessarily only one element
-                latest_tags = [result.get("name") for result in all_tags_info if result.get("digest") == latest_digest and result.get("name") != "latest"]
+                latest_tags = [result.get("name") for result in all_df_info[df.parent.name] if result.get("digest") == latest_digest and result.get("name") != "latest"]
 
                 if current_tag_info : # Check current is not empty and get all the tags corresponding to current digest else current tag
                     current_digest = current_tag_info[0].get("digest") # current_tag_info has necessarily only on
@@ -165,7 +173,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                         current_tags = [df.parent.version]
                     else :
                         logger.debug(f"Current digest for dockerfile {df.parent.name} {df.parent.version} is {current_digest}")
-                        current_tags = [result.get("name") for result in all_tags_info if result.get("digest") == current_digest]
+                        current_tags = [result.get("name") for result in all_df_info[df.parent.name] if result.get("digest") == current_digest]
                 else :
                     current_digest = None
                     current_tags = [df.parent.version]
@@ -213,7 +221,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
         description += description_up_to_date
         newline_count = 12 # Number of lines corresponding to anything but dockerfiles
     else :
-        newline_count = 8
+        newline_count = 9
 
     # Sanity check : assuring we treated every dockerfile
     if description.count('\n')-newline_count != len(sorted_dockerfiles[0]) :
