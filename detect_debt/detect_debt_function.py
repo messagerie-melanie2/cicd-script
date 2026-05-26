@@ -132,7 +132,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
         str: Markdown-formatted description listing outdated and ambiguous external images.
     """
 
-    description = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
+    description_outdated = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
     description_dirty =  "| Dockerfile | Version actuel | Tags correspondants | Latest tags |\n|------------|---------------|---------------|---------------|\n"
     description_failed = "| Dockerfile | Version actuel |\n|------------|---------------|\n"
     description_up_to_date = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
@@ -176,7 +176,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                     # Filling the first table for classic technical debt
                     if not passes_dirty_comparaison :
                         display_latest = ', '.join(latest_tags) if latest_tags else "latest"
-                        description += f"{df.path} | {df.parent.version} | {display_latest}\n"
+                        description_outdated += f"{df.path} | {df.parent.version} | {display_latest}\n"
                     # Filling the dirty comparaison table for human check
                     elif passes_dirty_comparaison :
                         description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)}\n"   
@@ -190,13 +190,16 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                 logger.debug(f"No latest tag found for dockerfile {df.parent.name} {df.parent.version}.")
                 # Filling the "failed" table
                 description_failed += f"{df.path} | {df.parent.name} {df.parent.version}\n"
-    
-    description += f"## Equivalent latest ({description_dirty.count('\n')})\n"
+
+    newline = '\n'
+    description = f"## Dette externe ({description_outdated.count('\n')-1})\n"
+    description += description_outdated
+    description += f"## Equivalent latest ({description_dirty.count('\n')-1})\n"
     description += description_dirty
-    description += f"## Dockerhub API fail ({description_failed.count('\n')})\n"
+    description += f"## Dockerhub API fail ({description_failed.count('\n')-1})\n"
     description += description_failed
     if DETECT_EXTERNAL_DEBT_ACTIVATE_UP_TO_DATE_TABLE : 
-        description += f"## Up to date ({description_up_to_date.count('\n')})\n"
+        description += f"## Up to date ({description_up_to_date.count('\n')-1})\n"
         description += description_up_to_date
 
     return description
