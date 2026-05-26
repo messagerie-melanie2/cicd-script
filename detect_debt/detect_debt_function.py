@@ -183,6 +183,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
 
                 # Else dockerfile is up to date
                 else :
+                    display_latest = ', '.join(latest_tags) if latest_tags else "latest"
                     description_up_to_date += f"{df.path} | {df.parent.version} | {display_latest}\n"
 
             else :
