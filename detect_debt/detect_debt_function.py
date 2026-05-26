@@ -194,8 +194,9 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
     description += description_dirty
     description += "## Dockerhub API fail\n"
     description += description_failed
-    description += "## Up to date\n"
-    description += description_up_to_date
+    if DETECT_EXTERNAL_DEBT_ACTIVATE_UP_TO_DATE_TABLE : 
+        description += "## Up to date\n"
+        description += description_up_to_date
 
     return description
 
