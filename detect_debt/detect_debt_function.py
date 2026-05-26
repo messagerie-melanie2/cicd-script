@@ -191,12 +191,12 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                 # Filling the "failed" table
                 description_failed += f"{df.path} | {df.parent.name} {df.parent.version}\n"
     
-    description += "## Equivalent latest\n"
+    description += f"## Equivalent latest ({description_dirty.count('\n')})\n"
     description += description_dirty
-    description += "## Dockerhub API fail\n"
+    description += f"## Dockerhub API fail ({description_failed.count('\n')})\n"
     description += description_failed
     if DETECT_EXTERNAL_DEBT_ACTIVATE_UP_TO_DATE_TABLE : 
-        description += "## Up to date\n"
+        description += f"## Up to date ({description_up_to_date.count('\n')})\n"
         description += description_up_to_date
 
     return description

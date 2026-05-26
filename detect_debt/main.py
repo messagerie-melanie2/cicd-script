@@ -26,8 +26,6 @@ def main(args) :
     
     #TODO refacto par service
 
-    #TODO 4ème tableau pour check les dockerfiles "à jour" et s'assurer que personne est oublié
-
     #TODO prometheus et grafana 
 
 #=======================================================#
