@@ -193,18 +193,18 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
 
     newline = '\n'
     logger.debug(f"API count {description_failed.count('\n')} et count -1 : {description_failed.count('\n')-1}")
-    description = f"## Dette externe ({description_outdated.count('\n')-1})\n"
+    description = f"## Dette externe ({description_outdated.count('\n')-2})\n"
     description += description_outdated
-    description += f"## Equivalent latest ({description_dirty.count('\n')-1})\n"
+    description += f"## Equivalent latest ({description_dirty.count('\n')-2})\n"
     description += description_dirty
-    description += f"## Dockerhub API fail ({description_failed.count('\n')-1})\n"
+    description += f"## Dockerhub API fail ({description_failed.count('\n')-2})\n"
     description += description_failed
     if DETECT_EXTERNAL_DEBT_ACTIVATE_UP_TO_DATE_TABLE : 
-        description += f"## Up to date ({description_up_to_date.count('\n')-1})\n"
+        description += f"## Up to date ({description_up_to_date.count('\n')-2})\n"
         description += description_up_to_date
    
     # Sanity check : assuring we treated every dockerfile
-    if description.count('\n')-4 != len(sorted_dockerfiles[0]) :
+    if description.count('\n')-8 != len(sorted_dockerfiles[0]) :
         logger.error(f"Error : initially got {len(sorted_dockerfiles[0])} dockerfiles but listed {description.count('\n')-4} in the issue.")
 
     return description
