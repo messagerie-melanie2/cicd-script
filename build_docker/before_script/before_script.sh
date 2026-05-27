@@ -20,6 +20,8 @@ readonly ARGS="$@"
 # Global variables from ENV
 #
 readonly CICD_COMMIT=${CICD_COMMIT}
+readonly CI_PROJECT_NAMESPACE=${CI_PROJECT_NAMESPACE}
+readonly CI_PROJECT_NAME=${CI_PROJECT_NAME}
 readonly CI_REGISTRY=${CI_REGISTRY}
 readonly CI_REGISTRY_USER=${CI_REGISTRY_USER}
 readonly CI_REGISTRY_PASSWORD=${CI_REGISTRY_PASSWORD}
@@ -82,7 +84,7 @@ main()
     export DOCKER_PROXY_BUILD_ARGS="$DOCKER_DIGEST_BUILD_ARGS $DOCKER_FILE_DIGEST --opt build-arg:http_proxy=$http_proxy --opt build-arg:https_proxy=$https_proxy --opt build-arg:no_proxy=$NO_PROXY"
 
     ## Create a variable to store Dockerfile build args (image related)
-    export DOCKER_BUILD_ARGS="--opt build-arg:parent_version=$PARENT_VERSION --opt build-arg:build_branch=$BUILD_BRANCH --opt build-arg:ci_job_token=$CI_JOB_TOKEN --opt build-arg:registry=$CI_PULL_REGISTRY $OTHER_DOCKER_ARGS"
+    export DOCKER_BUILD_ARGS="--opt build-arg:parent_version=$PARENT_VERSION --opt build-arg:build_branch=$BUILD_BRANCH --opt build-arg:ci_job_token=$CI_JOB_TOKEN --opt build-arg:registry=$CI_PULL_REGISTRY$CI_PROJECT_NAMESPACE$CI_PROJECT_NAME $OTHER_DOCKER_ARGS"
 
     echo $DOCKER_BUILD_ARGS
     #
