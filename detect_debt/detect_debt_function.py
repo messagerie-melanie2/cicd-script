@@ -152,6 +152,9 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
             # Service partially present in our dict but missing info on the specific version
             elif not any(tag.get("name") == df.parent.version for tag in all_df_info[df.parent.name]) :
                     _, _, all_df_info[df.parent.name] = get_info_from_dockerhub(df.parent.name, df.parent.version)
+            
+            else :
+                logger.debug(f"Optimisation worked for dockerfile {df.parent.name} {df.parent.version}.")
 
     for df in sorted_dockerfiles[0] : 
 
