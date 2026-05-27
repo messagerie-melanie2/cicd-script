@@ -1,18 +1,9 @@
-/**
- * Function to check if a string 's' contains a specified substring 
- */
-//local strContains(s, substr) = std.length(std.findSubstr(substr, s)) > 0;
-local strContains(s, substr) = std.findSubstr(substr, s) != [];
-
-/**
- * Function to ...
- */
-local build_docker(stage, name, path, parent, version, branch, is_changed, is_triggered, job_needs, docker_args, allowed_push, latest) =
+local build_docker(payload, job_needs) =
 {
-  stage: stage,
+  stage: payload.stage,
   //
   rules:
-      if (parent.is_building == true || is_triggered == true || is_changed == true)
+      if (payload.parent.is_building == 1 || payload.is_triggered == 1 || payload.is_changed == 1)
       then 
       [{
         when: 'on_success'
@@ -35,18 +26,36 @@ local build_docker(stage, name, path, parent, version, branch, is_changed, is_tr
   //
   variables:
   {
-    NAME: name,
-    // VERSION: if(branch != "") then version else (version + "-" + branch),
-    VERSION: version, //std.strReplace(version, "_", "-"),
-    PARENT_VERSION: parent.version,
-    BUILD_PATH: path,
-    BUILD_BRANCH: branch,
+    NAME: payload.name,
+    VERSION: payload.version,
+    PARENT_VERSION: payload.parent.version,
+    BUILD_PATH: payload.path,
+    BUILD_BRANCH: payload.branch,
     #
     TAG: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:${VERSION}",
-    OTHER_DOCKER_ARGS: docker_args,
-    ALLOWED_PUSH: allowed_push,
+    OTHER_DOCKER_ARGS: payload.docker_args,
+    ALLOWED_PUSH: payload.allowed_push,
     BUILDKITD_FLAGS: "--oci-worker-no-process-sandbox",
-  } + if latest == true then {TAG_LATEST: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:latest",} else {},
+  } + (
+    if payload.latest == 1 then {
+      TAG_LATEST: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:latest",
+    } else {}
+  )
+  + (
+    if payload.registry_push != {} then {
+      CI_REGISTRY: payload.registry_push.name,
+      CI_REGISTRY_USER: payload.registry_push.username,
+      CI_REGISTRY_PASSWORD: payload.registry_push.password,
+    } else {}
+  )
+  + (
+    if payload.registry_pull != {} then {
+      CI_PULL_REGISTRY: payload.registry_pull.name,
+      CI_PULL_REGISTRY_USER: payload.registry_pull.username,
+      CI_PULL_REGISTRY_PASSWORD: payload.registry_pull.password,
+      TAG_PULL: payload.registry_pull.name + "/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:${VERSION}",
+    } else {}
+  ),
   image:
   {
       # name: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/cicd-docker/kaniko-executor:v1.9.1-debug",
@@ -66,7 +75,7 @@ local build_docker(stage, name, path, parent, version, branch, is_changed, is_tr
       #
       # Log which image we are building
       #
-      ('echo Building docker image ' + name + ' of stage ' + stage + ' and parent ' + parent + ' -- path : ' + path + ' -- version : ' + version + '.'),
+      ('echo Building docker image ' + payload.name + ' of stage ' + payload.stage + ' and parent ' + payload.parent + ' -- path : ' + payload.path + ' -- version : ' + payload.version + '.'),
       #
       # Call the entrypoint script, after going in the right directory (gitlab-runner starts in a directory that's not the workdir)
       # Kaniko Builder Entrypoint
@@ -87,12 +96,12 @@ local build_docker(stage, name, path, parent, version, branch, is_changed, is_tr
     paths:['./${NAME}_metadata.json']
   },
 };
-local deploy_docker(stage, name, path, parent, version, branch, is_changed, is_triggered, job_to_deploy, deploy_jenkins) =
+local deploy_docker(payload) =
 {
-  stage: stage,
+  stage: payload.stage,
   //
   rules:
-    if (parent.is_building == true || is_triggered == true || is_changed == true)
+    if (payload.parent.is_building == 1 || payload.is_triggered == 1 || payload.is_changed == 1)
     then 
     [{
       when: 'on_success'
@@ -113,16 +122,16 @@ local deploy_docker(stage, name, path, parent, version, branch, is_changed, is_t
   //
   needs:
   {
-    job: job_to_deploy,
+    job: payload.job_to_deploy,
   },
   //
   variables:
   {
-    NAME: name,
-    VERSION: version,
+    NAME: payload.name,
+    VERSION: payload.version,
     TAG: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:${VERSION}",
     JENKINS_TOKEN: "${JENKINS_TOKEN}",
-    JENKINS_URL: deploy_jenkins,
+    JENKINS_URL: payload.deploy_jenkins,
   },
   image:
   {
