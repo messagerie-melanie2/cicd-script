@@ -104,6 +104,7 @@ class Dockerfile:
         self.name = name
         self.version = version
         self.parent = parent
+        self.children = []
         self.multistage_parents = multistage_parents
         self.parameters = parameters
         self.branch = branch

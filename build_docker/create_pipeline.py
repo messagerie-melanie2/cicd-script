@@ -42,15 +42,19 @@ def sort_dockerfiles(dockerfiles):
 
         # loop through Dockerfile element
         for elem in res:
+            found = False
             # loop through previous levels
             for level in range(roundCount):
-                if (elem.parent.name, elem.parent.version) in {
-                    (df.name, df.version) for df in sortedRes[level]
-                }:
-                    logger.debug(f"Found : {elem}")
-
-                    sortedRes[level + 1].append(elem)
-                    elementsToRemove.append(elem)
+                for df in sortedRes[level] :
+                    if (elem.parent.name, elem.parent.version) == (df.name, df.version) :
+                        logger.debug(f"Found : {elem}")
+                        df.children.append(elem) 
+                        sortedRes[level + 1].append(elem)
+                        elementsToRemove.append(elem)
+                        found = True
+                        break
+                if found : 
+                    break
         
         # Increment counter
         roundCount += 1

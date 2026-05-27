@@ -118,26 +118,7 @@ def get_info_from_dockerhub(current_service_name, current_tag_name, latest = "la
 
     return current_tag_info, latest_tag_info, all_tags_info
 
-def get_external_debt_description(sorted_dockerfiles) -> str:
-    """
-    Builds the markdown description for the external debt GitLab issue.
-
-    For each external Dockerfile, compares its parent version against DockerHub's latest tags
-    and populates two tables: outdated images and images requiring manual review (dirty comparison).
-
-    Args:
-        sorted_dockerfiles (list): Output of sort_dockerfiles — sorted_dockerfiles[0] contains external Dockerfiles.
-
-    Returns:
-        str: Markdown-formatted description listing outdated and ambiguous external images.
-    """
-
-    description_outdated = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
-    description_dirty =  "| Dockerfile | Version actuel | Tags correspondants | Latest tags |\n|------------|---------------|---------------|---------------|\n"
-    description_failed = "| Dockerfile | Version actuel |\n|------------|---------------|\n"
-    description_up_to_date = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
-
-
+def get_all_info_from_dockerhub(sorted_dockerfiles) -> dict:
     # Optimising requests to dockerhub : constructing a dict with info on all our external dockerfiles
     all_df_info = {}
 
@@ -155,6 +136,35 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
             
             else :
                 logger.debug(f"Optimisation worked for dockerfile {df.parent.name} {df.parent.version}.")
+    return all_df_info
+
+def get_dockerfile_children_paths(dockerfile) -> list[str]:
+    path = [dockerfile.path]
+    if dockerfile.children :
+        for children in dockerfile.children :
+            path += get_dockerfile_children_paths(children) 
+    return path
+
+def get_external_debt_description(sorted_dockerfiles) -> str:
+    """
+    Builds the markdown description for the external debt GitLab issue.
+
+    For each external Dockerfile, compares its parent version against DockerHub's latest tags
+    and populates two tables: outdated images and images requiring manual review (dirty comparison).
+
+    Args:
+        sorted_dockerfiles (list): Output of sort_dockerfiles — sorted_dockerfiles[0] contains external Dockerfiles.
+
+    Returns:
+        str: Markdown-formatted description listing outdated and ambiguous external images.
+    """
+
+    description_outdated = "| Dockerfile | Version actuel | Latest tags | Enfants concernés |\n|------------|---------------|---------------|---------------|\n"
+    description_dirty =  "| Dockerfile | Version actuel | Tags correspondants | Latest tags | Enfants concernés |\n|------------|---------------|---------------|---------------|---------------|\n"
+    description_failed = "| Dockerfile | Version actuel |\n|------------|---------------|\n"
+    description_up_to_date = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
+
+    all_df_info = get_all_info_from_dockerhub(sorted_dockerfiles)
 
     for df in sorted_dockerfiles[0] : 
 
@@ -196,10 +206,12 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                     # Filling the first table for classic technical debt
                     if not passes_dirty_comparaison :
                         display_latest = ', '.join(latest_tags) if latest_tags else "latest"
-                        description_outdated += f"{df.path} | {df.parent.version} | {display_latest}\n"
+                        df_children_path = ', '.join(path for child in df.children for path in get_dockerfile_children_paths(child))
+                        description_outdated += f"{df.path} | {df.parent.version} | {display_latest} | {df_children_path}\n"
                     # Filling the dirty comparaison table for human check
                     elif passes_dirty_comparaison :
-                        description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)}\n"   
+                        df_children_path = ', '.join(path for child in df.children for path in get_dockerfile_children_paths(child))
+                        description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)} | {df_children_path}\n"   
 
                 # Else dockerfile is up to date
                 else :
