@@ -172,10 +172,10 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
         str: Markdown-formatted description listing outdated and ambiguous external images.
     """
 
-    description_outdated = "| Dockerfile | Version actuel | Latest tags | Enfants concernés |\n|------------|------------|-----------|---------------|\n"
-    description_dirty =  "| Dockerfile | Version actuel | Tags correspondants | Latest tags | Enfants concernés |\n|------------|------------|-----------|-----------|---------------|\n"
-    description_failed = "| Dockerfile | Version actuel |\n|------------|---------------|\n"
-    description_up_to_date = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
+    description_outdated = "| Dockerfile | Version actuel | Latest tags | Enfants concernés |\n|------|------|------|------|\n"
+    description_dirty =  "| Dockerfile | Version actuel | Tags correspondants | Latest tags | Enfants concernés |\n|----|----|----|----|----|\n"
+    description_failed = "| Dockerfile | Version actuel |\n|----|----|\n"
+    description_up_to_date = "| Dockerfile | Version actuel | Latest tags |\n|----|----|----|\n"
 
     all_df_info = get_all_info_from_dockerhub(sorted_dockerfiles)
 
@@ -192,8 +192,8 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                 latest_digest = latest_tag_info[0].get("digest") # latest_tag_info has necessarily only one element
                 latest_tags = [result.get("name") for result in all_df_info[df.parent.name]["tags"] if result.get("digest") == latest_digest and result.get("name") != "latest"]
 
-                if current_tag_info : # Check current is not empty and get all the tags corresponding to current digest else current tag
-                    current_digest = current_tag_info[0].get("digest") # current_tag_info has necessarily only on
+                if current_tag_info : # Check current_tag_info is not empty and get all the tags corresponding to current digest
+                    current_digest = current_tag_info[0].get("digest") # current_tag_info has necessarily only one element
                     if current_digest is None :
                         logger.error(f"Current dockerfile {df.parent.name} {df.parent.version} has no digest.")
                         current_tags = [df.parent.version]
@@ -206,10 +206,24 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                     logger.error(f"No tags found for dockerfile {df.parent.name} {df.parent.version}.")
 
                 logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags} and current tags : {current_tags}")
-                
+
+                # Creating 40-max caracter line with latest equivalents tags 
+                display_latest = ""
+                if latest_tags :
+                    current_line = ""
+                        for tag in latest_tags :
+                            if len(current_line) + len(tag) > 40 :
+                                current_line = tag
+                                display_latest += '<br>' + tag
+                            else :
+                                current_line += tag + ', '
+                                display_latest += tag + ', '
+                else :
+                    display_latest = "latest"
+
                 # If dockerfile has technical debt
                 if current_digest != latest_digest :
-
+                    
                     # Is the current version up to date or non-conventionally named ?
                     if DETECT_EXTERNAL_DEBT_ACTIVATE_DIRTY_COMPARAISON : 
                         passes_dirty_comparaison = dirty_comparaison(current_tags, latest_tags)
@@ -218,7 +232,6 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
 
                     # Filling the first table for classic technical debt
                     if not passes_dirty_comparaison :
-                        display_latest = ', '.join(latest_tags) if latest_tags else "latest"
                         df_children_path = ['- ' + path for child in df.children for path in get_dockerfile_children_paths(child)]
                         description_outdated += f"{df.path} | {df.parent.version} | {display_latest} | {'<br>'.join(df_children_path)}\n"
                     # Filling the dirty comparaison table for human check
@@ -228,7 +241,6 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
 
                 # Else dockerfile is up to date
                 else :
-                    display_latest = ', '.join(latest_tags) if latest_tags else "latest"
                     description_up_to_date += f"{df.path} | {df.parent.version} | {display_latest}\n"
 
             else :
