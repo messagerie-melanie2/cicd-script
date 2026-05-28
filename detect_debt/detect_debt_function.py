@@ -207,18 +207,21 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
 
                 logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags} and current tags : {current_tags}")
 
-                # Creating 40-max caracter line with latest equivalents tags 
-                display_latest = ""
-                if latest_tags :
-                    current_line = ""
-                    for tag in latest_tags :
-                        if len(current_line) + len(tag) > 40 :
-                            current_line = tag
-                            display_latest += '<br>' + tag
-                        else :
-                            current_line += tag + ', '
-                            display_latest += tag + ', '
-                else :
+                # Creating 40-max character lines with latest equivalent tags
+                if latest_tags:
+                    lines, current_line_tags, current_len = [], [], 0
+                    for tag in latest_tags:
+                        add_len = len(tag) + (2 if current_line_tags else 0)
+                        if current_line_tags and current_len + add_len > 40:
+                            lines.append(', '.join(current_line_tags))
+                            current_line_tags, current_len = [tag], len(tag)
+                        else:
+                            current_line_tags.append(tag)
+                            current_len += add_len
+                    if current_line_tags:
+                        lines.append(', '.join(current_line_tags))
+                    display_latest = '<br>'.join(lines)
+                else:
                     display_latest = "latest"
 
                 # If dockerfile has technical debt
@@ -237,15 +240,18 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                     # Filling the dirty comparaison table for human check
                     elif passes_dirty_comparaison :
                         df_children_path = ['- ' + path for child in df.children for path in get_dockerfile_children_paths(child)]
-                        display_current = ""
-                        current_line = ""
+                        lines, current_line_tags, current_len = [], [], 0
                         for tag in current_tags:
-                            if len(current_line) + len(tag) > 40:
-                                current_line = tag
-                                display_current += '<br>' + tag
+                            add_len = len(tag) + (2 if current_line_tags else 0)
+                            if current_line_tags and current_len + add_len > 40:
+                                lines.append(', '.join(current_line_tags))
+                                current_line_tags, current_len = [tag], len(tag)
                             else:
-                                current_line += tag + ', '
-                                display_current += tag + ', '
+                                current_line_tags.append(tag)
+                                current_len += add_len
+                        if current_line_tags:
+                            lines.append(', '.join(current_line_tags))
+                        display_current = '<br>'.join(lines)
                         description_dirty += f"{df.path} | {df.parent.version} | {display_current} | {display_latest} | {'<br>'.join(df_children_path)}\n"   
 
                 # Else dockerfile is up to date
