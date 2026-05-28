@@ -135,11 +135,15 @@ def get_all_info_from_dockerhub(sorted_dockerfiles) -> dict:
             # Service not present at all in our dict
             if df.parent.name not in all_df_info :
                 _, _, all_df_info[df.parent.name] = get_info_from_dockerhub(df.parent.name, df.parent.version)
+            
+            # Service already requested but got an API fail
+            elif all_df_info[df.parent.name]['last_page_requested'] == 0 :
+                logger.debug(f"Otpmisation worked for {df.parent.name} {df.parent.version}, already got on API fail.") 
 
             # Service partially present in our dict but missing info on the specific version
             elif not any(tag.get("name") == df.parent.version for tag in all_df_info[df.parent.name]["tags"]) :
                 _, _, all_df_info[df.parent.name] = get_info_from_dockerhub(df.parent.name, df.parent.version, all_tags_info = all_df_info[df.parent.name]) 
-                logger.debug(f"Otpmisation worked for {all_df_info[df.parent.name]['last_page_requested']} resquests on {df.parent.name} {df.parent.version}.") 
+                logger.debug(f"Otpmisation worked for {all_df_info[df.parent.name]['last_page_requested']} requests on {df.parent.name} {df.parent.version}.") 
             else :
                 logger.debug(f"Optimisation worked for dockerfile {df.parent.name} {df.parent.version}.")
 
@@ -215,11 +219,11 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                     # Filling the first table for classic technical debt
                     if not passes_dirty_comparaison :
                         display_latest = ', '.join(latest_tags) if latest_tags else "latest"
-                        df_children_path = '\n - '.join(path for child in df.children for path in get_dockerfile_children_paths(child))
+                        df_children_path = '<br> - '.join(path for child in df.children for path in get_dockerfile_children_paths(child))
                         description_outdated += f"{df.path} | {df.parent.version} | {display_latest} | {df_children_path}\n"
                     # Filling the dirty comparaison table for human check
                     elif passes_dirty_comparaison :
-                        df_children_path = '\n - '.join(path for child in df.children for path in get_dockerfile_children_paths(child))
+                        df_children_path = '<br> - '.join(path for child in df.children for path in get_dockerfile_children_paths(child))
                         description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)} | {df_children_path}\n"   
 
                 # Else dockerfile is up to date
