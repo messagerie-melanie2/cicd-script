@@ -55,6 +55,35 @@ def dirty_comparaison(current_tags, latest_tags) -> bool:
 
     return current_version_in_latest
 
+def wrap_tags(tags, max_len=40) -> str:
+    """
+    Formats a list of tags into a string where each line stays under max_len characters.
+    Lines are separated by '<br>' for Markdown table cell rendering.
+
+    Algorithm:
+    - We go through tags one by one, accumulating them on a "current line".
+    - Before adding a tag, we check if it would make the line exceed max_len.
+      (We account for the ', ' separator that will be added between tags.)
+    - If it fits  → we add it to the current line.
+    - If it doesn't → we save the current line and start a new one with this tag.
+    - At the end, we join all lines with '<br>'.
+    """
+    if not tags:
+        return ""
+    lines, current_line_tags, current_len = [], [], 0
+    for tag in tags:
+        # +2 accounts for the ', ' separator added between tags on the same line
+        add_len = len(tag) + (2 if current_line_tags else 0)
+        if current_line_tags and current_len + add_len > max_len:
+            lines.append(', '.join(current_line_tags))
+            current_line_tags, current_len = [tag], len(tag)
+        else:
+            current_line_tags.append(tag)
+            current_len += add_len
+    if current_line_tags:
+        lines.append(', '.join(current_line_tags))
+    return ',<br>'.join(lines)
+
 def get_info_from_dockerhub(current_service_name, current_tag_name, latest = "latest", all_tags_info = None) -> tuple[list, list, dict]:
     """
     Fetches tag information for a given image from DockerHub.
@@ -207,22 +236,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
 
                 logger.debug(f"Dockerfile {df.parent.name} {df.parent.version} has latest tags : {latest_tags} and current tags : {current_tags}")
 
-                # Creating 40-max character lines with latest equivalent tags
-                if latest_tags:
-                    lines, current_line_tags, current_len = [], [], 0
-                    for tag in latest_tags:
-                        add_len = len(tag) + (2 if current_line_tags else 0)
-                        if current_line_tags and current_len + add_len > 40:
-                            lines.append(', '.join(current_line_tags))
-                            current_line_tags, current_len = [tag], len(tag)
-                        else:
-                            current_line_tags.append(tag)
-                            current_len += add_len
-                    if current_line_tags:
-                        lines.append(', '.join(current_line_tags))
-                    display_latest = '<br>'.join(lines)
-                else:
-                    display_latest = "latest"
+                display_latest = wrap_tags(latest_tags) if latest_tags else "latest"
 
                 # If dockerfile has technical debt
                 if current_digest != latest_digest :
@@ -240,18 +254,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                     # Filling the dirty comparaison table for human check
                     elif passes_dirty_comparaison :
                         df_children_path = ['- ' + path for child in df.children for path in get_dockerfile_children_paths(child)]
-                        lines, current_line_tags, current_len = [], [], 0
-                        for tag in current_tags:
-                            add_len = len(tag) + (2 if current_line_tags else 0)
-                            if current_line_tags and current_len + add_len > 40:
-                                lines.append(', '.join(current_line_tags))
-                                current_line_tags, current_len = [tag], len(tag)
-                            else:
-                                current_line_tags.append(tag)
-                                current_len += add_len
-                        if current_line_tags:
-                            lines.append(', '.join(current_line_tags))
-                        display_current = '<br>'.join(lines)
+                        display_current = wrap_tags(current_tags)
                         description_dirty += f"{df.path} | {df.parent.version} | {display_current} | {display_latest} | {'<br>'.join(df_children_path)}\n"   
 
                 # Else dockerfile is up to date
