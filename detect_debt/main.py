@@ -22,9 +22,7 @@ def main(args) :
         if DETECT_EXTERNAL_DEBT_ACTIVATE_ISSUE : 
             create_or_update_issue(args.token, args.project_id, payload_external_debt, issue_filter_external_debt)
 
-    #TODO je répértorie dans une colonne supplémentaire le path des enfants impactés
-    
-    #TODO refacto par service
+    #TODO refacto par service -> reprendre à la dernière page pour toujours plus d'opti
 
     #TODO prometheus et grafana 
 

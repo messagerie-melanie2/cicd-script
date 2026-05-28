@@ -55,7 +55,7 @@ def dirty_comparaison(current_tags, latest_tags) -> bool:
 
     return current_version_in_latest
 
-def get_info_from_dockerhub(current_service_name, current_tag_name, latest = "latest") -> tuple[list, list, list]:
+def get_info_from_dockerhub(current_service_name, current_tag_name, latest = "latest", all_tags_info = None) -> tuple[list, list, dict]:
     """
     Fetches tag information for a given image from DockerHub.
 
@@ -76,9 +76,13 @@ def get_info_from_dockerhub(current_service_name, current_tag_name, latest = "la
     }
     
     current_tag_info = []
-    page_number = 0
-    all_tags_info = []
     latest_tag_info = []
+
+    if not all_tags_info :
+        all_tags_info = {
+            "tags" : [],
+            "last_page_requested" : 0
+        }
    
     if "/" in current_service_name:
         parts = current_service_name.split("/")
@@ -91,30 +95,32 @@ def get_info_from_dockerhub(current_service_name, current_tag_name, latest = "la
         namespace = "library"
     
     # Paginate until we have current, latest, and at least one named version alias for latest
-    while len(all_tags_info) == 100 * page_number:
+    while True:
 
-        url = f"https://hub.docker.com/v2/namespaces/{namespace}/repositories/{current_service_name}/tags?page={page_number+1}&page_size=100"
+        url = f"https://hub.docker.com/v2/namespaces/{namespace}/repositories/{current_service_name}/tags?page={all_tags_info['last_page_requested']+1}&page_size=100"
         r = request("get", url, proxies=proxies)
         if r == {}:
             logger.error(f"Failed to get info from dockerhub for {current_service_name} {current_tag_name}")
             break
         try:
-            all_tags_info += r.get("results")
+            all_tags_info["tags"] += r.get("results")
         except Exception as err:
             logger.error(f"Got info from dockerhub but {err} with r : {r}")
             break
 
-        current_tag_info = [tag for tag in all_tags_info if tag.get("name") == current_tag_name]
-        latest_tag_info = [tag for tag in all_tags_info if tag.get("name") == latest]
-        page_number += 1
+        current_tag_info = [tag for tag in all_tags_info["tags"] if tag.get("name") == current_tag_name]
+        latest_tag_info = [tag for tag in all_tags_info["tags"] if tag.get("name") == latest]
+        all_tags_info["last_page_requested"] += 1
 
-        # Early exit:
-        # condition 1: current and latest found
-        # condition 2: latest has at least one named version alias (or it's been already 5 requests) 
+        # Exit:
+        # condition 1: current and latest found + latest has at least one named version alias (or it's been already 5 requests) 
+        # condition 2: no more results from dockerhub
         if current_tag_info and latest_tag_info:
             latest_digest = latest_tag_info[0].get("digest")
-            if any(result.get("digest") == latest_digest and result.get("name") != latest for result in all_tags_info) or page_number >= 5:
+            if any(result.get("digest") == latest_digest and result.get("name") != latest for result in all_tags_info["tags"]) or all_tags_info["last_page_requested"] >= 5:
                 break
+        if len(r.get("results")) != 100 : 
+            break
 
     return current_tag_info, latest_tag_info, all_tags_info
 
@@ -128,21 +134,24 @@ def get_all_info_from_dockerhub(sorted_dockerfiles) -> dict:
            
             # Service not present at all in our dict
             if df.parent.name not in all_df_info :
-                    _, _, all_df_info[df.parent.name] = get_info_from_dockerhub(df.parent.name, df.parent.version) 
+                _, _, all_df_info[df.parent.name] = get_info_from_dockerhub(df.parent.name, df.parent.version)
 
             # Service partially present in our dict but missing info on the specific version
-            elif not any(tag.get("name") == df.parent.version for tag in all_df_info[df.parent.name]) :
-                    _, _, all_df_info[df.parent.name] = get_info_from_dockerhub(df.parent.name, df.parent.version)
-            
+            elif not any(tag.get("name") == df.parent.version for tag in all_df_info[df.parent.name]["tags"]) :
+                _, _, all_df_info[df.parent.name] = get_info_from_dockerhub(df.parent.name, df.parent.version, all_tags_info = all_df_info[df.parent.name]) 
+                logger.debug(f"Otpmisation worked for {all_df_info[df.parent.name]['last_page_requested']} resquests on {df.parent.name} {df.parent.version}.") 
             else :
                 logger.debug(f"Optimisation worked for dockerfile {df.parent.name} {df.parent.version}.")
+
     return all_df_info
 
 def get_dockerfile_children_paths(dockerfile) -> list[str]:
+    
     path = [dockerfile.path]
     if dockerfile.children :
         for children in dockerfile.children :
             path += get_dockerfile_children_paths(children) 
+
     return path
 
 def get_external_debt_description(sorted_dockerfiles) -> str:
@@ -170,14 +179,14 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
 
         if df.parent.external : # Sanity check, dockerfiles should be external in the first array
             
-            current_tag_info = [tag for tag in all_df_info[df.parent.name] if tag.get("name") == df.parent.version]
-            latest_tag_info = [tag for tag in all_df_info[df.parent.name] if tag.get("name") == "latest"]
+            current_tag_info = [tag for tag in all_df_info[df.parent.name]["tags"] if tag.get("name") == df.parent.version]
+            latest_tag_info = [tag for tag in all_df_info[df.parent.name]["tags"] if tag.get("name") == "latest"]
 
             if latest_tag_info: # Sanity check latest is not empty
 
                 # Getting all the tags corresponding to latest 
                 latest_digest = latest_tag_info[0].get("digest") # latest_tag_info has necessarily only one element
-                latest_tags = [result.get("name") for result in all_df_info[df.parent.name] if result.get("digest") == latest_digest and result.get("name") != "latest"]
+                latest_tags = [result.get("name") for result in all_df_info[df.parent.name]["tags"] if result.get("digest") == latest_digest and result.get("name") != "latest"]
 
                 if current_tag_info : # Check current is not empty and get all the tags corresponding to current digest else current tag
                     current_digest = current_tag_info[0].get("digest") # current_tag_info has necessarily only on
@@ -186,7 +195,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                         current_tags = [df.parent.version]
                     else :
                         logger.debug(f"Current digest for dockerfile {df.parent.name} {df.parent.version} is {current_digest}")
-                        current_tags = [result.get("name") for result in all_df_info[df.parent.name] if result.get("digest") == current_digest]
+                        current_tags = [result.get("name") for result in all_df_info[df.parent.name]["tags"] if result.get("digest") == current_digest]
                 else :
                     current_digest = None
                     current_tags = [df.parent.version]
@@ -206,11 +215,11 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                     # Filling the first table for classic technical debt
                     if not passes_dirty_comparaison :
                         display_latest = ', '.join(latest_tags) if latest_tags else "latest"
-                        df_children_path = ', '.join(path for child in df.children for path in get_dockerfile_children_paths(child))
+                        df_children_path = '\n - '.join(path for child in df.children for path in get_dockerfile_children_paths(child))
                         description_outdated += f"{df.path} | {df.parent.version} | {display_latest} | {df_children_path}\n"
                     # Filling the dirty comparaison table for human check
                     elif passes_dirty_comparaison :
-                        df_children_path = ', '.join(path for child in df.children for path in get_dockerfile_children_paths(child))
+                        df_children_path = '\n - '.join(path for child in df.children for path in get_dockerfile_children_paths(child))
                         description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)} | {df_children_path}\n"   
 
                 # Else dockerfile is up to date
