@@ -211,13 +211,13 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                 display_latest = ""
                 if latest_tags :
                     current_line = ""
-                        for tag in latest_tags :
-                            if len(current_line) + len(tag) > 40 :
-                                current_line = tag
-                                display_latest += '<br>' + tag
-                            else :
-                                current_line += tag + ', '
-                                display_latest += tag + ', '
+                    for tag in latest_tags :
+                        if len(current_line) + len(tag) > 40 :
+                            current_line = tag
+                            display_latest += '<br>' + tag
+                        else :
+                            current_line += tag + ', '
+                            display_latest += tag + ', '
                 else :
                     display_latest = "latest"
 
@@ -237,7 +237,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                     # Filling the dirty comparaison table for human check
                     elif passes_dirty_comparaison :
                         df_children_path = ['- ' + path for child in df.children for path in get_dockerfile_children_paths(child)]
-                        description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)} | {'<br>'.join(df_children_path)}\n"   
+                        description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {display_latest} | {'<br>'.join(df_children_path)}\n"   
 
                 # Else dockerfile is up to date
                 else :
