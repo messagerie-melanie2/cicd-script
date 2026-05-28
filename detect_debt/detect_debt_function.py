@@ -172,8 +172,8 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
         str: Markdown-formatted description listing outdated and ambiguous external images.
     """
 
-    description_outdated = "| Dockerfile | Version actuel | Latest tags | Enfants concernés |\n|------------|---------------|---------------|---------------|\n"
-    description_dirty =  "| Dockerfile | Version actuel | Tags correspondants | Latest tags | Enfants concernés |\n|------------|---------------|---------------|---------------|---------------|\n"
+    description_outdated = "| Dockerfile | Version actuel | Latest tags | Enfants concernés |\n|------------|------------|-----------|---------------|\n"
+    description_dirty =  "| Dockerfile | Version actuel | Tags correspondants | Latest tags | Enfants concernés |\n|------------|------------|-----------|-----------|---------------|\n"
     description_failed = "| Dockerfile | Version actuel |\n|------------|---------------|\n"
     description_up_to_date = "| Dockerfile | Version actuel | Latest tags |\n|------------|---------------|---------------|\n"
 
@@ -219,12 +219,12 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                     # Filling the first table for classic technical debt
                     if not passes_dirty_comparaison :
                         display_latest = ', '.join(latest_tags) if latest_tags else "latest"
-                        df_children_path = ['<br> - ' + path for child in df.children for path in get_dockerfile_children_paths(child)]
+                        df_children_path = ['- ' + path for child in df.children for path in get_dockerfile_children_paths(child)]
                         description_outdated += f"{df.path} | {df.parent.version} | {display_latest} | {''.join(df_children_path)}\n"
                     # Filling the dirty comparaison table for human check
                     elif passes_dirty_comparaison :
                         df_children_path = ['<br> - ' + path for child in df.children for path in get_dockerfile_children_paths(child)]
-                        description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)} | {''.join(df_children_path)}\n"   
+                        description_dirty += f"{df.path} | {df.parent.version} | {', '.join(current_tags)} | {', '.join(latest_tags)} | {'<br>'.join(df_children_path)}\n"   
 
                 # Else dockerfile is up to date
                 else :
