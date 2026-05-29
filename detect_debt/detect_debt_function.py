@@ -1,5 +1,5 @@
 from detect_debt.global_vars import *
-from build_docker.create_pipeline import sort_dockerfiles 
+from build_docker.create_pipeline import sort_dockerfiles
 from lib.gitlab_helper import get_issues, create_issue, update_issue, get_user_id, get_users
 from lib.helper import request
 
@@ -86,7 +86,7 @@ def wrap_tags(tags, max_len=40) -> str:
         lines.append(', '.join(current_line_tags))
     return ',<br>'.join(lines)
 
-def get_info_from_dockerhub(current_service_name, current_tag_name, latest="latest", all_tags_info = None) -> tuple[dict | None, dict | None, dict]:
+def get_info_from_dockerhub(current_service_name, current_tag_name, latest="latest", all_tags_info=None) -> tuple[dict | None, dict | None, dict]:
     """
     Fetches tag information for a given image from DockerHub.
 
@@ -113,7 +113,7 @@ def get_info_from_dockerhub(current_service_name, current_tag_name, latest="late
       "http": os.environ.get("HTTP_PROXY"),
       "https": os.environ.get("HTTPS_PROXY")
     }
-    
+
     current_tag_info = None
     latest_tag_info = None
 
@@ -122,17 +122,17 @@ def get_info_from_dockerhub(current_service_name, current_tag_name, latest="late
             "tags": [],
             "last_page_requested": 0
         }
-   
+
     if "/" in current_service_name:
         parts = current_service_name.split("/")
         current_service_name = parts[-1]
         if "." in parts[0]:
-            namespace = parts[1] if len(parts) > 2 else "library" # Anticipating cases like docker.io/bitnami/mariadb-galera 
+            namespace = parts[1] if len(parts) > 2 else "library" # Anticipating cases like docker.io/bitnami/mariadb-galera
         else:
             namespace = parts[0]
     else:
         namespace = "library"
-    
+
     # Paginate until we have current, latest, and at least one named version alias for latest
     while True:
 
@@ -153,7 +153,7 @@ def get_info_from_dockerhub(current_service_name, current_tag_name, latest="late
         all_tags_info["last_page_requested"] += 1
 
         # Exit:
-        # condition 1: current and latest found + latest has at least one named version alias (or it's been already 5 requests) 
+        # condition 1: current and latest found + latest has at least one named version alias (or it's been already 5 requests)
         # condition 2: no more results from dockerhub
         if current_tag_info and latest_tag_info:
             latest_digest = latest_tag_info.get("digest")
@@ -184,22 +184,22 @@ def get_all_info_from_dockerhub(sorted_dockerfiles) -> dict:
     # Optimising requests to dockerhub : constructing a dict with info on all our external dockerfiles
     all_df_info = {}
 
-    for df in sorted_dockerfiles[0]: 
+    for df in sorted_dockerfiles[0]:
 
         if df.parent.external: # Sanity check, dockerfiles should be external in the first array
-           
+
             # Service not present at all in our dict
             if df.parent.name not in all_df_info:
                 _, _, all_df_info[df.parent.name] = get_info_from_dockerhub(df.parent.name, df.parent.version)
-            
+
             # Service already requested but got an API fail
             elif all_df_info[df.parent.name]['last_page_requested'] == 0:
-                logger.debug(f"Optimisation worked for {df.parent.name} {df.parent.version}, already got on API fail.") 
+                logger.debug(f"Optimisation worked for {df.parent.name} {df.parent.version}, already got on API fail.")
 
             # Service partially present in our dict but missing info on the specific version
             elif not any(tag.get("name") == df.parent.version for tag in all_df_info[df.parent.name]["tags"]):
-                _, _, all_df_info[df.parent.name] = get_info_from_dockerhub(df.parent.name, df.parent.version, all_tags_info = all_df_info[df.parent.name]) 
-                logger.debug(f"Optimisation worked for {all_df_info[df.parent.name]['last_page_requested']} requests on {df.parent.name} {df.parent.version}.") 
+                _, _, all_df_info[df.parent.name] = get_info_from_dockerhub(df.parent.name, df.parent.version, all_tags_info = all_df_info[df.parent.name])
+                logger.debug(f"Optimisation worked for {all_df_info[df.parent.name]['last_page_requested']} requests on {df.parent.name} {df.parent.version}.")
             else:
                 logger.debug(f"Optimisation worked for dockerfile {df.parent.name} {df.parent.version}.")
 
@@ -216,9 +216,8 @@ def get_dockerfile_children_paths(dockerfile) -> list[str]:
         list[str]: Paths of the given Dockerfile and all its children, depth-first.
     """
     path = [dockerfile.path]
-    if dockerfile.children:
-        for children in dockerfile.children:
-            path += get_dockerfile_children_paths(children) 
+    for children in dockerfile.children:
+        path += get_dockerfile_children_paths(children)
 
     return path
 
@@ -246,14 +245,14 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
     for df in sorted_dockerfiles[0]:
 
         if df.parent.external: # Sanity check, dockerfiles should be external in the first array
-            
+
             current_tag_info = next((elem for elem in all_df_info[df.parent.name]["tags"] if elem.get("name") == df.parent.version), None)
             latest_tag_info = next((elem for elem in all_df_info[df.parent.name]["tags"] if elem.get("name") == "latest"), None)
 
             if latest_tag_info: # Sanity check latest is not empty
 
-                # Getting all the tags corresponding to latest 
-                latest_digest = latest_tag_info.get("digest") 
+                # Getting all the tags corresponding to latest
+                latest_digest = latest_tag_info.get("digest")
                 latest_tags = [result.get("name") for result in all_df_info[df.parent.name]["tags"] if result.get("digest") == latest_digest and result.get("name") != "latest"]
 
                 if current_tag_info: # Check current_tag_info is not empty and get all the tags corresponding to current digest
@@ -275,7 +274,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
 
                 # If dockerfile has technical debt
                 if current_digest != latest_digest:
-                    
+
                     # Is the current version up to date or non-conventionally named ?
                     if DETECT_EXTERNAL_DEBT_ACTIVATE_DIRTY_COMPARAISON:
                         passes_dirty_comparaison = dirty_comparaison(current_tags, latest_tags)
@@ -290,7 +289,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
                     # Filling the dirty comparaison table for human check
                     else:
                         display_current = wrap_tags(current_tags)
-                        description_dirty += f"{df.path} | {df.parent.version} | {display_current} | {display_latest} | {display_children_path}\n"   
+                        description_dirty += f"{df.path} | {df.parent.version} | {display_current} | {display_latest} | {display_children_path}\n"
 
                 # Else dockerfile is up to date
                 else:
@@ -350,13 +349,13 @@ def external_debt(token, project_id, dockerfiles) -> tuple[dict, dict]:
 
     payload = {
         'title': DETECT_EXTERNAL_DEBT_ISSUE_TITLE,
-        'description': description, 
-        'labels': DETECT_EXTERNAL_DEBT_ISSUE_LABEL, 
+        'description': description,
+        'labels': DETECT_EXTERNAL_DEBT_ISSUE_LABEL,
         'assignee_id': obtained_users_id
-    } 
+    }
 
     issue_filter = {'search': DETECT_EXTERNAL_DEBT_ISSUE_TITLE}
-    
+
     return payload, issue_filter
 
 def get_internal_debt_description(dockerfiles) -> str:
@@ -383,7 +382,7 @@ def get_internal_debt_description(dockerfiles) -> str:
         versions[df.name].append(df.path.split('/')[-1])
     logger.debug(f"Versions found : {versions}")
 
-    # Analysing debt 
+    # Analysing debt
     for df in dockerfiles:
         # Check only dockerfiles which depend on internal parent
         if not df.parent.external:
@@ -409,8 +408,8 @@ def internal_debt(token, project_id, dockerfiles) -> tuple[dict, dict]:
     """
 
     logger.info(f"Found {len(dockerfiles)} Dockerfiles")
-    
-    description = get_internal_debt_description(dockerfiles) 
+
+    description = get_internal_debt_description(dockerfiles)
 
     logger.info(f"=== Internal debt found === \n {description}")
 
@@ -421,11 +420,11 @@ def internal_debt(token, project_id, dockerfiles) -> tuple[dict, dict]:
 
     payload = {
         'title': DETECT_INTERNAL_DEBT_ISSUE_TITLE,
-        'description': description, 
-        'labels': DETECT_INTERNAL_DEBT_ISSUE_LABEL, 
+        'description': description,
+        'labels': DETECT_INTERNAL_DEBT_ISSUE_LABEL,
         'assignee_id': obtained_users_id
     }
-    
+
     issue_filter = {'search': DETECT_INTERNAL_DEBT_ISSUE_TITLE}
 
     return payload, issue_filter
