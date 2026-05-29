@@ -110,8 +110,8 @@ def get_info_from_dockerhub(current_service_name, current_tag_name, latest="late
     """
 
     proxies = {
-      "http": os.environ.get("HTTP_PROXY"),
-      "https": os.environ.get("HTTPS_PROXY")
+        "http": os.environ.get("HTTP_PROXY"),
+        "https": os.environ.get("HTTPS_PROXY")
     }
 
     current_tag_info = None
@@ -125,18 +125,19 @@ def get_info_from_dockerhub(current_service_name, current_tag_name, latest="late
 
     if "/" in current_service_name:
         parts = current_service_name.split("/")
-        current_service_name = parts[-1]
+        service_name = parts[-1]
         if "." in parts[0]:
             namespace = parts[1] if len(parts) > 2 else "library" # Anticipating cases like docker.io/bitnami/mariadb-galera
         else:
             namespace = parts[0]
     else:
         namespace = "library"
+        service_name = current_service_name
 
     # Paginate until we have current, latest, and at least one named version alias for latest
     while True:
 
-        url = f"https://hub.docker.com/v2/namespaces/{namespace}/repositories/{current_service_name}/tags?page={all_tags_info['last_page_requested']+1}&page_size=100"
+        url = f"https://hub.docker.com/v2/namespaces/{namespace}/repositories/{service_name}/tags?page={all_tags_info['last_page_requested']+1}&page_size=100"
         r = request("get", url, proxies=proxies)
         if r == {}:
             logger.error(f"Failed to get info from dockerhub for {current_service_name} {current_tag_name}")
@@ -198,7 +199,7 @@ def get_all_info_from_dockerhub(sorted_dockerfiles) -> dict:
 
             # Service partially present in our dict but missing info on the specific version
             elif not any(tag.get("name") == df.parent.version for tag in all_df_info[df.parent.name]["tags"]):
-                _, _, all_df_info[df.parent.name] = get_info_from_dockerhub(df.parent.name, df.parent.version, all_tags_info = all_df_info[df.parent.name])
+                _, _, all_df_info[df.parent.name] = get_info_from_dockerhub(df.parent.name, df.parent.version, all_tags_info=all_df_info[df.parent.name])
                 logger.debug(f"Optimisation worked for {all_df_info[df.parent.name]['last_page_requested']} requests on {df.parent.name} {df.parent.version}.")
             else:
                 logger.debug(f"Optimisation worked for dockerfile {df.parent.name} {df.parent.version}.")
@@ -236,7 +237,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
     """
 
     description_outdated = "| Dockerfile | Version actuel | Latest tags | Enfants concernés |\n|------|------|------|------|\n"
-    description_dirty =  "| Dockerfile | Version actuel | Tags correspondants | Latest tags | Enfants concernés |\n|----|----|----|----|----|\n"
+    description_dirty = "| Dockerfile | Version actuel | Tags correspondants | Latest tags | Enfants concernés |\n|----|----|----|----|----|\n"
     description_failed = "| Dockerfile | Version actuel |\n|----|----|\n"
     description_up_to_date = "| Dockerfile | Version actuel | Latest tags |\n|----|----|----|\n"
 
@@ -318,6 +319,7 @@ def get_external_debt_description(sorted_dockerfiles) -> str:
     # Sanity check : assuring we treated every dockerfile
     if description.count('\n')-newline_count != len(sorted_dockerfiles[0]):
         logger.error(f"Error : Initially got {len(sorted_dockerfiles[0])} dockerfiles from sorted_dockerfiles() but listed {description.count('\n')-newline_count} in the issue.")
+        description += f"### Error : Initially got {len(sorted_dockerfiles[0])} dockerfiles from sorted_dockerfiles() but listed {description.count('\n')-newline_count} in the issue.\n"
 
     return description
 
