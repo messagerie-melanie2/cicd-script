@@ -1,34 +1,9 @@
 from detect_debt.global_vars import *
 from build_docker.create_pipeline import sort_dockerfiles
-from lib.gitlab_helper import get_issues, create_issue, update_issue, get_user_id, get_users
+from lib.gitlab_helper import get_user_id, get_users
 from lib.helper import request
 
 logger = logging.getLogger(__name__)
-
-def create_or_update_issue(token, project_id, payload, issue_filter):
-    """
-    Creates or updates a GitLab issue based on the provided payload.
-
-    If an issue matching the filter already exists, it is updated. Otherwise, a new issue is created.
-
-    Args:
-        token (str): Private token used for GitLab authentication.
-        project_id (int): ID of the GitLab project.
-        payload (dict): Issue fields (title, description, labels, assignee_id).
-        issue_filter (dict): Filter used to search for an existing issue.
-
-    Returns:
-        None
-    """
-
-    logger.info(f"Payload created : {payload}")
-
-    obtained_issues = get_issues(token, project_id, issue_filter)
-
-    if not obtained_issues:
-        create_issue(token, project_id, payload)
-    else:
-        update_issue(token, project_id, obtained_issues[0]["iid"], payload)
 
 def dirty_comparaison(current_tags, latest_tags) -> bool:
     """
@@ -148,8 +123,8 @@ def get_info_from_dockerhub(current_service_name, current_tag_name, latest="late
             logger.error(f"Got info from dockerhub but {err} with r : {r}")
             break
 
-        current_tag_info = next((elem for elem in all_tags_info["tags"] if elem.get("name") == current_tag_name), None)
-        latest_tag_info = next((elem for elem in all_tags_info["tags"] if elem.get("name") == latest), None)
+        current_tag_info = next((tag for tag in all_tags_info["tags"] if tag.get("name") == current_tag_name), None)
+        latest_tag_info = next((tag for tag in all_tags_info["tags"] if tag.get("name") == latest), None)
 
         all_tags_info["last_page_requested"] += 1
 

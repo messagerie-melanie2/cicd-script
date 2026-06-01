@@ -490,3 +490,28 @@ def delete_tag_in_repository(token,project_id,repository_id,tag_name):
         deleted = True
     
     return deleted
+
+def create_or_update_issue(token,project_id,payload,issue_filter):
+    """
+    Creates or updates a GitLab issue based on the provided payload.
+
+    If an issue matching the filter already exists, it is updated. Otherwise, a new issue is created.
+
+    Args:
+        token (str): Private token used for GitLab authentication.
+        project_id (int): ID of the GitLab project.
+        payload (dict): Issue fields (title, description, labels, assignee_id).
+        issue_filter (dict): Filter used to search for an existing issue.
+
+    Returns:
+        None
+    """
+
+    logger.info(f"Payload created : {payload}")
+
+    obtained_issues = get_issues(token, project_id, issue_filter)
+
+    if not obtained_issues:
+        create_issue(token, project_id, payload)
+    else:
+        update_issue(token, project_id, obtained_issues[0]["iid"], payload)
