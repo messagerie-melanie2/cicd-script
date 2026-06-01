@@ -1,6 +1,7 @@
 from detect_debt.global_vars import *
 from build_docker.find_dockerfiles import find_dockerfiles_r
 from detect_debt.detect_debt_function import *
+from lib.gitlab_helper import create_or_update_issue
 
 logger = logging.getLogger(__name__)
 
