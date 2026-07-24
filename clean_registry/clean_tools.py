@@ -11,7 +11,7 @@ def check_if_is_dev_branch(branch_to_check):
 def check_if_is_tag_to_keep(tag_to_check):
     check = False
     for tag in TAG_TO_KEEP :
-        if tag in tag_to_check["name"] :
+        if tag in tag_to_check :
             check = True
 
     return check
