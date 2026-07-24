@@ -316,7 +316,7 @@ def get_users(token,project_id):
 
 def get_issues(token,project_id, issue_filter):
     """
-    Create an issue for a project.
+    Get issues of a project.
 
     Args:
         token (str): Private access token for the GitLab API.
@@ -324,10 +324,10 @@ def get_issues(token,project_id, issue_filter):
         issue_payload (dict): Issues information to create
 
     Returns:
-        users (list): A list of users dictionaries as returned by the GitLab API.
+        issues (list): A list of issues dictionaries as returned by the GitLab API.
     """
 
-    issues = {}
+    issues = []
     headers = {"PRIVATE-TOKEN": token}
 
     url = f"{GITLAB_URL}api/v4/projects/{project_id}/issues"
@@ -337,7 +337,7 @@ def get_issues(token,project_id, issue_filter):
 
     return issues
 
-def create_issue(token,project_id, issue_payload):
+def create_issue(token, project_id, issue_payload):
     """
     Create an issue for a project.
 
@@ -347,7 +347,7 @@ def create_issue(token,project_id, issue_payload):
         issue_payload (dict): Issues information to create
 
     Returns:
-        users (list): A list of users dictionaries as returned by the GitLab API.
+        issue (dict): A dict of an issue as returned by the GitLab API.
     """
 
     issue = {}
@@ -410,6 +410,37 @@ def create_issue_link(token, issue, issue_target):
     
     return new_issue_link
 
+def get_user_id(assignee_username, project_user, multiple_user) :
+    """
+    Get users ids depending of their username.
+
+    Args:
+        issue (dict): The issue json.
+        project_user (list): List of all user of the project
+        multiple_user (bool): Permit multiple user feature.
+
+    Returns:
+        user_id (list): List of all user ids needed.
+    """
+
+    user_id = []
+    if assignee_username != None :
+        assignee_username = assignee_username.lower().split(",")
+        logger.debug(f"assignee_username: {assignee_username}")
+        if len(assignee_username) > 1  and not multiple_user:
+            logger.error(f"assignee_username must have only one username because multiple user is false")
+            sys.exit()
+        for user in project_user :
+            if user.get("username").lower() in assignee_username :
+                user_id.append(user.get("id"))
+                logger.info(f"User {user.get("username")} found with id : {user.get("id")}")
+    
+    logger.debug(f"user_id: {user_id}")
+    if len(user_id) == 0 : 
+        logger.warning(f"No user found with name : {assignee_username}")
+
+    return user_id 
+
 #DELETE
 
 def delete_repository_in_registry(token,project_id,repository_id):
@@ -459,3 +490,28 @@ def delete_tag_in_repository(token,project_id,repository_id,tag_name):
         deleted = True
     
     return deleted
+
+def create_or_update_issue(token,project_id,payload,issue_filter):
+    """
+    Creates or updates a GitLab issue based on the provided payload.
+
+    If an issue matching the filter already exists, it is updated. Otherwise, a new issue is created.
+
+    Args:
+        token (str): Private token used for GitLab authentication.
+        project_id (int): ID of the GitLab project.
+        payload (dict): Issue fields (title, description, labels, assignee_id).
+        issue_filter (dict): Filter used to search for an existing issue.
+
+    Returns:
+        None
+    """
+
+    logger.info(f"Payload created : {payload}")
+
+    obtained_issues = get_issues(token, project_id, issue_filter)
+
+    if not obtained_issues:
+        create_issue(token, project_id, payload)
+    else:
+        update_issue(token, project_id, obtained_issues[0]["iid"], payload)

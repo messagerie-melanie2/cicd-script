@@ -104,6 +104,7 @@ class Dockerfile:
         self.name = name
         self.version = version
         self.parent = parent
+        self.children = []
         self.multistage_parents = multistage_parents
         self.parameters = parameters
         self.branch = branch
@@ -135,11 +136,56 @@ class Dockerfile:
                     self.docker_args += convert_multistage_parents_version_to_docker_args(multistage_parent,True)
 
         # Build result string
-        parent_str = f"{{name: '{self.parent.name}', version: '{self.parent.version}', external: {str(self.parent.external).lower()}, is_building: {str(self.parent.is_building).lower()}}}"
+        parent_dict = {
+            'name': self.parent.name, 
+            'version': self.parent.version, 
+            'external': int(self.parent.external),
+            'is_building': int(self.parent.is_building)
+            }
         job_needs = create_job_needs(self.parent,self.multistage_parents,mode)
 
         if not deploy :
-            return f"'{self.name}:{version}{suffix}' : {method}('{stage}{level}', '{self.name}', '{self.path}', {parent_str}, '{version}', '{self.branch}', {str(self.is_changed).lower()}, {str(self.is_triggered).lower()}, {job_needs}, '{self.docker_args}', '{self.allowed_push}', {str(self.parameters.latest).lower()})"
-            # 'php-mce-rcube' : build_docker(0, 'php-mce-rcube', 'php/php-mce-rcube', {name: 'registry/php-mce-generic', external: false, is_building: false}, '7.3-fpm_1.0', 'prod', 'True', 'False', 'debian-mce-generic'),
+            payload = {
+                'stage': f'{stage}{level}', #0
+                'name': self.name, # php-mce-rcube
+                'path': self.path, # php/php-mce-rcube
+                'parent': parent_dict, # {name: 'registry/php-mce-generic', external: false, is_building: false}
+                'version': version, # 7.3-fpm_1.0
+                'branch': self.branch, # prod
+                'is_changed': int(self.is_changed), # true
+                'is_triggered': int(self.is_triggered), # false
+                'docker_args': self.docker_args, # --opt build-arg:
+                'allowed_push': self.allowed_push, # True
+                'latest': int(self.parameters.latest), # true
+                'registry_push': {}, #registry where we push
+                'registry_pull': {}, #registry where we pull
+            }
+            if BUILD_DOCKER_CI_PUSH_REGISTRY_VARIABLE_NAME != BUILD_DOCKER_CI_PUSH_REGISTRY_VARIABLE_NAME_DEFAULT :
+                payload['registry_push'] = {#registry where we push
+                    'name': BUILD_DOCKER_CI_PUSH_REGISTRY,
+                    'username': BUILD_DOCKER_CI_PUSH_REGISTRY_USERNAME,
+                    'password': BUILD_DOCKER_CI_PUSH_REGISTRY_PASSWORD,
+                }
+            
+            if BUILD_DOCKER_CI_PULL_REGISTRY_VARIABLE_NAME != BUILD_DOCKER_CI_PULL_REGISTRY_VARIABLE_NAME_DEFAULT :
+                payload['registry_pull'] = {#registry where we pull
+                    'name': BUILD_DOCKER_CI_PULL_REGISTRY,
+                    'username': BUILD_DOCKER_CI_PULL_REGISTRY_USERNAME,
+                    'password': BUILD_DOCKER_CI_PULL_REGISTRY_PASSWORD,
+                }
+            
+            return f"'{self.name}:{version}{suffix}' : {method}({payload}, {job_needs})"
+            # 'php-mce-rcube:7.4-fpm_1.0-prod' : build_docker(payload),
         else :
-            return f"'deploy-{self.name}:{version}{suffix}' : {method}('{stage}{level}', '{self.name}', '{self.path}', {parent_str}, '{version}', '{self.branch}', {str(self.is_changed).lower()}, {str(self.is_triggered).lower()}, '{self.name}:{version}{suffix}', '{deploy_jenkins}')"
+            payload = {
+                'stage': f'{stage}{level}', #0
+                'name': self.name, # php-mce-rcube
+                'parent': parent_dict, # {name: 'registry/php-mce-generic', external: false, is_building: false}
+                'version': version, # 7.3-fpm_1.0
+                'is_changed': int(self.is_changed), # true
+                'is_triggered': int(self.is_triggered), # false
+                'job_to_deploy': f'{self.name}:{version}{suffix}', # php-mce-rcube:7.4-fpm_1.0-prod
+                'deploy_jenkins': deploy_jenkins, # https://myjenkins.com/webhook
+            }
+            return f"'deploy-{self.name}:{version}{suffix}' : {method}({payload})"
+            # 'deploy-php-mce-rcube:7.4-fpm_1.0-prod' : build_docker(payload),
