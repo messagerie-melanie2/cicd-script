@@ -1,6 +1,7 @@
 from detect_debt.global_vars import *
 from build_docker.find_dockerfiles import find_dockerfiles_r
 from detect_debt.detect_debt_function import *
+from lib.gitlab_helper import create_or_update_issue
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +22,6 @@ def main(args) :
    
         if DETECT_EXTERNAL_DEBT_ACTIVATE_ISSUE : 
             create_or_update_issue(args.token, args.project_id, payload_external_debt, issue_filter_external_debt)
-
-    #TODO refacto par service -> reprendre à la dernière page pour toujours plus d'opti
 
     #TODO prometheus et grafana 
 
