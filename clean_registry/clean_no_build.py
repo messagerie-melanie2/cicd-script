@@ -66,21 +66,21 @@ def clean_ghost_images(registry,dockerfiles_to_build,token,project_id):
     for ghost_repository in ghost_repositories :
         if ghost_repository["name"] not in REPOSITORIES_WHITELIST :
             logger.info(f"we have to delete {ghost_repository['name']} repository")
-            # deleted = delete_repository_in_registry(token,project_id,ghost_repository["id"])
-            # if deleted :
-            #     logger.info(f"{ghost_repository['name']} repository is deleted")
-            # else :
-            #     logger.warning(f"{ghost_repository['name']} repository couldn't be deleted")
+            deleted = delete_repository_in_registry(token,project_id,ghost_repository["id"])
+            if deleted :
+                logger.info(f"{ghost_repository['name']} repository is deleted")
+            else :
+                logger.warning(f"{ghost_repository['name']} repository couldn't be deleted")
         else :
             logger.info(f"{ghost_repository['name']} repository is whitelisted")
     
     for ghost_tag in ghost_tags :
         if ghost_tag["repository_name"] not in REPOSITORIES_WHITELIST :
             print(f"we have to delete {ghost_tag['image_name']} tag")
-            # deleted = delete_tag_in_repository(token,project_id,ghost_tag["repository_id"],ghost_tag["name"])
-            # if deleted :
-            #     logger.info(f"{ghost_tag['image_name']} tag is deleted")
-            # else :
-            #     logger.warning(f"{ghost_tag['image_name']} tag couldn't be deleted")
+            deleted = delete_tag_in_repository(token,project_id,ghost_tag["repository_id"],ghost_tag["name"])
+            if deleted :
+                logger.info(f"{ghost_tag['image_name']} tag is deleted")
+            else :
+                logger.warning(f"{ghost_tag['image_name']} tag couldn't be deleted")
         else :
             logger.info(f"{ghost_tag['image_name']} tag is whitelisted")
