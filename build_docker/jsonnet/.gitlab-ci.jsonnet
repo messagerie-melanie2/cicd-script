@@ -38,7 +38,7 @@ local build_docker(payload, job_needs) =
     BUILDKITD_FLAGS: "--oci-worker-no-process-sandbox",
   } + (
     if payload.latest == 1 then {
-      TAG_LATEST: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:latest-" + branch,
+      TAG_LATEST: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:latest-" + payload.branch,
     } else {}
   )
   + (
