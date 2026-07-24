@@ -15,15 +15,15 @@ def clean_dev_images(registry,token,project_id):
         tags = get_tags_in_repository(token,project_id,repository["id"])
         logger.debug(f"tags : {tags}")
         for tag in tags :
-            is_not_current_dev_tag = True
+            is_current_dev_tag = False
             for branch in branches:
                 if branch["name"] in tag["name"]:
-                    is_not_current_dev_tag = False
+                    is_current_dev_tag = True
 
             if check_if_is_tag_to_keep(tag["name"]):
-                is_not_current_dev_tag = False
+                is_current_dev_tag = True
             
-            if is_not_current_dev_tag :
+            if not is_current_dev_tag :
                 dev_tags_to_delete.append({"repository_id":repository["id"],"repository_name":repository["name"],"name":tag["name"],"image_name":repository["name"] + "_" + tag["name"]})
 
     logger.debug(f"dev_tags_to_delete: {dev_tags_to_delete}")
