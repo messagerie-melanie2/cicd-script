@@ -36,6 +36,27 @@ def read_setup_files(folder_path, file_endswith):
                         all_setup = all_setup + setup_yaml
     return all_setup
 
+def get_project_variables(token, project_id, project_name):
+    """
+    Retrieve the existing variables of a project from the GitLab API.
+
+    Args:
+        token (str): The GitLab private token used for authentication.
+        project_id (id): Project id to get project variables.
+        project_name (str): Project name to get project variables
+
+    Returns:
+        project_variables (list): Existing variables retrieved from the GitLab API.
+    """
+    headers = {"PRIVATE-TOKEN": token}
+
+    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
+    logger.info(f"Getting variables for {project_name} project")
+    project_variables = request("get", url, headers)
+    logger.debug(f"project_variables : {project_variables}")
+
+    return project_variables
+
 def set_config_path(token, project):
     """
     Updates the CI configuration path for a list of GitLab projects.

@@ -1,7 +1,8 @@
 from setup.global_vars import *
-from setup.setup_general import read_setup_files, set_config_path, config_schedule, set_schedule
+from setup.setup_general import read_setup_files,get_project_variables, set_config_path, config_schedule, set_schedule
 from setup.setup_trigger import create_trigger_ci_variables, set_trigger_ci_variables, set_trigger_allowlist
-from setup.setup_build import config_build_token, get_build_project_variables, set_build_ci_variables, set_build_allowlist
+from setup.setup_build import config_build_token, set_build_ci_variables, set_build_allowlist
+from setup.setup_scan import set_sonar_scan_ci_variables
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +46,9 @@ def main(args) :
         all_setup = read_setup_files(SETUP_BUILD_FOLDER_PATH, SETUP_BUILD_FILE_ENDSWITH)
         for project_to_setup in all_setup :
             project_to_setup_id = project_to_setup.get("id")
+            project_to_setup_name = project_to_setup.get("name")
             set_config_path(token,project_to_setup)
-            project_to_setup_variables = get_build_project_variables(token, project_to_setup)
+            project_to_setup_variables = get_project_variables(token, project_to_setup_id,project_to_setup_name)
             config_build_token(token, project_to_setup, project_to_setup_variables)
             set_build_ci_variables(token, project_to_setup, project_to_setup_variables)
             set_build_allowlist(token, project_to_setup)
@@ -70,6 +72,17 @@ def main(args) :
             logger.debug(f"Schedule to set : {schedules_to_set}")
             for schedule in schedules_to_set.values() :
                 set_schedule(token, project_to_setup_id, schedule)
+
+    if (args.setup_scan):
+        all_setup = read_setup_files(SETUP_SCAN_FOLDER_PATH, SETUP_SCAN_FILE_ENDSWITH)
+        for project_to_setup in all_setup :
+            type_of_setup = project_to_setup.get("type")
+            project_to_setup_id = project_to_setup.get("id")
+            project_to_setup_name = project_to_setup.get("name")
+            set_config_path(token,project_to_setup)
+            if "SONARQUBE" in type_of_setup :
+                project_to_setup_variables = get_project_variables(token, project_to_setup_id,project_to_setup_name)
+                set_sonar_scan_ci_variables(token, project_to_setup, project_to_setup_variables)
 
 
             
@@ -105,7 +118,15 @@ group.add_argument(
 group.add_argument(
     '-ss', '--setup-schedule', 
     action='store_true',
-    help="Setup project to use trigger feature")
+    help="Setup project to use schedule feature")
+
+#####
+# Argument to launch setup scan
+#####
+group.add_argument(
+    '-ssc', '--setup-scan', 
+    action='store_true',
+    help="Setup project to use scan feature")
 
 # Run the arguments parser
 args = parser.parse_args()
