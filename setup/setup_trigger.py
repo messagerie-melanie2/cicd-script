@@ -1,7 +1,7 @@
 from setup.global_vars import *
 from lib.helper import request, send_message, add_argument_to_conf
 from lib.gitlab_helper import set_new_ci_variable, get_project_info
-from setup.setup_general import set_project_allowlist
+from setup.setup_general import set_project_allowlist, get_project_variables
 
 logger = logging.getLogger(__name__)
 
@@ -155,11 +155,10 @@ def set_trigger_ci_variables(token,all_project_configuration):
     for project_id,project_configuration in all_project_configuration.items() :
         project_name = project_configuration.pop('name')
 
-        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
-        logger.info(f"Getting variables for {project_name} project")
-        project_variables = request("get", url, headers)
-        logger.debug(f"project_variables : {project_variables}")
+        project_variables = get_project_variables(token, project_id,project_name)
 
+        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
+        
         for project_to_trigger_name,variable in project_configuration.items() :
             variable_payload = {'key':variable.get("token_name"), 'value':variable.get("token"), 'masked': True}
             variable_already_put = set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)

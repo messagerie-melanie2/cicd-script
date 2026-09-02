@@ -9,28 +9,6 @@ logger = logging.getLogger(__name__)
 #================ Build setup function =================#
 #=======================================================#
 
-def get_build_project_variables(token, project):
-    """
-    Retrieve the existing variables of a project from the GitLab API.
-
-    Args:
-        token (str): The GitLab private token used for authentication.
-        project (dict): The project info dictionary.
-
-    Returns:
-        project_variables (list): Existing variables retrieved from the GitLab API.
-    """
-    headers = {"PRIVATE-TOKEN": token}
-    project_name = project.get('name')
-    project_id = project.get("id")
-
-    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
-    logger.info(f"Getting variables for {project_name} project")
-    project_variables = request("get", url, headers)
-    logger.debug(f"project_variables : {project_variables}")
-
-    return project_variables
-
 def create_build_token(headers, project_name, project_id, project_tokens, project_variables):
     """
     Rotate or creates a build token for a GitLab project.
