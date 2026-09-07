@@ -42,7 +42,7 @@ local build_docker(payload, job_needs) =
     } else if payload.latest != 1 && payload.latest_versions == 1 then {
       TAG_LATEST: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:" + payload.parent.version + "_latest-" + payload.branch,
     } else if payload.latest == 1 && payload.latest_versions == 1 then {
-      TAG_LATEST: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:" + payload.parent.version + "_latest-" + payload.branch + "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:latest-" + payload.branch,
+      TAG_LATEST: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:" + payload.parent.version + "_latest-" + payload.branch + ",${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${NAME}:latest-" + payload.branch,
     } else {}
   )
   + (
