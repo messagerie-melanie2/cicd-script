@@ -55,7 +55,7 @@ class Deploy(Enum):
 class Parameters:
     """Class containing Dockerfile's parameters information"""
 
-    def __init__(self, is_up, parent_version, no_build, no_repo, no_deploy, deploy_jenkins, variables, multistage_parents, latest):
+    def __init__(self, is_up, parent_version, no_build, no_repo, no_deploy, deploy_jenkins, variables, multistage_parents, latest, latest_versions):
         self.is_up = is_up
         self.parent_version = parent_version
         self.no_build = no_build
@@ -65,6 +65,7 @@ class Parameters:
         self.variables = variables
         self.multistage_parents = multistage_parents
         self.latest = latest
+        self.latest_versions = latest_versions
 
     def __str__(self):
         return f"Parameters with parent_version :'{self.parent_version}'\n no_build : {self.no_build}\n no_repo : {self.no_repo}\n no_deploy : {self.no_deploy}\n deploy_jenkins : {self.deploy_jenkins}\n variables : {self.variables}\n multistage_parents : {self.multistage_parents}\n latest : {self.latest}"
@@ -157,6 +158,7 @@ class Dockerfile:
                 'docker_args': self.docker_args, # --opt build-arg:
                 'allowed_push': self.allowed_push, # True
                 'latest': int(self.parameters.latest), # true
+                'latest_versions': int(self.parameters.latest_versions), # true
                 'registry_push': {}, #registry where we push
                 'registry_pull': {}, #registry where we pull
             }

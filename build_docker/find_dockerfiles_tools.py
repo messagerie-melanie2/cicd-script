@@ -293,12 +293,18 @@ def find_info_from_parameters(subdir, default_version):
                         stage_info_with_fullname = set_fullname_parent_version(stage_info)
                         multistage_parents[index] = stage_info_with_fullname
 
+                try :
+                    latest_versions = parameters['latest_versions']         
+                except Exception as e:
+                    logger.debug("latest_versions not in parameters.yml")
+                    latest_versions = False
+
                 for parent_version in parameters['parent_version']:
                     is_latest = parent_version.get("latest")
                     if is_latest == None:
                         is_latest = False
                     parent_version = set_fullname_parent_version(parent_version)        
-                    parametersInfo.append(Parameters(True,parent_version,no_build,no_repo,no_deploy,deploy_jenkins,variables,multistage_parents,is_latest))
+                    parametersInfo.append(Parameters(True,parent_version,no_build,no_repo,no_deploy,deploy_jenkins,variables,multistage_parents,is_latest,latest_versions))
 
     except Exception as e:
         logger.debug(f"{PARAMETERS_FILE_NAME} file not found... Will use default parent version.")
