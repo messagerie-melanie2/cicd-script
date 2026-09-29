@@ -87,12 +87,12 @@ local build_docker(payload, job_needs) =
       #'cp /tmp/${NAME}_metadata.json ./${NAME}_metadata.json',
       #'cat ./${NAME}_metadata.json'
     ]
-  ,
-  retry:
-  {
-    max: 2,
-    when: ['script_failure']
-  }
+  // ,
+  // retry:
+  // {
+  //   max: 2,
+  //   when: ['script_failure']
+  // }
   ,
   artifacts:
   {
