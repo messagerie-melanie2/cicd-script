@@ -20,7 +20,8 @@ SETUP_SCHEDULE_TYPE_DEFAULT = """{
         "variables":
         {
             "CLEANLOG_WEEKS_LIMIT" : 2,
-            "CI_COMMIT_MESSAGE": "[cleanlog] ci-clean-log "
+            "CI_COMMIT_MESSAGE": "[cleanlog] Schedule de rotation de log",
+            "LAUNCH_FEATURE": "clean-log"
         }
     }
 }"""
@@ -97,7 +98,8 @@ SETUP_BUILD_SCHEDULE_TYPE_DEFAULT = """{
         "cron_timezone": "Europe/Paris",
         "variables":
         {
-            "CI_COMMIT_MESSAGE": "[cleanghostimage] Daily cleaning 'NO_BUILD' - ci-clean-nobuild"
+            "CI_COMMIT_MESSAGE": "[cleanghostimage] Daily cleaning 'NO_BUILD'",
+            "LAUNCH_FEATURE": "clean-registry-ghost-image"
         }
     },
     "cleandevimage":
@@ -107,7 +109,8 @@ SETUP_BUILD_SCHEDULE_TYPE_DEFAULT = """{
         "cron_timezone": "Europe/Paris",
         "variables":
         {
-            "CI_COMMIT_MESSAGE": "[cleandevimage] Daily cleaning 'DEV' - ci-clean-dev"
+            "CI_COMMIT_MESSAGE": "[cleandevimage] Daily cleaning 'DEV'",
+            "LAUNCH_FEATURE": "clean-registry-dev-image"
         }
     }
 }"""
