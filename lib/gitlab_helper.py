@@ -32,8 +32,9 @@ def set_new_ci_variable(url, headers, project_id, project_variables, variable_pa
             variable_already_put = True
     
     if variable_already_put :
-        url = f"{url}/{variable_key}?value={variable_value}"
-        request("put", url, headers)
+        # Value sent in the request body: in the URL, characters like & # + would be misread
+        url = f"{url}/{variable_key}"
+        request("put", url, headers, payload_data={"value": variable_value})
     else :
         logger.info(f"Setup {variable_key} for {project_id} project")
         request("post", url, headers, payload_data=variable_payload)

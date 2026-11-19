@@ -131,21 +131,16 @@ def set_schedule(token, project_id, schedule_to_set):
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get('id')}"
         schedule_created = request("put", url, headers, files=files)
 
+    # Variables already set on the schedule (empty for a newly created schedule),
+    # used to choose between creating (POST) and updating (PUT) each variable.
+    logger.info(f"Getting {schedule_to_set_description} schedule variables...")
+    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get('id')}"
+    schedule_variables = request("get", url, headers).get("variables", [])
+
     for key,value in schedule_to_set_variables.items() :
-        schedule_variable_info = []
         variable_payload = {"key": key, "value": value }
-
-        #FOR GITLAB IN 18.7
-        #logger.info(f"Getting {key} variable...")
-        #url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get('id')}/variables/{key}"
-        #schedule_variable_info.append(request("get", url, headers))
-
-        #FOR GITLAB < 18.7
-        if schedule_already_setup :
-            schedule_variable_info.append(variable_payload)
-        
         url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule_created.get('id')}/variables"
-        set_new_ci_variable(url, headers, project_id, schedule_variable_info, variable_payload)
+        set_new_ci_variable(url, headers, project_id, schedule_variables, variable_payload)
 
 
 def config_schedule(token, project, schedules_to_set_default):
