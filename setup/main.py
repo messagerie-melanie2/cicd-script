@@ -1,5 +1,5 @@
 from setup.global_vars import *
-from setup.setup_general import read_setup_files,get_project_variables, set_config_path, config_schedule, set_schedule
+from setup.setup_general import read_setup_files,get_project_variables, set_config_path, config_schedule, set_schedule, delete_schedules
 from setup.setup_trigger import create_trigger_ci_variables, set_trigger_ci_variables, set_trigger_allowlist
 from setup.setup_build import config_build_token, set_build_ci_variables, set_build_allowlist
 from setup.setup_scan import set_sonar_scan_ci_variables
@@ -52,7 +52,20 @@ def main(args) :
             config_build_token(token, project_to_setup, project_to_setup_variables)
             set_build_ci_variables(token, project_to_setup, project_to_setup_variables)
             set_build_allowlist(token, project_to_setup)
-    
+
+    if (args.reset_schedule):
+        all_build_setup = read_setup_files(SETUP_BUILD_FOLDER_PATH, SETUP_BUILD_FILE_ENDSWITH)
+        all_trigger_setup = read_setup_files(SETUP_TRIGGER_FOLDER_PATH, SETUP_TRIGGER_FILE_ENDSWITH)
+        for project_to_trigger in all_trigger_setup :
+            projects_to_setup = project_to_trigger.get("projects")
+            for project in projects_to_setup :
+                project_id = project.get("id")
+                delete_schedules(token, project_id)
+
+        for project_to_setup in all_build_setup :
+            project_to_setup_id = project_to_setup.get("id")
+            delete_schedules(token, project_id)
+
     if (args.setup_schedule):
         all_build_setup = read_setup_files(SETUP_BUILD_FOLDER_PATH, SETUP_BUILD_FILE_ENDSWITH)
         all_trigger_setup = read_setup_files(SETUP_TRIGGER_FOLDER_PATH, SETUP_TRIGGER_FILE_ENDSWITH)
@@ -119,6 +132,14 @@ group.add_argument(
     '-ss', '--setup-schedule', 
     action='store_true',
     help="Setup project to use schedule feature")
+
+#####
+# Argument to launch reset schedule
+#####
+group.add_argument(
+    '-rs', '--reset-schedule', 
+    action='store_true',
+    help="Reset all schedules of all projects")
 
 #####
 # Argument to launch setup scan

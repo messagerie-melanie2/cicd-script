@@ -204,6 +204,26 @@ def config_schedule(token, project, schedules_to_set_default):
 
     return schedules_to_set
 
+def delete_schedules(token, project_id):
+    """
+    Deleting schedules and schedules variables of a project.
+
+    Args:
+        token (str): The GitLab private token used for authentication.
+        project_id (id): Project id to delete schedule.
+    """
+    headers = {"PRIVATE-TOKEN": token}
+    schedule_deleted = {}
+
+    logger.info(f"Deleting project {project_id} schedules...")
+
+    logger.info(f"Getting project schedules...")
+    url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules"
+    project_schedules = request("get", url, headers)
+
+    for schedule in project_schedules :
+        url = f"{GITLAB_URL}/api/v4/projects/{project_id}/pipeline_schedules/{schedule.get('id')}"
+        request("delete", url, headers)
 
 def set_project_allowlist(token, project, instance_to_allow):
     """
