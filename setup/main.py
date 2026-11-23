@@ -66,7 +66,7 @@ def main(args) :
             project_to_setup_id = project_to_setup.get("id")
             delete_schedules(token, project_id)
 
-    if (args.setup_schedule or args.reset_schedule):
+    if (args.setup_schedule):
         all_build_setup = read_setup_files(SETUP_BUILD_FOLDER_PATH, SETUP_BUILD_FILE_ENDSWITH)
         all_trigger_setup = read_setup_files(SETUP_TRIGGER_FOLDER_PATH, SETUP_TRIGGER_FILE_ENDSWITH)
         for project_to_trigger in all_trigger_setup :
