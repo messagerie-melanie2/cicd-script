@@ -2,7 +2,7 @@ from lib.global_vars import *
 
 logger = logging.getLogger(__name__)
 
-def request(mode, url = '', headers = None, auth = None, payload_data = None, payload_json = None, files = None, params = None, proxies = None) -> dict:
+def request(mode, url = '', headers = None, auth = None, payload_data = None, payload_json = None, files = None, params = None, proxies = None, ignored_status_codes = None) -> dict:
     """
     Sends an HTTP request based on the specified mode.
 
@@ -19,6 +19,8 @@ def request(mode, url = '', headers = None, auth = None, payload_data = None, pa
         payload_json (dict): Data sent as JSON using the `json` parameter.
         files (dict): Data sent as JSON using the `files` parameter.
         params (dict): Data sent as JSON using the `params` parameter.
+        ignored_status_codes (list): HTTP error status codes that are expected (ex: 404 when checking
+            if something exists). They are logged in debug instead of error. Defaults to None.
 
     Returns:
         response (dict): The JSON response content if the request succeeds.
@@ -44,7 +46,10 @@ def request(mode, url = '', headers = None, auth = None, payload_data = None, pa
                 logger.warning(f"request mode {mode} not supported")
         r.raise_for_status()
     except requests.exceptions.HTTPError as err:
-        logger.error(f"Request failed : {r}")
+        if ignored_status_codes is not None and r.status_code in ignored_status_codes :
+            logger.debug(f"Request returned an expected status code : {r}")
+        else :
+            logger.error(f"Request failed : {r}")
         logger.debug(f"Http Error: {err}")
     else :
         if r.status_code in ACCEPTED_STATUS_CODE:

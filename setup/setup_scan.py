@@ -139,11 +139,13 @@ def set_sonar_project(token, project):
     project_key = project.get("sonar_project_key", project_path.replace("/", ":"))
     sonar_auth = (SETUP_SONAR_API_TOKEN, "")
 
+    # api/components/show only needs the 'Browse' permission on the project
+    # (api/projects/search would need the 'Administer System' permission). A 404 means the project doesn't exist.
     logger.info(f"Searching {project_key} project on Sonarqube ({SETUP_SONAR_HOST_URL})...")
-    url = f"{SETUP_SONAR_HOST_URL}/api/projects/search"
-    sonar_projects = request("get", url, auth=sonar_auth, params={"projects": project_key}).get("components", [])
+    url = f"{SETUP_SONAR_HOST_URL}/api/components/show"
+    sonar_project = request("get", url, auth=sonar_auth, params={"component": project_key}, ignored_status_codes=[404])
 
-    if sonar_projects != [] :
+    if sonar_project != {} :
         logger.info(f"{project_key} project already exists on Sonarqube.")
     else :
         logger.info(f"{project_key} project not created on Sonarqube. Creating...")
