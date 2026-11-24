@@ -25,7 +25,7 @@ def set_sonar_scan_ci_variables(token, project, project_variables):
 
     url = f"{GITLAB_URL}/api/v4/projects/{project_id}/variables"
 
-    variable_payload = {'key':SETUP_SONAR_TOKEN_VARIABLE_NAME, 'value':SETUP_SONAR_TOKEN, 'masked': False}
+    variable_payload = {'key':SETUP_SONAR_PROJECT_TOKEN_VARIABLE_NAME, 'value':SETUP_SONAR_TOKEN, 'masked': False}
     variable_already_put = set_new_ci_variable(url, headers, project_id, project_variables, variable_payload)
     if not variable_already_put :
         send_message(SETUP_CHANNEL_URL, f"🔔 Le projet {project_name} a bien été configuré pour être scanné par Sonarqube. Pour plus d'information voir : {SETUP_CI_JOB_URL}")
@@ -87,9 +87,11 @@ def set_sonar_gitlab_binding(sonar_auth, project_key, gitlab_project_id):
     """
     Bind a Sonarqube project to its GitLab repository (DevOps Platform Integration).
 
-    The binding is created, or replaced if it points to another integration or repository.
+    The binding is always set: set_gitlab_binding creates it, or replaces it if it already exists.
+    (Reading it first with get_binding is avoided: Sonarqube answers 404 when the project is not bound yet.)
 
     Args:
+        sonar_auth (tuple): The Sonarqube API token authentication.
         project_key (str): The Sonarqube project key.
         gitlab_project_id (int): The GitLab project id.
     """
@@ -98,24 +100,15 @@ def set_sonar_gitlab_binding(sonar_auth, project_key, gitlab_project_id):
         logger.error(f"Skipping GitLab binding of {project_key} Sonarqube project.")
         return
 
-    # Sonarqube answers 404 when the project is not bound yet: the request helper then logs a failed request.
-    logger.info(f"Getting GitLab binding of {project_key} Sonarqube project...")
-    url = f"{SETUP_SONAR_HOST_URL}/api/alm_settings/get_binding"
-    binding = request("get", url, auth=sonar_auth, params={"project": project_key})
-    logger.debug(f"binding : {binding}")
-
-    if binding.get("key") == alm_setting and str(binding.get("repository")) == str(gitlab_project_id) :
-        logger.info(f"{project_key} Sonarqube project is already bound to GitLab project {gitlab_project_id}.")
-    else :
-        logger.info(f"Binding {project_key} Sonarqube project to GitLab project {gitlab_project_id} with {alm_setting} integration...")
-        url = f"{SETUP_SONAR_HOST_URL}/api/alm_settings/set_gitlab_binding"
-        payload = {
-            "almSetting": alm_setting,
-            "project": project_key,
-            "repository": gitlab_project_id,
-            "monorepo": "false",
-        }
-        request("post", url, auth=sonar_auth, payload_data=payload)
+    logger.info(f"Binding {project_key} Sonarqube project to GitLab project {gitlab_project_id} with {alm_setting} integration...")
+    url = f"{SETUP_SONAR_HOST_URL}/api/alm_settings/set_gitlab_binding"
+    payload = {
+        "almSetting": alm_setting,
+        "project": project_key,
+        "repository": gitlab_project_id,
+        "monorepo": "false",
+    }
+    request("post", url, auth=sonar_auth, payload_data=payload)
 
 def set_sonar_project(token, project):
     """
