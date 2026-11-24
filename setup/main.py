@@ -2,7 +2,7 @@ from setup.global_vars import *
 from setup.setup_general import read_setup_files,get_project_variables, set_config_path, config_schedule, set_schedule, delete_schedules
 from setup.setup_trigger import create_trigger_ci_variables, set_trigger_ci_variables, set_trigger_allowlist
 from setup.setup_build import config_build_token, set_build_ci_variables, set_build_allowlist
-from setup.setup_scan import set_sonar_scan_ci_variables
+from setup.setup_scan import set_sonar_scan_ci_variables, set_sonar_project
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +94,7 @@ def main(args) :
             project_to_setup_name = project_to_setup.get("name")
             set_config_path(token,project_to_setup)
             if "SONARQUBE" in type_of_setup :
+                set_sonar_project(token, project_to_setup)
                 project_to_setup_variables = get_project_variables(token, project_to_setup_id,project_to_setup_name)
                 set_sonar_scan_ci_variables(token, project_to_setup, project_to_setup_variables)
 

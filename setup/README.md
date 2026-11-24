@@ -19,3 +19,7 @@ Regroupement des fonctions nécessaires exclusivement au setup de build.
 Regroupement des fonctions nécessaires exclusivement au setup de trigger.
 
 ::: cicdscript.setup.setup_trigger
+## Module setup_scan
+Regroupement des fonctions nécessaires exclusivement au setup de scan (création du projet SonarQube via son API, variables CI/CD du scan).
+
+::: cicdscript.setup.setup_scan
