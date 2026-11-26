@@ -318,7 +318,7 @@ def find_info_from_parameters(subdir, default_version):
             version_name=default_version.split("_")[0]
             version_number=default_version.split("_")[1]
 
-        parametersInfo.append(Parameters(True,{'version_name':version_name,'version_number':version_number,'fullname':default_version},False,False,[Deploy.NONE], PROD_KEY, None, False, False, False))
+        parametersInfo.append(Parameters(True,{'version_name':version_name,'version_number':version_number,'fullname':default_version},False,False,[Deploy.NONE], PROD_KEY, None, None, False, False))
 
     # return all values found
     return parametersInfo
