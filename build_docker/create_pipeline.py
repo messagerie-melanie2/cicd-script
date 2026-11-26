@@ -155,7 +155,8 @@ def sort_pipeline(sortedRes):
             else:
                 for pipeline_name in pipelines.keys() :
 
-                    if  len(pipelines[pipeline_name]) - 1 < level :
+                    # Add every missing level : a pipeline created late (ex: pipeline-others) can have less levels than the current one
+                    while len(pipelines[pipeline_name]) - 1 < level :
                         pipelines[pipeline_name].append([])
 
                     for possible_parent in pipelines[pipeline_name][level - 1] :
@@ -164,9 +165,7 @@ def sort_pipeline(sortedRes):
                             added = True
             if not added :
                 pipeline_name = "pipeline-others"
-                logger.info(dockerfile.name)
-                logger.info(dockerfile.parent.version)
-                logger.info(level)
+                logger.warning(f"{dockerfile.name}:{dockerfile.version} (level {level}) : parent {dockerfile.parent.name}:{dockerfile.parent.version} not found in any pipeline, building it in {pipeline_name} without waiting for its parent.")
                 if pipeline_name not in pipelines :
                     pipelines[pipeline_name] = [[dockerfile]]
                 else :
