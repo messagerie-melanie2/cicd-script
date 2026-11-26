@@ -3,6 +3,7 @@ from build_docker.global_vars import *
 from lib.gitlab_helper import get_registry_info
 from lib.helper import get_changes
 from build_docker.find_dockerfiles import find_dockerfiles_r
+from build_docker.find_dockerfiles_tools import remove_duplicate_latest_tags
 from build_docker.create_pipeline import sort_dockerfiles, set_parent_to_is_building, sort_pipeline, pipelines_write_jsonnet, write_jsonnet
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,9 @@ def main(args) :
     logger.info(f"[General] Scanning {args.path} to find Dockerfiles")
     dockerfiles_to_build = find_dockerfiles_r(args.generate_jsonnet_current_repo, args.path, args.generate_jsonnet_branch_name if(args.generate_jsonnet) else NO_BRANCH, changes, registry, args.trigger_project, args.trigger_changes)
     logger.info(f'Found {len(dockerfiles_to_build)} docker images to build.')
+
+    # Prevent several images from pushing the same latest tag
+    dockerfiles_to_build = remove_duplicate_latest_tags(dockerfiles_to_build)
 
     #####
     # Jsonnet generation to build Docker images

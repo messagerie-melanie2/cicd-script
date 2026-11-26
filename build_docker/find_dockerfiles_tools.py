@@ -433,3 +433,33 @@ def create_multistage_parents(multistage_parents_info, registry, multistage_pare
         multistage_parents.append(MultiStageParent(stage["name"],version,stage["external"],False,repository_id,alias,have_parameters,stage["project_dependency"],stage["files_dependency"]))
     
     return multistage_parents
+
+def remove_duplicate_latest_tags(dockerfiles):
+    """
+    Remove the latest tags that would be pushed by several Dockerfiles.
+
+    A latest tag only depends on the image name (latest) or on the image name and its parent version (latest_versions).
+    If several Dockerfiles would push the same latest tag, the tag would point to the last built image.
+    In that case the tag is removed from all the conflicting Dockerfiles, until their parameters.yml are fixed.
+
+    Args:
+        dockerfiles (list): All the Dockerfile objects found.
+
+    Returns:
+        dockerfiles (list): The same Dockerfile objects, without conflicting latest tags.
+    """
+    latest_tags = {}
+    for df in dockerfiles :
+        if df.parameters.latest :
+            latest_tags.setdefault(("latest", f"{df.name}:latest"), []).append(df)
+        if df.parameters.latest_versions :
+            latest_tags.setdefault(("latest_versions", f"{df.name}:{df.parent.version}_latest"), []).append(df)
+
+    for (parameter, tag), conflicting_dockerfiles in latest_tags.items() :
+        if len(conflicting_dockerfiles) > 1 :
+            conflicting_list = ", ".join(f"{df.path} ({df.name}:{df.version})" for df in conflicting_dockerfiles)
+            logger.error(f"Latest tag '{tag}' would be pushed by {len(conflicting_dockerfiles)} images : {conflicting_list}. '{parameter}' is disabled for all of them, set it on only one of them in parameters.yml.")
+            for df in conflicting_dockerfiles :
+                setattr(df.parameters, parameter, False)
+
+    return dockerfiles
