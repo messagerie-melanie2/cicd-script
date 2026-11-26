@@ -69,13 +69,13 @@ def process_from_line(df_from):
     # Remove default value placeholders
     # like ':-${registry_default}' in '${registry:-${registry_default}}'
     # like '${parent_version_default}' in '${parent_version:-${parent_version_default}}'
-    df_from_without_placeholder = re.sub(":-\${[a-zA-Z0-9_-]*}", '', df_from_without_from)
+    df_from_without_placeholder = re.sub(r":-\${[a-zA-Z0-9_-]*}", '', df_from_without_from)
     logger.debug(f"processing... : {df_from_without_placeholder}")
         
     # Remove variable placeholders
     # like '${registry}' in '${registry:-${registry_default}}'
     # like '${parent_version}' in '${parent_version:-${parent_version_default}}'
-    df_from_without_placeholder = re.sub("\${[a-zA-Z0-9_-]*}", '', df_from_without_placeholder)
+    df_from_without_placeholder = re.sub(r"\${[a-zA-Z0-9_-]*}", '', df_from_without_placeholder)
     logger.debug(f"processing... : {df_from_without_placeholder}")
 
     # Remove version substring (after ':' like ':version')
@@ -119,7 +119,7 @@ def find_multistage_parents(content, current_repo):
     multistage_parents = []
     
     #Get all content from stages from a multistage docker
-    stages_content = re.findall("(FROM [\s\S]+?AS\s+\w+[\s\S]+?(?=FROM|\Z))", content,re.MULTILINE)
+    stages_content = re.findall(r"(FROM [\s\S]+?AS\s+\w+[\s\S]+?(?=FROM|\Z))", content,re.MULTILINE)
 
 
     for stage in stages_content :
@@ -151,12 +151,12 @@ def find_multistage_parents(content, current_repo):
 
         if multistage_parent["name"] is not None and "git-mce-generic" in multistage_parent["name"]:
             #Look for the git project
-            regex = GITLAB_URL.split('/')[2].replace(".","\.") + '(.*?)\.git'
+            regex = GITLAB_URL.split('/')[2].replace(".",r"\.") + r'(.*?)\.git'
             dependency = re.search(regex,stage)
 
             if dependency is not None :
                 multistage_parent["project_dependency"] = dependency.group(1)
-                regex = 'COPY .*?--from=' + multistage_parent["alias"] + ' .*?\/source\/(.*?) '
+                regex = 'COPY .*?--from=' + multistage_parent["alias"] + r' .*?\/source\/(.*?) '
                 files_dependency = re.findall(regex, content,re.MULTILINE)
                 multistage_parent["files_dependency"] = files_dependency
         
@@ -174,7 +174,7 @@ def find_info_from_path(path):
     Extract information from the path himself
     '''
 
-    reg_result = re.search('(?:\./){0,1}((.*/)?([a-zA-Z0-9_-]*)/([0-9]+.[0-9]+))/Dockerfile', path)
+    reg_result = re.search(r'(?:\./){0,1}((.*/)?([a-zA-Z0-9_-]*)/([0-9]+.[0-9]+))/Dockerfile', path)
 
     if(reg_result == None or len(reg_result.groups()) < InfoFromPath.count):
         logger.debug("No info could be found (or not enough), check your path...")
