@@ -1,6 +1,5 @@
 from build_docker.global_vars import *
 from build_docker.class_pipeline import Deploy
-from build_docker.find_dockerfiles_tools import find_info_from_changesfile
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +80,7 @@ def sort_dockerfiles(dockerfiles):
     logger.debug(f"Number of levels : {len(sortedRes)}")
     return sortedRes
 
-def set_parent_to_is_building(sortedRes,changes) :
+def set_parent_to_is_building(sortedRes) :
     
     new_sortedRes = copy.deepcopy(sortedRes)
     to_build_array = []
@@ -94,15 +93,8 @@ def set_parent_to_is_building(sortedRes,changes) :
                     to_build_array.append(df)
                 is_to_build = True
 
-            #Look if first layer dockerfile is changed to build their childrens
-            #if df.parent.external == True :
-            version_number = ""
-            if len(df.version.split("_")) > 1 :
-                version_number = df.version.split("_")[-1]
-            else :
-                version_number = df.version
-                
-            if find_info_from_changesfile(changes,df.name,version_number) :
+            #Look if dockerfile is changed (computed in find_dockerfiles_parameters) to build their childrens
+            if df.is_changed :
                 if not is_to_build :
                     to_build_array.append(df)
                 is_to_build = True

@@ -1,6 +1,6 @@
 from build_docker.global_vars import *
 from build_docker.class_pipeline import Parent,Dockerfile
-from build_docker.find_dockerfiles_tools import find_info_from_parameters, convert_variables_to_docker_args, find_info_from_changesfile, find_info_from_path, find_info_from_dockerfile, no_build_file_in_folder, check_if_triggered, create_multistage_parents
+from build_docker.find_dockerfiles_tools import find_info_from_parameters, convert_variables_to_docker_args, find_info_from_changesfile, find_info_from_path, find_info_from_dockerfile, no_build_file_in_folder, check_if_triggered, create_multistage_parents, get_parent_versions_to_build
 from lib.gitlab_helper import get_repository_id
 
 logger = logging.getLogger(__name__)
@@ -26,6 +26,11 @@ def find_dockerfiles_parameters(info_from_df, info_from_path, triggered_project,
             
             if "../" in info_from_path.path :
                 info_from_path.path = info_from_path.path.split("../")[-1]
+
+            # Commit before the push, used to read the previous parameters.yml (git show)
+            ci_commit_before_sha = os.environ.get('CI_COMMIT_BEFORE_SHA', '')
+            # If only parent_version changed in parameters.yml, only the added or modified versions are built
+            parent_versions_to_build = get_parent_versions_to_build(subdir, info_from_path.path, changes, ci_commit_before_sha, info_from_parameters_file, info_from_df.parent_version_default)
                 
             for info_from_parameters in info_from_parameters_file:
                 docker_image_tag_separator = DOCKER_IMAGE_TAG_SEPARATOR
@@ -67,6 +72,8 @@ def find_dockerfiles_parameters(info_from_df, info_from_path, triggered_project,
 
                 #Find if dockerfile is changed
                 is_changed = find_info_from_changesfile(changes,info_from_path.image_name,info_from_path.image_version_number,False)
+                if is_changed and parent_versions_to_build is not None :
+                    is_changed = info_from_parameters.parent_version['fullname'] in parent_versions_to_build
                 # Add new Dockerfile to array
                 df_info = Dockerfile(info_from_path.path, info_from_path.image_name, df_parent,multistage_parents, info_from_parameters, df_version, build_branch, is_changed, is_triggered, docker_args, allowed_push) 
 

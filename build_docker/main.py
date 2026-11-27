@@ -43,7 +43,7 @@ def main(args) :
         sortedRes = sort_dockerfiles(dockerfiles_to_build)
         logger.info(f"{job} Sorted Dockerfiles to handle dependencies !")
 
-        new_sortedRes, to_build_array = set_parent_to_is_building(sortedRes,changes)
+        new_sortedRes, to_build_array = set_parent_to_is_building(sortedRes)
         logger.info(f"{job} Set child to build if their parent are !")
         
         if(args.pipeline_source == "schedule" or args.trigger_project == "snum/detn/gmcd/docker-tools") :
