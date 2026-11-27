@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 #============= Find Dockerfiles Functions ==============#
 #=======================================================#
 
-def find_dockerfiles_parameters(info_from_df, info_from_path, triggered_project, trigger_changes, build_branch, subdir, changes, registry):
+def find_dockerfiles_parameters(info_from_df, info_from_path, triggered_project, trigger_changes, build_branch, subdir, changes, registry, commit_before_sha = ""):
 
     dockerfiles = []
 
@@ -27,10 +27,8 @@ def find_dockerfiles_parameters(info_from_df, info_from_path, triggered_project,
             if "../" in info_from_path.path :
                 info_from_path.path = info_from_path.path.split("../")[-1]
 
-            # Commit before the push, used to read the previous parameters.yml (git show)
-            ci_commit_before_sha = os.environ.get('CI_COMMIT_BEFORE_SHA', '')
             # If only parent_version changed in parameters.yml, only the added or modified versions are built
-            parent_versions_to_build = get_parent_versions_to_build(subdir, info_from_path.path, changes, ci_commit_before_sha, info_from_parameters_file, info_from_df.parent_version_default)
+            parent_versions_to_build = get_parent_versions_to_build(subdir, info_from_path.path, changes, commit_before_sha, info_from_parameters_file, info_from_df.parent_version_default)
                 
             for info_from_parameters in info_from_parameters_file:
                 docker_image_tag_separator = DOCKER_IMAGE_TAG_SEPARATOR
@@ -86,7 +84,7 @@ def find_dockerfiles_parameters(info_from_df, info_from_path, triggered_project,
 
 ##### Core functions
 
-def find_dockerfiles_r(current_repo, path = ".", build_branch=NO_BRANCH, changes = [], registry = [], triggered_project = "", trigger_changes = ""):
+def find_dockerfiles_r(current_repo, path = ".", build_branch=NO_BRANCH, changes = [], registry = [], triggered_project = "", trigger_changes = "", commit_before_sha = ""):
     '''
     Description:
     > Recursively finds all the Dockerfiles under a path
@@ -117,7 +115,7 @@ def find_dockerfiles_r(current_repo, path = ".", build_branch=NO_BRANCH, changes
 
                 is_no_build_file = no_build_file_in_folder(subdir)             
                 if not is_no_build_file :
-                    tmp_dockerfiles = find_dockerfiles_parameters(info_from_df,info_from_path,triggered_project,trigger_changes,build_branch,subdir,changes,registry)             
+                    tmp_dockerfiles = find_dockerfiles_parameters(info_from_df,info_from_path,triggered_project,trigger_changes,build_branch,subdir,changes,registry,commit_before_sha)             
                     dockerfiles.extend(tmp_dockerfiles)
     
     return dockerfiles

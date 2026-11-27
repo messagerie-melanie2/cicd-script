@@ -529,12 +529,15 @@ def get_parent_versions_to_build(subdir, folder_path, changes, before_sha, curre
     if len(previous_parameters_info) == 0 :
         return None
 
-    # These parameters are common to every version : if one of them changed, every version has to be built
-    common_parameters = ["no_build", "no_repo", "no_deploy", "deploy_jenkins", "variables", "multistage_parents", "latest_versions"]
-    for parameter in common_parameters :
-        if getattr(current_parameters_info[0], parameter) != getattr(previous_parameters_info[0], parameter) :
-            logger.info(f"'{parameter}' changed in {parameters_path}, all its versions will be built.")
-            return None
+    # Every parameter except the version specific ones is common to every version :
+    # if one of them changed (even a parameter added later to Parameters), every version has to be built
+    version_specific_parameters = {"parent_version", "latest", "is_up"}
+    current_common = {parameter_name: parameter_value for parameter_name, parameter_value in vars(current_parameters_info[0]).items() if parameter_name not in version_specific_parameters}
+    previous_common = {parameter_name: parameter_value for parameter_name, parameter_value in vars(previous_parameters_info[0]).items() if parameter_name not in version_specific_parameters}
+    if current_common != previous_common :
+        changed_parameters = sorted(parameter_name for parameter_name in current_common.keys() | previous_common.keys() if current_common.get(parameter_name) != previous_common.get(parameter_name))
+        logger.info(f"{changed_parameters} changed in {parameters_path}, all its versions will be built.")
+        return None
 
     previous_parent_versions = [(info.parent_version, info.latest) for info in previous_parameters_info]
     parent_versions_to_build = set()
