@@ -21,7 +21,7 @@ def main(args) :
 
     # Find all Dockerfiles in the current path
     logger.info(f"[General] Scanning {args.path} to find Dockerfiles")
-    dockerfiles_to_build = find_dockerfiles_r(args.generate_jsonnet_current_repo, args.path, args.generate_jsonnet_branch_name if(args.generate_jsonnet) else NO_BRANCH, changes, registry, args.trigger_project, args.trigger_changes)
+    dockerfiles_to_build = find_dockerfiles_r(args.generate_jsonnet_current_repo, args.path, args.generate_jsonnet_branch_name if(args.generate_jsonnet) else NO_BRANCH, changes, registry, args.trigger_project, args.trigger_changes, args.commit_before_sha)
     logger.info(f'Found {len(dockerfiles_to_build)} docker images to build.')
 
     # Prevent several images from pushing the same latest tag
@@ -43,7 +43,7 @@ def main(args) :
         sortedRes = sort_dockerfiles(dockerfiles_to_build)
         logger.info(f"{job} Sorted Dockerfiles to handle dependencies !")
 
-        new_sortedRes, to_build_array = set_parent_to_is_building(sortedRes,changes)
+        new_sortedRes, to_build_array = set_parent_to_is_building(sortedRes)
         logger.info(f"{job} Set child to build if their parent are !")
         
         if(args.pipeline_source == "schedule" or args.trigger_project == "snum/detn/gmcd/docker-tools") :
@@ -142,6 +142,14 @@ parser.add_argument(
     '-tgv', '--trigger-variables', 
     metavar='PROJECT_TRIGGER_VARIABLES', default='',
     help="Les variables envoyés par le trigger")
+
+#####
+# Argument to take the commit before the push
+#####
+parser.add_argument(
+    '-cbs', '--commit-before-sha', 
+    metavar='CI_COMMIT_BEFORE_SHA', default='',
+    help="Le commit avant le push, pour comparer les parameters.yml (git show) et ne builder que les versions ajoutees ou modifiees")
 
 #####
 # Argument to take pipeline source

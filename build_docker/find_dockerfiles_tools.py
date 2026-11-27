@@ -2,6 +2,7 @@
 from build_docker.global_vars import *
 from build_docker.class_pipeline import InfoFromPath, InfoFromDockerfile, Deploy, Parameters, MultiStageParent
 from lib.gitlab_helper import get_repository_id
+from io import StringIO
 
 logger = logging.getLogger(__name__)
 
@@ -239,12 +240,14 @@ def set_fullname_parent_version(parent_version):
     
     return new_parent_version
 
-def find_info_from_parameters(subdir, default_version):
+def find_info_from_parameters(subdir, default_version, parameters_content = None):
 
     parametersInfo = []
 
     try:
-        with open(subdir + os.sep + PARAMETERS_FILE_NAME, 'r') as parameters_file:
+        # parameters_content : content of a parameters.yml already read (ex: previous version from git show)
+        parameters_file = StringIO(parameters_content) if parameters_content is not None else open(subdir + os.sep + PARAMETERS_FILE_NAME, 'r')
+        with parameters_file:
             try:
                 parameters = yaml.safe_load(parameters_file)
             except yaml.YAMLError as exc:
@@ -463,3 +466,87 @@ def remove_duplicate_latest_tags(dockerfiles):
                 setattr(df.parameters, parameter, False)
 
     return dockerfiles
+
+
+def get_previous_file_content(folder_path, file_name, before_sha):
+    """
+    Read a file as it was at a previous commit, with git show.
+
+    Args:
+        folder_path (str): Folder of the file, inside the git repository.
+        file_name (str): Name of the file in this folder.
+        before_sha (str): Commit to read the file from.
+
+    Returns:
+        content (str): The file content at before_sha, or None if it can't be read (no commit, new file, git error...).
+    """
+    if before_sha == "" :
+        return None
+
+    try :
+        result = subprocess.run(
+            ["git", "-c", "safe.directory=*", "-C", folder_path, "show", f"{before_sha}:./{file_name}"],
+            capture_output=True, text=True, check=True)
+    except (subprocess.CalledProcessError, FileNotFoundError) as err :
+        logger.info(f"Can't read {folder_path}/{file_name} at {before_sha} : {getattr(err, 'stderr', err)}".strip())
+        return None
+
+    return result.stdout
+
+def get_parent_versions_to_build(subdir, folder_path, changes, before_sha, current_parameters_info, default_version):
+    """
+    Find which versions (parent_version entries) of a Dockerfile folder have to be built.
+
+    If only the parameters.yml of the folder changed, and only its parent_version list changed,
+    only the added or modified parent_version entries have to be built.
+    In every other case (other files changed, other parameters changed, previous parameters.yml unreadable...),
+    all the versions have to be built.
+    The previous parameters.yml is read with git show and interpreted with find_info_from_parameters,
+    so both versions are compared the same way.
+
+    Args:
+        subdir (str): Path of the Dockerfile folder, as walked by the script.
+        folder_path (str): Path of the Dockerfile folder, relative to the git repository (as in the changes).
+        changes (list): Files changed by the push (git diff --name-only).
+        before_sha (str): Commit before the push.
+        current_parameters_info (list): Parameters of the current parameters.yml (from find_info_from_parameters).
+        default_version (str): Default parent version of the Dockerfile.
+
+    Returns:
+        parent_versions_to_build (set): Fullnames of the versions to build, or None if all the versions have to be built.
+    """
+    folder_changes = [change.strip() for change in changes if change.strip().startswith(folder_path.rstrip("/") + "/")]
+    parameters_path = f"{folder_path.rstrip('/')}/{PARAMETERS_FILE_NAME}"
+
+    if folder_changes != [parameters_path] or len(current_parameters_info) == 0 :
+        return None
+
+    previous_content = get_previous_file_content(subdir, PARAMETERS_FILE_NAME, before_sha)
+    if previous_content is None :
+        return None
+
+    previous_parameters_info = find_info_from_parameters(subdir, default_version, previous_content)
+    if len(previous_parameters_info) == 0 :
+        return None
+
+    # Every parameter except the version specific ones is common to every version :
+    # if one of them changed (even a parameter added later to Parameters), every version has to be built
+    version_specific_parameters = {"parent_version", "latest", "is_up"}
+    current_common = {parameter_name: parameter_value for parameter_name, parameter_value in vars(current_parameters_info[0]).items() if parameter_name not in version_specific_parameters}
+    previous_common = {parameter_name: parameter_value for parameter_name, parameter_value in vars(previous_parameters_info[0]).items() if parameter_name not in version_specific_parameters}
+    if current_common != previous_common :
+        changed_parameters = sorted(parameter_name for parameter_name in current_common.keys() | previous_common.keys() if current_common.get(parameter_name) != previous_common.get(parameter_name))
+        logger.info(f"{changed_parameters} changed in {parameters_path}, all its versions will be built.")
+        return None
+
+    previous_parent_versions = [(info.parent_version, info.latest) for info in previous_parameters_info]
+    parent_versions_to_build = set()
+    for info in current_parameters_info :
+        if (info.parent_version, info.latest) not in previous_parent_versions :
+            parent_versions_to_build.add(info.parent_version['fullname'])
+
+    if parent_versions_to_build :
+        logger.info(f"Only parent_version changed in {parameters_path}, versions to build : {sorted(parent_versions_to_build)}")
+    else :
+        logger.info(f"No parameter used by the build changed in {parameters_path}, no version to build.")
+    return parent_versions_to_build
